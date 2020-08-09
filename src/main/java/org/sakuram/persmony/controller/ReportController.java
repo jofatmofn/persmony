@@ -46,18 +46,12 @@ public class ReportController {
 			throw new AppException("Error creating CSV Builder", e);
 		}
     	report01VOList = reportService.pendingTransactions();
-    	for (Report01VO report01VO : report01VOList)
-    		System.out.println(report01VO.getInvestmentIdWithProvider());
     	try {
 			btcsv.write(report01VOList);
 		} catch (CsvException e) {
 			throw new AppException("Error mapping data to CSV", e);
 		}
-    	try {
-			response.getWriter().flush();
-		} catch (IOException e) {
-			throw new AppException("Error writing CSV to response", e);
-		}
+    	response.setHeader("Content-Disposition", "attachment; file=transactions.csv");
     }
 
 }

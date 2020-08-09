@@ -14,4 +14,6 @@ public class Constants {
 	public static final String CATEGORY_CLOSURE_TYPE = "ClsType";
 	public static final String CATEGORY_BANK_ACCOUNT = "BankAcc";
 	public static final String CATEGORY_REALISATION_TYPE = "RlsnTyp";
+	
+	public static final long DVID_TRANSACTION_TYPE_RECEIPT = 73;
 }

@@ -1,5 +1,7 @@
 package org.sakuram.persmony.valueobject;
 
+import java.sql.Date;
+
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 
@@ -9,9 +11,12 @@ import lombok.Setter;
 
 @Getter @Setter @NoArgsConstructor
 public class Report01VO {
+	
+	/* Investment Details */
+	
 	@CsvBindByName(column="Sl. No.")
 	@CsvBindByPosition(position=0)
-	long investmentId;
+	Long investmentId;
 	
 	@CsvBindByName(column="Investor")
 	@CsvBindByPosition(position=1)
@@ -31,6 +36,20 @@ public class Report01VO {
 	
 	@CsvBindByName(column="Is Closed?")
 	@CsvBindByPosition(position=5)
-	boolean isClosed;
+	Boolean isClosed;
+
+	/* Receipt Details */
+	
+	@CsvBindByName(column="Receipt Date")
+	@CsvBindByPosition(position=6)
+	Date receiptDate;
+
+	@CsvBindByName(column="Receipt Amount")
+	@CsvBindByPosition(position=7)
+	Float receiptAmout;
+
+	@CsvBindByName(column="Receipt Status")
+	@CsvBindByPosition(position=8)
+	String receiptStatus;
 
 }

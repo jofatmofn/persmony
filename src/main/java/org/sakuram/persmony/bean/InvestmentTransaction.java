@@ -53,6 +53,9 @@ public class InvestmentTransaction {
 	@Column(name="returned_principal_amount", nullable=true)
 	private Float returnedPrincipalAmount;
 	
+	@Column(name="interest_amount", nullable=true)
+	private Float interestAmount;
+	
 	@Column(name="tds_amount", nullable=true)
 	private Float tdsAmount; /* Only for Accruals and Receipts */
 	
