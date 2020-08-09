@@ -5,20 +5,13 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.sakuram.persmony.service.ReportService;
-import org.sakuram.persmony.util.AppException;
-import org.sakuram.persmony.util.CustomBeanToCSVMappingStrategy;
-import org.sakuram.persmony.valueobject.Report01VO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.opencsv.CSVWriter;
-import com.opencsv.bean.ColumnPositionMappingStrategy;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import com.opencsv.exceptions.CsvException;
 
 @RestController
 @RequestMapping("/report")
@@ -26,32 +19,19 @@ public class ReportController {
 	@Autowired
 	ReportService reportService;
 
-    @RequestMapping(value = "/pendingTransactions", method = RequestMethod.GET, produces = "text/csv")
-    public void pendingTransactions(HttpServletResponse response)
+    @RequestMapping(value = "/pendingTransactions", method = RequestMethod.GET)
+    public void pendingTransactions(HttpServletResponse response) throws IOException
     {
-    	List<Report01VO> report01VOList;
-    	ColumnPositionMappingStrategy<Report01VO> columnPositionMappingStrategy;
-    	StatefulBeanToCsv<Report01VO> btcsv;
+    	List<Object[]> recordList;
     	
-    	columnPositionMappingStrategy = new CustomBeanToCSVMappingStrategy<>();
-    	columnPositionMappingStrategy.setType(Report01VO.class);
-    	
-		try {
-			btcsv = new StatefulBeanToCsvBuilder<Report01VO>(response.getWriter())
-					.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-					.withMappingStrategy(columnPositionMappingStrategy)
-					.withSeparator(',')
-					.build();
-		} catch (IOException e) {
-			throw new AppException("Error creating CSV Builder", e);
-		}
-    	report01VOList = reportService.pendingTransactions();
-    	try {
-			btcsv.write(report01VOList);
-		} catch (CsvException e) {
-			throw new AppException("Error mapping data to CSV", e);
-		}
-    	response.setHeader("Content-Disposition", "attachment; file=transactions.csv");
+    	recordList = reportService.pendingTransactions();
+    	try (CSVPrinter csvPrinter = new CSVPrinter(response.getWriter(), CSVFormat.DEFAULT)) {
+	    	for (Object[] record : recordList) {
+	    		csvPrinter.printRecord(record);
+	    	}
+    	}
+    	response.setHeader("Content-Type", "text/csv");
+    	response.setHeader("Content-Disposition", "attachment; filename=\"transactions.csv\"");
     }
 
 }

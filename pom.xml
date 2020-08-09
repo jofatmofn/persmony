@@ -73,16 +73,16 @@
 			<scope>provided</scope>
 		</dependency>
         <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-            <version>5.2</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.8</version>
         </dependency>
         <dependency>
 	        <groupId>org.projectlombok</groupId>
 	        <artifactId>lombok</artifactId>
-	        <version>1.18.12</version>
-	    </dependency>
-	    </dependencies>
+	        <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>
