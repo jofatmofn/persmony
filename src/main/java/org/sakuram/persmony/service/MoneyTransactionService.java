@@ -40,9 +40,15 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		
 		investmentTransaction = investmentTransactionRepository.findById(receiptSingleRealisationIntoBankVO.getInvestmentTransactionId())
 			.orElseThrow(() -> new AppException("Invalid Group Type " + receiptSingleRealisationIntoBankVO.getInvestmentTransactionId(), null));
+		if (investmentTransaction.getStatus().getId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
+			throw new AppException("Transaction " + receiptSingleRealisationIntoBankVO.getInvestmentTransactionId() + " no longer Pending ", null);
+		}
 		domainValue = domainValueRepository.findById(Constants.DVID_TRANSACTION_STATUS_COMPLETED)
 				.orElseThrow(() -> new AppException("Transaction Status could not be located: " + Constants.DVID_TRANSACTION_STATUS_COMPLETED, null));
 		investmentTransaction.setStatus(domainValue);
+		if (investmentTransaction.getDueAmount() == null) {
+			investmentTransaction.setDueAmount(receiptSingleRealisationIntoBankVO.getAmount());
+		}
 		// investment = investmentTransaction.getInvestment();
 		
 		savingsAccountTransaction = new SavingsAccountTransaction();

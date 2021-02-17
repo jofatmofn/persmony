@@ -15,6 +15,7 @@ public class Constants {
 	public static final String CATEGORY_BANK_ACCOUNT = "BankAcc";
 	public static final String CATEGORY_REALISATION_TYPE = "RlsnTyp";
 	
+	public static final long DVID_TRANSACTION_STATUS_PENDING = 69;
 	public static final long DVID_TRANSACTION_STATUS_COMPLETED = 71;
 	public static final long DVID_TRANSACTION_TYPE_RECEIPT = 73;
 	public static final long DVID_REALISATION_TYPE_SAVINGS_ACCOUNT = 101;
