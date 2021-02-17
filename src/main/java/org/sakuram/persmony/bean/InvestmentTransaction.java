@@ -50,6 +50,9 @@ public class InvestmentTransaction {
 	@JoinColumn(name="status_fk", nullable=false)
 	private DomainValue status;
 	
+	@Column(name="settled_amount", nullable=true)
+	private Float settledAmount;
+	
 	@Column(name="returned_principal_amount", nullable=true)
 	private Float returnedPrincipalAmount;
 	

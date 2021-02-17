@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -103,6 +104,7 @@ public class Investment {
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "investment", cascade = CascadeType.ALL)
+	@OrderBy("dueDate")
 	private List<InvestmentTransaction> investmentTransactionList;
 
 }

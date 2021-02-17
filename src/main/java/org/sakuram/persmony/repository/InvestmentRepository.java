@@ -6,6 +6,6 @@ import java.util.List;
 
 import org.sakuram.persmony.bean.Investment;
 
-public interface InvestmentRepository extends JpaRepository<Investment, Integer> {
+public interface InvestmentRepository extends JpaRepository<Investment, Long> {
 	List<Investment> findAllByOrderByIdAsc();
 }
