@@ -12,9 +12,11 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter @Setter
+@NoArgsConstructor
 @Entity
 @Table(name="savings_account_transaction")
 public class SavingsAccountTransaction {
@@ -35,4 +37,9 @@ public class SavingsAccountTransaction {
 	@Column(name="amount", nullable=true)
 	private Float amount;
 
+	public SavingsAccountTransaction(DomainValue bankAccount, Date transactionDate, Float amount) {
+		this.bankAccount = bankAccount;
+		this.transactionDate = transactionDate;
+		this.amount = amount;
+	}
 }

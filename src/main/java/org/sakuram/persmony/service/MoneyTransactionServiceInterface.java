@@ -1,7 +1,7 @@
 package org.sakuram.persmony.service;
 
-import org.sakuram.persmony.valueobject.ReceiptSingleRealisationIntoBankVO;
+import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 
 public interface MoneyTransactionServiceInterface {
-	public void receiptSingleRealisationIntoBank(ReceiptSingleRealisationIntoBankVO receiptSingleRealisationIntoBankVO);
+	public void singleRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO);
 }

@@ -13,9 +13,11 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter @Setter
+@NoArgsConstructor
 @Entity
 @Table(name="realisation")
 public class Realisation {
@@ -43,4 +45,11 @@ public class Realisation {
 	@Column(name="amount", nullable=true)
 	private Float amount;
 
+	public Realisation(InvestmentTransaction investmentTransaction, Date realisationDate, DomainValue realisationType, Long detailsReference, Float amount) {
+		this.investmentTransaction = investmentTransaction;
+		this.realisationDate = realisationDate;
+		this.realisationType = realisationType;
+		this.detailsReference = detailsReference;
+		this.amount = amount;
+	}
 }

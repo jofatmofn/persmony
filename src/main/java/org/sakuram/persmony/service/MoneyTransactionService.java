@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
-import org.sakuram.persmony.valueobject.ReceiptSingleRealisationIntoBankVO;
+import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 
 @Service
 @Transactional
@@ -31,44 +31,37 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 	@Autowired
 	RealisationRepository realisationRepository;
 	
-	public void receiptSingleRealisationIntoBank(ReceiptSingleRealisationIntoBankVO receiptSingleRealisationIntoBankVO) {
+	public void singleRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO) {
 		// Investment investment;
 		InvestmentTransaction investmentTransaction;
 		SavingsAccountTransaction savingsAccountTransaction;
 		Realisation realisation;
 		DomainValue domainValue;
 		
-		investmentTransaction = investmentTransactionRepository.findById(receiptSingleRealisationIntoBankVO.getInvestmentTransactionId())
-			.orElseThrow(() -> new AppException("Invalid Group Type " + receiptSingleRealisationIntoBankVO.getInvestmentTransactionId(), null));
+		investmentTransaction = investmentTransactionRepository.findById(singleRealisationWithBankVO.getInvestmentTransactionId())
+			.orElseThrow(() -> new AppException("Invalid Group Type " + singleRealisationWithBankVO.getInvestmentTransactionId(), null));
 		if (investmentTransaction.getStatus().getId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
-			throw new AppException("Transaction " + receiptSingleRealisationIntoBankVO.getInvestmentTransactionId() + " no longer Pending ", null);
+			throw new AppException("Transaction " + singleRealisationWithBankVO.getInvestmentTransactionId() + " no longer Pending ", null);
 		}
 		domainValue = domainValueRepository.findById(Constants.DVID_TRANSACTION_STATUS_COMPLETED)
 				.orElseThrow(() -> new AppException("Transaction Status could not be located: " + Constants.DVID_TRANSACTION_STATUS_COMPLETED, null));
 		investmentTransaction.setStatus(domainValue);
 		if (investmentTransaction.getDueAmount() == null) {
-			investmentTransaction.setDueAmount(receiptSingleRealisationIntoBankVO.getAmount());
+			investmentTransaction.setDueAmount(singleRealisationWithBankVO.getAmount());
 		}
 		// investment = investmentTransaction.getInvestment();
+		// TODO: Close the investment if it's the last investmentTransaction?
 		
-		savingsAccountTransaction = new SavingsAccountTransaction();
-		domainValue = domainValueRepository.findById(receiptSingleRealisationIntoBankVO.getBankAccountDvId())
-				.orElseThrow(() -> new AppException("Invalid Bank Account " + receiptSingleRealisationIntoBankVO.getBankAccountDvId(), null));
-		savingsAccountTransaction.setBankAccount(domainValue);
-		savingsAccountTransaction.setTransactionDate(receiptSingleRealisationIntoBankVO.getTransactionDate());
-		savingsAccountTransaction.setAmount(receiptSingleRealisationIntoBankVO.getAmount());
+		domainValue = domainValueRepository.findById(singleRealisationWithBankVO.getBankAccountDvId())
+				.orElseThrow(() -> new AppException("Invalid Bank Account " + singleRealisationWithBankVO.getBankAccountDvId(), null));
+		savingsAccountTransaction = new SavingsAccountTransaction(domainValue, singleRealisationWithBankVO.getTransactionDate(), singleRealisationWithBankVO.getAmount());
 		savingsAccountTransaction = savingsAccountTransactionRepository.save(savingsAccountTransaction);
 
-		realisation = new Realisation();
-		realisation.setAmount(receiptSingleRealisationIntoBankVO.getAmount());
-		realisation.setDetailsReference(savingsAccountTransaction.getId());
-		realisation.setRealisationDate(receiptSingleRealisationIntoBankVO.getTransactionDate());
-		realisation.setInvestmentTransaction(investmentTransaction);
 		domainValue = domainValueRepository.findById(Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT)
 				.orElseThrow(() -> new AppException("Realisation Type could not be located: " + Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT, null));
-		realisation.setRealisationType(domainValue);
+		realisation = new Realisation(investmentTransaction, singleRealisationWithBankVO.getTransactionDate(), domainValue, savingsAccountTransaction.getId(), singleRealisationWithBankVO.getAmount());
 		realisation = realisationRepository.save(realisation);
 		
-		System.out.println("receiptSingleRealisationIntoBank completed.");
+		System.out.println("singleRealisationWithBank completed.");
 	}
 }

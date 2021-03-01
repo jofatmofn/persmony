@@ -16,7 +16,7 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.service.ReportService;
 import org.sakuram.persmony.util.AppException;
-import org.sakuram.persmony.valueobject.ReceiptSingleRealisationIntoBankVO;
+import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -51,19 +51,19 @@ public class PersmonyApplication implements CommandLineRunner {
     		    	    	case "checkifitruns":
     		    	    		System.out.println("PersMony Application Runs!!!");
     		    	    		break;
-    		    	    	case "receiptsinglerealisationintobank":
+    		    	    	case "singlerealisationwithbank":
     		    	    		if (record.size() == 5) {
-	    		    				ReceiptSingleRealisationIntoBankVO receiptSingleRealisationIntoBankVO;
-	    		    				receiptSingleRealisationIntoBankVO = new ReceiptSingleRealisationIntoBankVO(Integer.valueOf(record.get(1)), Float.valueOf(record.get(2)), new java.sql.Date(format.parse(record.get(3)).getTime()), Integer.valueOf(record.get(4)));
+	    		    				SingleRealisationWithBankVO singleRealisationWithBankVO;
+	    		    				singleRealisationWithBankVO = new SingleRealisationWithBankVO(Integer.valueOf(record.get(1)), Float.valueOf(record.get(2)), new java.sql.Date(format.parse(record.get(3)).getTime()), Integer.valueOf(record.get(4)));
 	    		    				try {
-	    		    					moneyTransactionService.receiptSingleRealisationIntoBank(receiptSingleRealisationIntoBankVO);
+	    		    					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
 		    		    				System.out.println(String.format("Processed %s", record.toString()));
 	    		    				}
 	    		    				catch (AppException aE) {
 		    		    				System.out.println(String.format("Skipped %s", record.toString()));
 	    		    				}
     		    	    		} else {
-        		    	    		quitCodeWithError("For transaction type ReceiptSingleRealisationIntoBank, 4 inputs are expected.");
+        		    	    		quitCodeWithError("For transaction type SingleRealisationWithBank, 4 inputs are expected.");
     		    	    		}
     		    	    		break;
     		    	    	default:

@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter @Setter
 @AllArgsConstructor
-public class ReceiptSingleRealisationIntoBankVO {
+public class SingleRealisationWithBankVO {
 	long investmentTransactionId;
 	Float amount;
 	Date transactionDate;
