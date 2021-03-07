@@ -19,9 +19,11 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter @Setter
+@NoArgsConstructor
 @Entity
 @Table(name="investment")
 public class Investment {
@@ -107,4 +109,27 @@ public class Investment {
 	@OrderBy("dueDate")
 	private List<InvestmentTransaction> investmentTransactionList;
 
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float rateOfInterest, DomainValue receiptAccountingBasis, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList) {
+		this.investor = investor;
+		this.productProvider = productProvider;
+		this.dematAccount = dematAccount;
+		this.facilitator = facilitator;
+		this.investorIdWithProvider = investorIdWithProvider;
+		this.productIdOfProvider = productIdOfProvider;
+		this.investmentIdWithProvider = investmentIdWithProvider;
+		this.productName = productName;
+		this.productType = productType;
+		this.worth = worth;
+		this.rateOfInterest = rateOfInterest;
+		this.receiptAccountingBasis = receiptAccountingBasis;
+		this.taxability = taxability;
+		this.previousInvestment = previousInvestment;
+		this.newInvestmentReason = newInvestmentReason;
+		this.productEndDate = productEndDate;
+		this.isClosed = isClosed;
+		this.closureType = closureType;
+		this.closureDate = closureDate;
+		this.isAccrualApplicable = isAccrualApplicable;
+		this.investmentTransactionList = investmentTransactionList;
+	}
 }

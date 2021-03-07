@@ -5,7 +5,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
@@ -13,9 +13,15 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.sakuram.persmony.bean.DomainValue;
+import org.sakuram.persmony.repository.DomainValueRepository;
 import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.service.ReportService;
 import org.sakuram.persmony.util.AppException;
+import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.util.UtilFuncs;
+import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -25,6 +31,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class PersmonyApplication implements CommandLineRunner {
 
+	@Autowired
+	DomainValueRepository domainValueRepository;
 	@Autowired
 	private MoneyTransactionService moneyTransactionService;
 	@Autowired
@@ -38,33 +46,54 @@ public class PersmonyApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+    	loadCache();
     	if (args.length == 2) {
     		switch(args[0].toLowerCase()) {
     			case "transact":
-    				SimpleDateFormat format = new SimpleDateFormat("M/d/yyyy");
     		    	// Reader in = new FileReader(args[1]);
     		    	// Iterable<CSVRecord> parser = CSVFormat.EXCEL.withSkipHeaderRecord(true).parse(in);
     				Reader in = new InputStreamReader(new BOMInputStream(new FileInputStream(args[1])), "UTF-8");
-    				CSVParser parser = new CSVParser(in, CSVFormat.EXCEL.withHeader().withSkipHeaderRecord(true));
+    				CSVParser parser = new CSVParser(in, CSVFormat.EXCEL.withHeader().withSkipHeaderRecord(true).withNullString(""));
     		    	for (CSVRecord record : parser) {
     		    	    switch(record.get(0).toLowerCase()) {
     		    	    	case "checkifitruns":
     		    	    		System.out.println("PersMony Application Runs!!!");
     		    	    		break;
     		    	    	case "singlerealisationwithbank":
-    		    	    		if (record.size() == 5) {
-	    		    				SingleRealisationWithBankVO singleRealisationWithBankVO;
-	    		    				singleRealisationWithBankVO = new SingleRealisationWithBankVO(Integer.valueOf(record.get(1)), Float.valueOf(record.get(2)), new java.sql.Date(format.parse(record.get(3)).getTime()), Integer.valueOf(record.get(4)));
-	    		    				try {
-	    		    					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
-		    		    				System.out.println(String.format("Processed %s", record.toString()));
-	    		    				}
-	    		    				catch (AppException aE) {
-		    		    				System.out.println(String.format("Skipped %s", record.toString()));
-	    		    				}
-    		    	    		} else {
-        		    	    		quitCodeWithError("For transaction type SingleRealisationWithBank, 4 inputs are expected.");
-    		    	    		}
+    		    				SingleRealisationWithBankVO singleRealisationWithBankVO;
+    		    				
+    		    				try {
+        		    				singleRealisationWithBankVO = new SingleRealisationWithBankVO(
+        		    						NumberUtils.createLong(record.get(1)),
+        		    						NumberUtils.createFloat(record.get(2)),
+        		    						UtilFuncs.createDate(record.get(3)),
+        		    						NumberUtils.createLong(record.get(4)));
+    		    					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
+	    		    				System.out.println(String.format("Processed %s", record.toString()));
+    		    				}
+    		    				catch (AppException aE) {
+	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+    		    				}
+    		    	    		break;
+    		    	    	case "renewal":
+		    	    			RenewalVO renewalVO;
+    		    				try {
+    		    	    			renewalVO = new RenewalVO(
+    		    	    					NumberUtils.createLong(record.get(1)),
+    		    	    					NumberUtils.createFloat(record.get(2)),
+    		    	    					UtilFuncs.createDate(record.get(3)),
+    		    	    					NumberUtils.createFloat(record.get(4)),
+    		    	    					NumberUtils.createFloat(record.get(5)),
+    		    	    					record.get(6),
+    		    	    					UtilFuncs.createDate(record.get(7)),
+    		    	    					NumberUtils.createFloat(record.get(8)),
+    		    	    					NumberUtils.createFloat(record.get(9)));
+    		    					moneyTransactionService.renewal(renewalVO);
+	    		    				System.out.println(String.format("Processed %s", record.toString()));
+    		    				}
+    		    				catch (AppException aE) {
+	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+    		    				}
     		    	    		break;
     		    	    	default:
     		    	    		quitCodeWithError(String.format("%s is not a valid transaction type.", record.get(0)));
@@ -97,8 +126,15 @@ public class PersmonyApplication implements CommandLineRunner {
     	}
     }
     
-    public void quitCodeWithError(String errorMessage) {
+    private void quitCodeWithError(String errorMessage) {
     	System.err.println(errorMessage);
     	System.exit(16);
+    }
+    
+    private void loadCache() {
+    	Constants.domainValueCache = new HashMap<Long, DomainValue>();
+    	for(DomainValue domainValue : domainValueRepository.findAll()) {
+    		Constants.domainValueCache.put(domainValue.getId(), domainValue);
+    	}
     }
 }

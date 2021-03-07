@@ -19,9 +19,11 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter @Setter
+@NoArgsConstructor
 @Entity
 @Table(name="investment_transaction")
 public class InvestmentTransaction {
@@ -51,7 +53,7 @@ public class InvestmentTransaction {
 	private DomainValue status;
 	
 	@Column(name="settled_amount", nullable=true)
-	private Float settledAmount;
+	private Float settledAmount; /* Only when not equal to dueAmount */
 	
 	@Column(name="returned_principal_amount", nullable=true)
 	private Float returnedPrincipalAmount;
@@ -67,10 +69,24 @@ public class InvestmentTransaction {
 	private DomainValue taxability;	/* Only for Receipts; Overrides Investment */
 	
 	@Column(name="assessment_year", nullable=true, precision=4, scale=0)
-	private BigDecimal assessmentYear;
+	private BigDecimal assessmentYear;	/* Why not Short? */
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "investmentTransaction", cascade = CascadeType.ALL)
 	private List<Realisation> realisationList;
 
+	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Float dueAmount, DomainValue status, Float settledAmount, Float returnedPrincipalAmount, Float interestAmount, Float tdsAmount, DomainValue taxability, BigDecimal assessmentYear, List<Realisation> realisationList) {
+		this.investment = investment;
+		this.transactionType = transactionType;
+		this.dueDate = dueDate;
+		this.dueAmount = dueAmount;
+		this.status = status;
+		this.settledAmount = settledAmount;
+		this.returnedPrincipalAmount = returnedPrincipalAmount;
+		this.interestAmount = interestAmount;
+		this.tdsAmount = tdsAmount;
+		this.taxability = taxability;
+		this.assessmentYear = assessmentYear;
+		this.realisationList = realisationList;
+	}
 }
