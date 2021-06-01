@@ -19,6 +19,7 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
+import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
 @Service
 @Transactional
@@ -59,6 +60,39 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		System.out.println("singleRealisationWithBank completed.");
 	}
 	
+	public void txnSingleRealisationWithBank(TxnSingleRealisationWithBankVO txnSingleRealisationWithBankVO) {
+		Investment investment;
+		InvestmentTransaction investmentTransaction;
+		
+		investment = investmentRepository.findById(txnSingleRealisationWithBankVO.getInvestmentId())
+				.orElseThrow(() -> new AppException("Invalid Investment Id " + txnSingleRealisationWithBankVO.getInvestmentId(), null));
+		if (investment.isClosed()) {
+			throw new AppException("Investment " + txnSingleRealisationWithBankVO.getInvestmentId() + " no longer Open", null);
+		}
+		
+		investmentTransaction = new InvestmentTransaction(
+				investment,
+				Constants.domainValueCache.get(txnSingleRealisationWithBankVO.getTransactionTypeDvId()),
+				txnSingleRealisationWithBankVO.getTransactionDate(),
+				txnSingleRealisationWithBankVO.getAmount(),
+				Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
+				null,
+				null,
+				null,
+				null,
+				null,
+				UtilFuncs.computeAssessmentYear(txnSingleRealisationWithBankVO.getTransactionDate()),
+				null);
+		investmentTransaction = investmentTransactionRepository.save(investmentTransaction);
+		
+		singleRealisationWithBank(new SingleRealisationWithBankVO(
+				investmentTransaction.getId(),
+				txnSingleRealisationWithBankVO.getAmount(),
+				txnSingleRealisationWithBankVO.getTransactionDate(),
+				txnSingleRealisationWithBankVO.getBankAccountDvId()));
+		System.out.println("txnSingleRealisationWithBank completed.");
+	}
+	
 	public void renewal(RenewalVO renewalVO) {
 		Investment renewedInvestment, newInvestment;
 		List<InvestmentTransaction> investmentTransactionList;
@@ -66,7 +100,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		Realisation riReceiptRealisation, niPaymentRealisation;
 		
 		renewedInvestment = investmentRepository.findById(renewalVO.getInvestmentId())
-				.orElseThrow(() -> new AppException("Invalid Group Type " + renewalVO.getInvestmentId(), null));
+				.orElseThrow(() -> new AppException("Invalid Investment Id " + renewalVO.getInvestmentId(), null));
 		if (renewedInvestment.isClosed()) {
 			throw new AppException("Investment " + renewalVO.getInvestmentId() + " no longer Open", null);
 		}

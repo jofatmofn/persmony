@@ -23,6 +23,7 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
+import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -38,7 +39,7 @@ public class PersmonyApplication implements CommandLineRunner {
 	@Autowired
 	ReportService reportService;
 	
-	static final String DATA_FOLDER = "D:\\RSureshK#Personal#\\RSKPers\\PersMony\\";
+	static final String DATA_FOLDER = "D:\\RSureshK\\RSKPers\\PersMony\\";
 	
 	public static void main(String[] args) {
 		SpringApplication.run(PersmonyApplication.class, args);
@@ -69,6 +70,23 @@ public class PersmonyApplication implements CommandLineRunner {
         		    						UtilFuncs.createDate(record.get(3)),
         		    						NumberUtils.createLong(record.get(4)));
     		    					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
+	    		    				System.out.println(String.format("Processed %s", record.toString()));
+    		    				}
+    		    				catch (AppException aE) {
+	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+    		    				}
+    		    	    		break;
+    		    	    	case "txnsinglerealisationwithbank":
+    		    				TxnSingleRealisationWithBankVO txnSingleRealisationWithBankVO;
+    		    				
+    		    				try {
+        		    				txnSingleRealisationWithBankVO = new TxnSingleRealisationWithBankVO(
+        		    						NumberUtils.createLong(record.get(1)),
+        		    						NumberUtils.createLong(record.get(2)),
+        		    						NumberUtils.createFloat(record.get(3)),
+        		    						UtilFuncs.createDate(record.get(4)),
+        		    						NumberUtils.createLong(record.get(5)));
+    		    					moneyTransactionService.txnSingleRealisationWithBank(txnSingleRealisationWithBankVO);
 	    		    				System.out.println(String.format("Processed %s", record.toString()));
     		    				}
     		    				catch (AppException aE) {

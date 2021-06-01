@@ -29,7 +29,7 @@ public class AppException extends java.lang.RuntimeException
 		this.message = pMessage;
         this.originatingClass = pClassName;
         this.originatingMethod = pMethodName;
-		LogManager.getLogger().error((pException != null && pException.getMessage() != null) ? pException.getMessage() : "");
+		LogManager.getLogger().error((pException != null && pException.getMessage() != null) ? pException.getMessage() : pMessage);
         // Only current class (AppException), current method (commonConstructor), above line number will be logged.
 		// Required to be logged: pClassName, pMethodName, actual line number causing exception
         if (pException != null)
