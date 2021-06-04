@@ -98,14 +98,12 @@ public class PersmonyApplication implements CommandLineRunner {
     		    				try {
     		    	    			renewalVO = new RenewalVO(
     		    	    					NumberUtils.createLong(record.get(1)),
-    		    	    					NumberUtils.createFloat(record.get(2)),
-    		    	    					UtilFuncs.createDate(record.get(3)),
-    		    	    					NumberUtils.createFloat(record.get(4)),
-    		    	    					NumberUtils.createFloat(record.get(5)),
-    		    	    					record.get(6),
-    		    	    					UtilFuncs.createDate(record.get(7)),
-    		    	    					NumberUtils.createFloat(record.get(8)),
-    		    	    					NumberUtils.createFloat(record.get(9)));
+    		    	    					record.get(2),
+    		    	    					NumberUtils.createFloat(record.get(3)),
+    		    	    					UtilFuncs.createDate(record.get(4)),
+    		    	    					UtilFuncs.parseScheduleData(record.get(5)),
+    		    	    					UtilFuncs.parseScheduleData(record.get(6)),
+    		    	    					UtilFuncs.parseScheduleData(record.get(7)));
     		    					moneyTransactionService.renewal(renewalVO);
 	    		    				System.out.println(String.format("Processed %s", record.toString()));
     		    				}

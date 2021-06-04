@@ -1,5 +1,6 @@
 package org.sakuram.persmony.service;
 
+import java.sql.Date;
 import java.util.List;
 
 import org.sakuram.persmony.bean.Investment;
@@ -18,6 +19,7 @@ import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.RenewalVO;
+import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
@@ -96,8 +98,13 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 	public void renewal(RenewalVO renewalVO) {
 		Investment renewedInvestment, newInvestment;
 		List<InvestmentTransaction> investmentTransactionList;
-		InvestmentTransaction riReceiptTransaction, niPaymentTransaction, niReceiptTransaction;
+		InvestmentTransaction riReceiptTransaction;
 		Realisation riReceiptRealisation, niPaymentRealisation;
+		Date realisationDate;
+		Float realisationAmount;
+		
+		realisationDate = renewalVO.getPaymentScheduleVOList().get(0).getDueDate();
+		realisationAmount = renewalVO.getPaymentScheduleVOList().get(0).getDueAmount();
 		
 		renewedInvestment = investmentRepository.findById(renewalVO.getInvestmentId())
 				.orElseThrow(() -> new AppException("Invalid Investment Id " + renewalVO.getInvestmentId(), null));
@@ -105,33 +112,9 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 			throw new AppException("Investment " + renewalVO.getInvestmentId() + " no longer Open", null);
 		}
 		renewedInvestment.setClosed(true);
-		renewedInvestment.setClosureDate(renewalVO.getRealisationDate());
+		renewedInvestment.setClosureDate(realisationDate);
 		renewedInvestment.setClosureType(Constants.domainValueCache.get(Constants.DVID_CLOSURE_TYPE_MATURITY));
 		
-		newInvestment = new Investment(
-				renewedInvestment.getInvestor(), 
-				renewedInvestment.getProductProvider(),
-				renewedInvestment.getDematAccount(),
-				renewedInvestment.getFacilitator(),
-				renewedInvestment.getInvestorIdWithProvider(),
-				renewedInvestment.getProductIdOfProvider(),
-				renewalVO.getInvestmentIdWithProvider(),
-				renewedInvestment.getProductName(),
-				renewedInvestment.getProductType(),
-				renewalVO.getRealisationAmount(),
-				renewalVO.getRateOfInterest(),
-				renewedInvestment.getReceiptAccountingBasis(),
-				renewedInvestment.getTaxability(),
-				renewedInvestment,
-				Constants.domainValueCache.get(Constants.DVID_NEW_INVESTMENT_REASON_RENEWAL),
-				renewalVO.getProductEndDate(),
-				false,
-				null,
-				null,
-				renewedInvestment.isAccrualApplicable(),
-				null);
-		newInvestment = investmentRepository.save(newInvestment);
-
 		investmentTransactionList = investmentTransactionRepository.findByInvestmentOrderByDueDateDesc(renewedInvestment);
 		if(investmentTransactionList.size() == 0) {
 			throw new AppException("No Investment Transactions found for the investment", null);
@@ -150,67 +133,140 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		
 		riReceiptTransaction = investmentTransactionList.get(0);
 		if(riReceiptTransaction.getDueAmount() == null) {
-			riReceiptTransaction.setDueAmount(renewalVO.getRealisationAmount());
+			riReceiptTransaction.setDueAmount(realisationAmount);
 		}
-		riReceiptTransaction.setTdsAmount(renewalVO.getTdsAmount());
 		riReceiptTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
-		riReceiptTransaction.setInterestAmount(renewalVO.getInterestAmount());
-		if (riReceiptTransaction.getDueAmount() != renewalVO.getRealisationAmount()) {
-			riReceiptTransaction.setSettledAmount(renewalVO.getRealisationAmount());
+		if (riReceiptTransaction.getDueAmount() != realisationAmount) {
+			riReceiptTransaction.setSettledAmount(realisationAmount);
 		}
-		
-		niPaymentTransaction = new InvestmentTransaction(
-				newInvestment,
-				Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_PAYMENT),
-				renewalVO.getRealisationDate(),
-				renewalVO.getRealisationAmount(),
-				Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED),
-				null,
-				null,
-				null,
-				null,
-				null,
-				UtilFuncs.computeAssessmentYear(renewalVO.getRealisationDate()),
-				null);
-		niPaymentTransaction = investmentTransactionRepository.save(niPaymentTransaction);
-		
-		niReceiptTransaction = new InvestmentTransaction(
-				newInvestment,
-				Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_RECEIPT),
-				renewalVO.getProductEndDate(),
-				renewalVO.getMaturityAmount(),
-				Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
-				null,
-				renewalVO.getRealisationAmount(),
-				null,
-				null,
-				riReceiptTransaction.getTaxability(),
-				UtilFuncs.computeAssessmentYear(renewalVO.getProductEndDate()),
-				null);
-		niReceiptTransaction = investmentTransactionRepository.save(niReceiptTransaction);
 		
 		riReceiptRealisation = new Realisation(
 				riReceiptTransaction,
-				renewalVO.getRealisationDate(),
+				realisationDate,
 				Constants.domainValueCache.get(Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
 				null,
-				renewalVO.getRealisationAmount());
+				realisationAmount);
 		riReceiptRealisation = realisationRepository.save(riReceiptRealisation);
 		
-		niPaymentRealisation = new Realisation(
-				niPaymentTransaction,
-				renewalVO.getRealisationDate(),
-				Constants.domainValueCache.get(Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
+		newInvestment = new Investment(
+				renewedInvestment.getInvestor(),
+				renewedInvestment.getProductProvider(),
+				renewedInvestment.getDematAccount(),
+				renewedInvestment.getFacilitator(),
+				renewedInvestment.getInvestorIdWithProvider(),
+				renewedInvestment.getProductIdOfProvider(),
+				renewalVO.getInvestmentIdWithProvider(),
+				renewedInvestment.getProductName(),
+				renewedInvestment.getProductType(),
 				null,
-				renewalVO.getRealisationAmount());
-		niPaymentRealisation = realisationRepository.save(niPaymentRealisation);
+				renewalVO.getRateOfInterest(),
+				renewedInvestment.getReceiptAccountingBasis(),
+				renewedInvestment.getTaxability(),
+				renewedInvestment,
+				Constants.domainValueCache.get(Constants.DVID_NEW_INVESTMENT_REASON_RENEWAL),
+				renewalVO.getProductEndDate(),
+				false,
+				null,
+				null,
+				renewedInvestment.isAccrualApplicable(),
+				null);
+		
+		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
 		
 		realisationRepository.flush();
 		riReceiptRealisation.setDetailsReference(niPaymentRealisation.getId());
 		realisationRepository.save(riReceiptRealisation);
-		niPaymentRealisation.setDetailsReference(riReceiptRealisation.getId());
-		realisationRepository.save(niPaymentRealisation);
 		
 		System.out.println("renewal completed.");
+	}
+	
+	private Realisation openNew(Investment newInvestment, List<ScheduleVO> paymentScheduleVOList, List<ScheduleVO> receiptScheduleVOList, List<ScheduleVO> accrualScheduleVOList, Long riReceiptRealisationId, Long bankDvId) {
+		InvestmentTransaction niPaymentTransaction, niReceiptTransaction, niAccrualTransaction;
+		Realisation niPaymentRealisation = null;
+		SavingsAccountTransaction niSavingsAccountTransaction = null;
+		boolean is_first;
+		Float worth;
+		
+		newInvestment = investmentRepository.save(newInvestment);
+
+		is_first = true;
+		worth = 0F;
+		for(ScheduleVO paymentScheduleVO : paymentScheduleVOList) {
+			niPaymentTransaction = new InvestmentTransaction(
+					newInvestment,
+					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_PAYMENT),
+					paymentScheduleVO.getDueDate(),
+					paymentScheduleVO.getDueAmount(),
+					Constants.domainValueCache.get(is_first? Constants.DVID_TRANSACTION_STATUS_COMPLETED : Constants.DVID_TRANSACTION_STATUS_PENDING),
+					null,
+					null,
+					null,
+					null,
+					null,
+					UtilFuncs.computeAssessmentYear(paymentScheduleVO.getDueDate()),
+					null);
+			niPaymentTransaction = investmentTransactionRepository.save(niPaymentTransaction);
+			
+			worth += paymentScheduleVO.getDueAmount();
+			
+			if (is_first) {
+				if (bankDvId != null) {
+					niSavingsAccountTransaction = new SavingsAccountTransaction(
+							Constants.domainValueCache.get(bankDvId),
+							paymentScheduleVO.getDueDate(),
+							paymentScheduleVO.getDueAmount());
+					niSavingsAccountTransaction = savingsAccountTransactionRepository.save(niSavingsAccountTransaction);
+				}
+				niPaymentRealisation = new Realisation(
+						niPaymentTransaction,
+						paymentScheduleVO.getDueDate(),
+						Constants.domainValueCache.get(riReceiptRealisationId == null? (bankDvId == null? Constants.DVID_REALISATION_TYPE_CASH : Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) : Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
+						riReceiptRealisationId == null? niSavingsAccountTransaction.getId() : riReceiptRealisationId,
+						paymentScheduleVO.getDueAmount());
+				niPaymentRealisation = realisationRepository.save(niPaymentRealisation);
+				is_first = false;
+			}
+		}
+		
+		if (worth > 0) {
+			newInvestment.setWorth(worth);
+			investmentRepository.save(newInvestment);
+		}
+		
+		for(ScheduleVO receiptScheduleVO : receiptScheduleVOList) {
+			niReceiptTransaction = new InvestmentTransaction(
+					newInvestment,
+					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_RECEIPT),
+					receiptScheduleVO.getDueDate(),
+					receiptScheduleVO.getDueAmount(),
+					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
+					null,
+					null,
+					null,
+					null,
+					null,
+					UtilFuncs.computeAssessmentYear(receiptScheduleVO.getDueDate()),
+					null);
+			niReceiptTransaction = investmentTransactionRepository.save(niReceiptTransaction);
+		}
+		
+		for(ScheduleVO accrualScheduleVO : accrualScheduleVOList) {
+			niAccrualTransaction = new InvestmentTransaction(
+					newInvestment,
+					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_ACCRUAL),
+					accrualScheduleVO.getDueDate(),
+					accrualScheduleVO.getDueAmount(),
+					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
+					null,
+					null,
+					null,
+					null,
+					null,
+					UtilFuncs.computeAssessmentYear(accrualScheduleVO.getDueDate()),
+					null);
+			niAccrualTransaction = investmentTransactionRepository.save(niAccrualTransaction);
+		}
+		
+		return niPaymentRealisation;
 	}
 }

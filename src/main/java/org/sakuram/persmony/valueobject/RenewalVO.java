@@ -1,6 +1,7 @@
 package org.sakuram.persmony.valueobject;
 
 import java.sql.Date;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,13 +12,11 @@ import lombok.Setter;
 public class RenewalVO {
 	// Being extended
 	long investmentId;
-	float realisationAmount;
-	Date realisationDate;
-	Float tdsAmount;
-	Float interestAmount;
 	// New
 	String investmentIdWithProvider;
-	Date productEndDate;
 	Float rateOfInterest;
-	Float maturityAmount;
+	Date productEndDate;
+	List<ScheduleVO> paymentScheduleVOList;
+	List<ScheduleVO> receiptScheduleVOList;
+	List<ScheduleVO> accrualScheduleVOList;
 }

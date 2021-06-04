@@ -24,8 +24,10 @@ public class Constants {
 	public static final long DVID_TRANSACTION_STATUS_COMPLETED = 71;
 	public static final long DVID_TRANSACTION_TYPE_PAYMENT = 72;
 	public static final long DVID_TRANSACTION_TYPE_RECEIPT = 73;
+	public static final long DVID_TRANSACTION_TYPE_ACCRUAL = 74;
 	public static final long DVID_CLOSURE_TYPE_MATURITY = 76;
 	public static final long DVID_REALISATION_TYPE_SAVINGS_ACCOUNT = 101;
+	public static final long DVID_REALISATION_TYPE_CASH = 102;
 	public static final long DVID_REALISATION_TYPE_ANOTHER_REALISATION = 103;
 	
 	public static final byte ASSESSMENT_YEAR_START_MONTH = 4;
