@@ -44,6 +44,10 @@ public class UtilFuncs {
 		}
 	}
 	
+	public static Boolean createBoolean(String booleanStr) {
+		return booleanStr == null ? null : Boolean.valueOf(booleanStr);
+	}
+	
     public static List<ScheduleVO> parseScheduleData(String inStr) {
     	List<ScheduleVO> scheduleVOList;
     	Matcher matcher;
@@ -51,8 +55,11 @@ public class UtilFuncs {
     	Float value;
     	int matcherEnd;
     	
-    	inStr = inStr.replaceAll("\\s+", "");
     	scheduleVOList = new ArrayList<ScheduleVO>();
+    	if (inStr == null) {
+        	return scheduleVOList;
+    	}
+    	inStr = inStr.replaceAll("\\s+", "");
     	matcherEnd = 0;
     	matcher = schedulePattern.matcher(inStr);
         while (matcher.find()) {
@@ -66,7 +73,7 @@ public class UtilFuncs {
         	for (Integer year : yearsList) {
         		for (Integer month : monthsList) {
         			for (Integer day : daysList) {
-        				scheduleVOList.add(new ScheduleVO(Date.valueOf(year + "-" + month + "-" + day), value));
+        				scheduleVOList.add(new ScheduleVO(Date.valueOf(year + "-" + month + "-" + day), value == 0? null : value));
         			}
         		}
         	}

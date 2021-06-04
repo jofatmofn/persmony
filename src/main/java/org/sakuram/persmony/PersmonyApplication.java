@@ -21,6 +21,7 @@ import org.sakuram.persmony.service.ReportService;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
+import org.sakuram.persmony.valueobject.InvestVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
@@ -105,6 +106,33 @@ public class PersmonyApplication implements CommandLineRunner {
     		    	    					UtilFuncs.parseScheduleData(record.get(6)),
     		    	    					UtilFuncs.parseScheduleData(record.get(7)));
     		    					moneyTransactionService.renewal(renewalVO);
+	    		    				System.out.println(String.format("Processed %s", record.toString()));
+    		    				}
+    		    				catch (AppException aE) {
+	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+    		    				}
+    		    	    		break;
+    		    	    	case "invest":
+		    	    			InvestVO investVO;
+    		    				try {
+    		    	    			investVO = new InvestVO(
+    		    	    					NumberUtils.createLong(record.get(1)),
+    		    	    					NumberUtils.createLong(record.get(2)),
+    		    	    					record.get(3),
+    		    	    					record.get(4),
+    		    	    					record.get(5),
+    		    	    					NumberUtils.createLong(record.get(6)),
+    		    	    					NumberUtils.createLong(record.get(7)),
+    		    	    					NumberUtils.createLong(record.get(8)),
+    		    	    					UtilFuncs.createBoolean(record.get(9)),
+    		    	    					NumberUtils.createLong(record.get(10)),
+    		    	    					record.get(11),
+    		    	    					NumberUtils.createFloat(record.get(12)),
+    		    	    					UtilFuncs.createDate(record.get(13)),
+    		    	    					UtilFuncs.parseScheduleData(record.get(14)),
+    		    	    					UtilFuncs.parseScheduleData(record.get(15)),
+    		    	    					UtilFuncs.parseScheduleData(record.get(16)));
+    		    					moneyTransactionService.invest(investVO);
 	    		    				System.out.println(String.format("Processed %s", record.toString()));
     		    				}
     		    				catch (AppException aE) {

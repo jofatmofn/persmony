@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
+import org.sakuram.persmony.valueobject.InvestVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
@@ -180,6 +181,37 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		System.out.println("renewal completed.");
 	}
 	
+	public void invest(InvestVO investVO) {
+		Investment newInvestment;
+		
+		newInvestment = new Investment(
+				Constants.domainValueCache.get(investVO.getInvestorDvId()),
+				Constants.domainValueCache.get(investVO.getProductProviderDvId()),
+				Constants.domainValueCache.get(investVO.getDematAccountDvId()),
+				null,
+				investVO.getInvestorIdWithProvider(),
+				investVO.getProductIdOfProvider(),
+				investVO.getInvestmentIdWithProvider(),
+				investVO.getProductName(),
+				Constants.domainValueCache.get(investVO.getProductTypeDvId()),
+				null,
+				investVO.getRateOfInterest(),
+				null,
+				Constants.domainValueCache.get(investVO.getTaxabilityDvId()),
+				null,
+				null,
+				investVO.getProductEndDate(),
+				false,
+				null,
+				null,
+				investVO.getIsAccrualApplicable(),
+				null);
+		
+		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getBankDvId());
+		
+		System.out.println("invest completed.");
+	}
+	
 	private Realisation openNew(Investment newInvestment, List<ScheduleVO> paymentScheduleVOList, List<ScheduleVO> receiptScheduleVOList, List<ScheduleVO> accrualScheduleVOList, Long riReceiptRealisationId, Long bankDvId) {
 		InvestmentTransaction niPaymentTransaction, niReceiptTransaction, niAccrualTransaction;
 		Realisation niPaymentRealisation = null;
@@ -221,7 +253,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 						niPaymentTransaction,
 						paymentScheduleVO.getDueDate(),
 						Constants.domainValueCache.get(riReceiptRealisationId == null? (bankDvId == null? Constants.DVID_REALISATION_TYPE_CASH : Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) : Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
-						riReceiptRealisationId == null? niSavingsAccountTransaction.getId() : riReceiptRealisationId,
+						riReceiptRealisationId == null? (niSavingsAccountTransaction == null ? null : niSavingsAccountTransaction.getId()) : riReceiptRealisationId,
 						paymentScheduleVO.getDueAmount());
 				niPaymentRealisation = realisationRepository.save(niPaymentRealisation);
 				is_first = false;
