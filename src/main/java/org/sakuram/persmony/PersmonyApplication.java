@@ -148,6 +148,10 @@ public class PersmonyApplication implements CommandLineRunner {
     				List<Object[]> recordList = null;
     				String outFile = null;
     	    		switch(args[1].toLowerCase()) {
+    	    			case "investmentsWithPendingTransactions":
+    	    				recordList = reportService.investmentsWithPendingTransactions();
+    	    				outFile = "investmentsWithPendingTransactions.csv";
+    	    				break;
     	    			case "pendingtransactions":
     	    				recordList = reportService.pendingTransactions();
     	    				outFile = "pendingTransactions.csv";

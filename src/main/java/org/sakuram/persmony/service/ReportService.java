@@ -9,6 +9,7 @@ import java.util.Map;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.repository.InvestmentRepository;
+import org.sakuram.persmony.repository.InvestmentTransactionRepository;
 import org.sakuram.persmony.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReportService {
 	@Autowired
 	InvestmentRepository investmentRepository;
+	@Autowired
+	InvestmentTransactionRepository investmentTransactionRepository;
 
 	final Integer CRITERION_INVESTOR = 1;
 	final Integer CRITERION_IS_CLOSED = 2;
 	final Integer CRITERION_TRANSACTION_TYPE = 3;
 	final Integer CRITERION_TRANSACTION_STATUS = 4;
 	
-	public List<Object[]> pendingTransactions() {
+	public List<Object[]> investmentsWithPendingTransactions() {
 		Map<Integer, List<String>> criteriaMap;
 		
 		criteriaMap = new HashMap<Integer, List<String>>();
@@ -65,6 +68,15 @@ public class ReportService {
 				// TODO: Update existing record, than always adding to recordList
 			}
 		}
+		return recordList;
+	}
+	
+	public List<Object[]> pendingTransactions() {
+		List<Object[]> recordList;
+		
+		recordList = investmentTransactionRepository.findPendingTransactions();
+		recordList.add(0, new Object[]{"Date", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Returned Principal"});
+		
 		return recordList;
 	}
 }
