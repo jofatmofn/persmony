@@ -69,7 +69,8 @@ public class PersmonyApplication implements CommandLineRunner {
         		    						NumberUtils.createLong(record.get(1)),
         		    						NumberUtils.createFloat(record.get(2)),
         		    						UtilFuncs.createDate(record.get(3)),
-        		    						NumberUtils.createLong(record.get(4)));
+        		    						NumberUtils.createLong(record.get(4)),
+        		    						null);
     		    					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
 	    		    				System.out.println(String.format("Processed %s", record.toString()));
     		    				}
@@ -88,6 +89,23 @@ public class PersmonyApplication implements CommandLineRunner {
         		    						UtilFuncs.createDate(record.get(4)),
         		    						NumberUtils.createLong(record.get(5)));
     		    					moneyTransactionService.txnSingleRealisationWithBank(txnSingleRealisationWithBankVO);
+	    		    				System.out.println(String.format("Processed %s", record.toString()));
+    		    				}
+    		    				catch (AppException aE) {
+	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+    		    				}
+    		    	    		break;
+    		    	    	case "singlelastrealisationwithbank":
+    		    				SingleRealisationWithBankVO singleRealisationWithBankVO2;
+    		    				
+    		    				try {
+        		    				singleRealisationWithBankVO2 = new SingleRealisationWithBankVO(
+        		    						NumberUtils.createLong(record.get(1)),
+        		    						NumberUtils.createFloat(record.get(2)),
+        		    						UtilFuncs.createDate(record.get(3)),
+        		    						NumberUtils.createLong(record.get(4)),
+        		    						NumberUtils.createLong(record.get(5)));
+    		    					moneyTransactionService.singleLastRealisationWithBank(singleRealisationWithBankVO2);
 	    		    				System.out.println(String.format("Processed %s", record.toString()));
     		    				}
     		    				catch (AppException aE) {

@@ -13,4 +13,5 @@ public class SingleRealisationWithBankVO {
 	Float amount;
 	Date transactionDate;
 	long bankAccountDvId;
+	Long closureTypeDvId;
 }

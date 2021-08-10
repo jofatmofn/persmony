@@ -92,8 +92,28 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				investmentTransaction.getId(),
 				txnSingleRealisationWithBankVO.getAmount(),
 				txnSingleRealisationWithBankVO.getTransactionDate(),
-				txnSingleRealisationWithBankVO.getBankAccountDvId()));
+				txnSingleRealisationWithBankVO.getBankAccountDvId(),
+				null));
 		System.out.println("txnSingleRealisationWithBank completed.");
+	}
+	
+	public void singleLastRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO) {
+		Investment investment;
+		InvestmentTransaction investmentTransaction;
+		
+		singleRealisationWithBank(singleRealisationWithBankVO);
+		investmentTransaction = investmentTransactionRepository.findById(singleRealisationWithBankVO.getInvestmentTransactionId())
+				.orElseThrow(() -> new AppException("Invalid Group Type " + singleRealisationWithBankVO.getInvestmentTransactionId(), null));
+		investment = investmentTransaction.getInvestment();
+		investment.setClosed(true);
+		investment.setClosureDate(singleRealisationWithBankVO.getTransactionDate());
+		investment.setClosureType(Constants.domainValueCache.get(singleRealisationWithBankVO.getClosureTypeDvId()));
+		
+		for(InvestmentTransaction childInvestmentTransaction : investment.getInvestmentTransactionList()) {
+			if(childInvestmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING) {
+				childInvestmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_CANCELLED));
+			}
+		}
 	}
 	
 	public void renewal(RenewalVO renewalVO) {

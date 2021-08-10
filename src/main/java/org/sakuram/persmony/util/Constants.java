@@ -21,6 +21,7 @@ public class Constants {
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_TRANSACTION_STATUS_PENDING = 69;
+	public static final long DVID_TRANSACTION_STATUS_CANCELLED = 70;
 	public static final long DVID_TRANSACTION_STATUS_COMPLETED = 71;
 	public static final long DVID_TRANSACTION_TYPE_PAYMENT = 72;
 	public static final long DVID_TRANSACTION_TYPE_RECEIPT = 73;
