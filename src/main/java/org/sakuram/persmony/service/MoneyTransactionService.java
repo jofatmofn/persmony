@@ -50,9 +50,9 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		investmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
 		if (investmentTransaction.getDueAmount() == null) {
 			investmentTransaction.setDueAmount(singleRealisationWithBankVO.getAmount());
+		} else if (investmentTransaction.getDueAmount() != singleRealisationWithBankVO.getAmount()) {
+			investmentTransaction.setSettledAmount(singleRealisationWithBankVO.getAmount());
 		}
-		// investment = investmentTransaction.getInvestment();
-		// TODO: Close the investment if it's the last investmentTransaction?
 		
 		savingsAccountTransaction = new SavingsAccountTransaction(Constants.domainValueCache.get(singleRealisationWithBankVO.getBankAccountDvId()), singleRealisationWithBankVO.getTransactionDate(), singleRealisationWithBankVO.getAmount());
 		savingsAccountTransaction = savingsAccountTransactionRepository.save(savingsAccountTransaction);
@@ -155,11 +155,10 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		riReceiptTransaction = investmentTransactionList.get(0);
 		if(riReceiptTransaction.getDueAmount() == null) {
 			riReceiptTransaction.setDueAmount(realisationAmount);
-		}
-		riReceiptTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
-		if (riReceiptTransaction.getDueAmount() != realisationAmount) {
+		} else if (riReceiptTransaction.getDueAmount() != realisationAmount) {
 			riReceiptTransaction.setSettledAmount(realisationAmount);
 		}
+		riReceiptTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
 		
 		riReceiptRealisation = new Realisation(
 				riReceiptTransaction,
