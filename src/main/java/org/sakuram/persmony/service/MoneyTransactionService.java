@@ -180,7 +180,6 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				renewedInvestment.getProductType(),
 				null,
 				renewalVO.getRateOfInterest(),
-				renewedInvestment.getReceiptAccountingBasis(),
 				renewedInvestment.getTaxability(),
 				renewedInvestment,
 				Constants.domainValueCache.get(Constants.DVID_NEW_INVESTMENT_REASON_RENEWAL),
@@ -188,7 +187,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				false,
 				null,
 				null,
-				renewedInvestment.isAccrualApplicable(),
+				renewedInvestment.getIsAccrualApplicable(),
 				null);
 		
 		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
@@ -215,7 +214,6 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				Constants.domainValueCache.get(investVO.getProductTypeDvId()),
 				null,
 				investVO.getRateOfInterest(),
-				null,
 				Constants.domainValueCache.get(investVO.getTaxabilityDvId()),
 				null,
 				null,
@@ -300,6 +298,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 					null);
 			niReceiptTransaction = investmentTransactionRepository.save(niReceiptTransaction);
 		}
+		// TODO: For last receipt, due amount = principal amount + interest amount and returned principal amount = principal amount
 		
 		for(ScheduleVO accrualScheduleVO : accrualScheduleVOList) {
 			niAccrualTransaction = new InvestmentTransaction(

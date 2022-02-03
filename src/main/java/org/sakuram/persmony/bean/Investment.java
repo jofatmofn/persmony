@@ -59,7 +59,7 @@ public class Investment {
 	@Column(name="investment_id_with_provider", length=63, nullable=false)
 	private String investmentIdWithProvider;
 	
-	@Column(name="product_name", length=127, nullable=false)
+	@Column(name="product_name", length=127, nullable=true)
 	private String productName;
 	
 	@ManyToOne
@@ -71,10 +71,6 @@ public class Investment {
 	
 	@Column(name="rate_of_interest", nullable=true)
 	private Float rateOfInterest;
-	
-	@ManyToOne
-	@JoinColumn(name="receipt_accounting_basis_fk", nullable=true)
-	private DomainValue receiptAccountingBasis;
 	
 	@ManyToOne
 	@JoinColumn(name="taxability_fk", nullable=true)
@@ -102,14 +98,14 @@ public class Investment {
 	private Date closureDate;
 	
 	@Column(name="is_accrual_applicable", nullable=true)
-	private boolean isAccrualApplicable;
+	private Boolean isAccrualApplicable;
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "investment", cascade = CascadeType.ALL)
 	@OrderBy("dueDate")
 	private List<InvestmentTransaction> investmentTransactionList;
 
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float rateOfInterest, DomainValue receiptAccountingBasis, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList) {
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;
@@ -121,7 +117,6 @@ public class Investment {
 		this.productType = productType;
 		this.worth = worth;
 		this.rateOfInterest = rateOfInterest;
-		this.receiptAccountingBasis = receiptAccountingBasis;
 		this.taxability = taxability;
 		this.previousInvestment = previousInvestment;
 		this.newInvestmentReason = newInvestmentReason;

@@ -118,7 +118,9 @@ public class UtilFuncs {
     }
 
     public static void main(String[] args){
-    	parseScheduleData("[2022-2022] [3] [31] 725.00,[2030, 2031] [3] [31] 600.00");
-    	
+    	for (ScheduleVO scheduleVO : parseScheduleData("[2022-2022] [3] [31] 725.00,[2030, 2031] [3] [31] 600.00")) {
+    		System.out.print(scheduleVO.getDueDate());
+    		System.out.println(scheduleVO.getDueAmount());
+    	}
     }
 }

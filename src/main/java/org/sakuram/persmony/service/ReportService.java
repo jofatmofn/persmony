@@ -52,7 +52,8 @@ public class ReportService {
 					!criteriaMap.get(CRITERION_IS_CLOSED).contains(String.valueOf(investment.isClosed())))
 				continue;
 			recordList.add(new Object[]{investment.getId(), investment.getInvestor().getValue(), investment.getProductProvider().getValue(),
-					investment.getProductName(), investment.getInvestmentIdWithProvider(), investment.isClosed()});
+					investment.getProductName() == null ? investment.getProductType().getValue() : investment.getProductName(),
+					investment.getInvestmentIdWithProvider(), investment.isClosed()});
 			for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
 				if (criteriaMap.containsKey(CRITERION_TRANSACTION_TYPE) &&
 						!criteriaMap.get(CRITERION_TRANSACTION_TYPE).contains(String.valueOf(investmentTransaction.getTransactionType().getId())))

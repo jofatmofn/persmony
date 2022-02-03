@@ -57,6 +57,7 @@ public class PersmonyApplication implements CommandLineRunner {
     				Reader in = new InputStreamReader(new BOMInputStream(new FileInputStream(args[1])), "UTF-8");
     				CSVParser parser = new CSVParser(in, CSVFormat.EXCEL.withHeader().withSkipHeaderRecord(true).withNullString(""));
     		    	for (CSVRecord record : parser) {
+	    				System.out.println(String.format("Record: %s", record.toString()));
     		    	    switch(record.get(0).toLowerCase()) {
     		    	    	case "checkifitruns":
     		    	    		System.out.println("PersMony Application Runs!!!");
@@ -72,10 +73,10 @@ public class PersmonyApplication implements CommandLineRunner {
         		    						NumberUtils.createLong(record.get(4)),
         		    						null);
     		    					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
-	    		    				System.out.println(String.format("Processed %s", record.toString()));
+	    		    				System.out.println("Processed");
     		    				}
     		    				catch (AppException aE) {
-	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+	    		    				System.out.println("Skipped");
     		    				}
     		    	    		break;
     		    	    	case "txnsinglerealisationwithbank":
@@ -89,10 +90,10 @@ public class PersmonyApplication implements CommandLineRunner {
         		    						UtilFuncs.createDate(record.get(4)),
         		    						NumberUtils.createLong(record.get(5)));
     		    					moneyTransactionService.txnSingleRealisationWithBank(txnSingleRealisationWithBankVO);
-	    		    				System.out.println(String.format("Processed %s", record.toString()));
+	    		    				System.out.println("Processed");
     		    				}
     		    				catch (AppException aE) {
-	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+	    		    				System.out.println("Skipped");
     		    				}
     		    	    		break;
     		    	    	case "singlelastrealisationwithbank":
@@ -106,10 +107,10 @@ public class PersmonyApplication implements CommandLineRunner {
         		    						NumberUtils.createLong(record.get(4)),
         		    						NumberUtils.createLong(record.get(5)));
     		    					moneyTransactionService.singleLastRealisationWithBank(singleRealisationWithBankVO2);
-	    		    				System.out.println(String.format("Processed %s", record.toString()));
+	    		    				System.out.println("Processed");
     		    				}
     		    				catch (AppException aE) {
-	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+	    		    				System.out.println("Skipped");
     		    				}
     		    	    		break;
     		    	    	case "renewal":
@@ -124,10 +125,10 @@ public class PersmonyApplication implements CommandLineRunner {
     		    	    					UtilFuncs.parseScheduleData(record.get(6)),
     		    	    					UtilFuncs.parseScheduleData(record.get(7)));
     		    					moneyTransactionService.renewal(renewalVO);
-	    		    				System.out.println(String.format("Processed %s", record.toString()));
+	    		    				System.out.println("Processed");
     		    				}
     		    				catch (AppException aE) {
-	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+	    		    				System.out.println("Skipped");
     		    				}
     		    	    		break;
     		    	    	case "invest":
@@ -151,15 +152,16 @@ public class PersmonyApplication implements CommandLineRunner {
     		    	    					UtilFuncs.parseScheduleData(record.get(15)),
     		    	    					UtilFuncs.parseScheduleData(record.get(16)));
     		    					moneyTransactionService.invest(investVO);
-	    		    				System.out.println(String.format("Processed %s", record.toString()));
+	    		    				System.out.println("Processed");
     		    				}
     		    				catch (AppException aE) {
-	    		    				System.out.println(String.format("Skipped %s", record.toString()));
+	    		    				System.out.println("Skipped");
     		    				}
     		    	    		break;
     		    	    	default:
     		    	    		quitCodeWithError(String.format("%s is not a valid transaction type.", record.get(0)));
     		    	    }
+	    				System.out.println("*****");
     		    	}
     				break;
     			case "report":
