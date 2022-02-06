@@ -76,7 +76,7 @@ public class ReportService {
 		List<Object[]> recordList;
 		
 		recordList = investmentTransactionRepository.findPendingTransactions();
-		recordList.add(0, new Object[]{"Date", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Returned Principal"});
+		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Returned Principal"});
 		
 		return recordList;
 	}
