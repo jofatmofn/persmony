@@ -36,11 +36,12 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 	@Autowired
 	RealisationRepository realisationRepository;
 	
-	public void singleRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO) {
+	public void singleRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO, Character invoker) {
 		// Investment investment;
-		InvestmentTransaction investmentTransaction;
+		InvestmentTransaction investmentTransaction, dynamicReceiptIt;
 		SavingsAccountTransaction savingsAccountTransaction;
 		Realisation realisation;
+		Date dynamicReceiptDueDate;
 		
 		investmentTransaction = investmentTransactionRepository.findById(singleRealisationWithBankVO.getInvestmentTransactionId())
 			.orElseThrow(() -> new AppException("Invalid Group Type " + singleRealisationWithBankVO.getInvestmentTransactionId(), null));
@@ -60,7 +61,31 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		realisation = new Realisation(investmentTransaction, singleRealisationWithBankVO.getTransactionDate(), Constants.domainValueCache.get(Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT), savingsAccountTransaction.getId(), singleRealisationWithBankVO.getAmount());
 		realisation = realisationRepository.save(realisation);
 		
-		System.out.println("singleRealisationWithBank completed.");
+		if (invoker == null && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+			if (investmentTransaction.getInvestment().getDynamicReceiptPeriodicity() == null) {
+			}
+			else if (investmentTransaction.getInvestment().getDynamicReceiptPeriodicity().equals(Constants.DYNAMIC_REALISATION_PERIODICITY_YEAR)) {
+				dynamicReceiptDueDate = Date.valueOf(investmentTransaction.getDueDate().toLocalDate().plusYears(1));
+				dynamicReceiptIt = new InvestmentTransaction(
+						investmentTransaction.getInvestment(),
+						investmentTransaction.getTransactionType(),
+						dynamicReceiptDueDate,
+						investmentTransaction.getDueAmount(),
+						Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
+						null,
+						null,
+						null,
+						null,
+						investmentTransaction.getTaxability(),
+						UtilFuncs.computeAssessmentYear(dynamicReceiptDueDate),
+						null);
+				dynamicReceiptIt = investmentTransactionRepository.save(dynamicReceiptIt);
+			}
+			else {
+				throw new AppException("Unsupported Dynamic Receipt Periodicity " + investmentTransaction.getInvestment().getDynamicReceiptPeriodicity(), null);
+			}
+			System.out.println("singleRealisationWithBank completed.");
+		}
 	}
 	
 	public void txnSingleRealisationWithBank(TxnSingleRealisationWithBankVO txnSingleRealisationWithBankVO) {
@@ -93,7 +118,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				txnSingleRealisationWithBankVO.getAmount(),
 				txnSingleRealisationWithBankVO.getTransactionDate(),
 				txnSingleRealisationWithBankVO.getBankAccountDvId(),
-				null));
+				null), 'T');
 		System.out.println("txnSingleRealisationWithBank completed.");
 	}
 	
@@ -101,7 +126,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		Investment investment;
 		InvestmentTransaction investmentTransaction;
 		
-		singleRealisationWithBank(singleRealisationWithBankVO);
+		singleRealisationWithBank(singleRealisationWithBankVO, 'L');
 		investmentTransaction = investmentTransactionRepository.findById(singleRealisationWithBankVO.getInvestmentTransactionId())
 				.orElseThrow(() -> new AppException("Invalid Group Type " + singleRealisationWithBankVO.getInvestmentTransactionId(), null));
 		investment = investmentTransaction.getInvestment();
@@ -188,6 +213,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				null,
 				null,
 				renewedInvestment.getIsAccrualApplicable(),
+				null,
 				null);
 		
 		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
@@ -222,6 +248,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				null,
 				null,
 				investVO.getIsAccrualApplicable(),
+				null,
 				null);
 		
 		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getBankDvId());

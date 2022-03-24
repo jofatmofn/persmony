@@ -105,7 +105,10 @@ public class Investment {
 	@OrderBy("dueDate")
 	private List<InvestmentTransaction> investmentTransactionList;
 
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList) {
+	@Column(name="dynamic_receipt_periodicity", nullable=true)
+	private Character dynamicReceiptPeriodicity;
+	
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;
@@ -126,5 +129,6 @@ public class Investment {
 		this.closureDate = closureDate;
 		this.isAccrualApplicable = isAccrualApplicable;
 		this.investmentTransactionList = investmentTransactionList;
+		this.dynamicReceiptPeriodicity = dynamicReceiptPeriodicity;
 	}
 }

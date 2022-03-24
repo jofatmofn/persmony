@@ -34,5 +34,7 @@ public class Constants {
 	public static final byte ASSESSMENT_YEAR_START_MONTH = 4;
 	public static final String CSV_DATE_FORMAT = "M/d/yyyy";
 	
+	public static final Character DYNAMIC_REALISATION_PERIODICITY_YEAR = 'Y';
+	
 	public static Map<Long, DomainValue> domainValueCache;
 }

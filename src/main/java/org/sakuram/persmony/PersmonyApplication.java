@@ -72,7 +72,7 @@ public class PersmonyApplication implements CommandLineRunner {
         		    						UtilFuncs.createDate(record.get(3)),
         		    						NumberUtils.createLong(record.get(4)),
         		    						null);
-    		    					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
+    		    					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO, null);
 	    		    				System.out.println("Processed");
     		    				}
     		    				catch (AppException aE) {
