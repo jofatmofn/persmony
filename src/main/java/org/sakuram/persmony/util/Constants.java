@@ -1,5 +1,6 @@
 package org.sakuram.persmony.util;
 
+import java.util.List;
 import java.util.Map;
 
 import org.sakuram.persmony.bean.DomainValue;
@@ -37,4 +38,5 @@ public class Constants {
 	public static final Character DYNAMIC_REALISATION_PERIODICITY_YEAR = 'Y';
 	
 	public static Map<Long, DomainValue> domainValueCache;
+	public static Map<String, List<Long>> categoryDvCache;
 }
