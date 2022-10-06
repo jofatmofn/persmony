@@ -56,7 +56,7 @@ public class UtilFuncs {
     	int matcherEnd;
     	
     	scheduleVOList = new ArrayList<ScheduleVO>();
-    	if (inStr == null) {
+    	if (inStr == null || inStr.equalsIgnoreCase("None")) {
         	return scheduleVOList;
     	}
     	inStr = inStr.replaceAll("\\s+", "");

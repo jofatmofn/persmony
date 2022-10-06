@@ -8,7 +8,10 @@ import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.IdValueVO;
+import org.sakuram.persmony.valueobject.RenewalVO;
+import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
@@ -19,6 +22,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -175,7 +179,6 @@ public class InvestmentTransactionView extends Div {
 					notification = Notification.show("Investment Transaction Saved Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
-					System.out.println("Exception Caught!!!");
 					showError(messageFromException(e));
 				}
 			} finally {
@@ -264,7 +267,6 @@ public class InvestmentTransactionView extends Div {
 					notification = Notification.show("Transaction and Realisation Saved Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
-					System.out.println("Exception Caught!!!");
 					showError(messageFromException(e));
 				}
 			} finally {
@@ -277,13 +279,135 @@ public class InvestmentTransactionView extends Div {
 	}
 	
 	private void handleRenewal(FormLayout formLayout) {
+		TextField oldInvestmentIdTextField, investmentIdWithProviderTextField, paymentScheduleTextField, receiptScheduleTextField, accrualScheduleTextField;
+		NumberField rateOfInterestNumberField;
+		DatePicker productEndDatePicker;
+		Label label1;
+		Button saveButton;
+		
+		// UI Elements
+		label1 = new Label();
+		formLayout.addFormItem(label1, "");
+		label1.getElement().setProperty("innerHTML", "<b>Details of the old investment being renewed</b>");
+		
+		oldInvestmentIdTextField = new TextField();
+		formLayout.addFormItem(oldInvestmentIdTextField, "Persmony Investment Id");
+		
+		label1 = new Label();
+		formLayout.addFormItem(label1, "");
+		label1.getElement().setProperty("innerHTML", "<b>Details of the new/renewed investment</b>");
+		
+		investmentIdWithProviderTextField = new TextField();
+		formLayout.addFormItem(investmentIdWithProviderTextField, "Investment Id with Provider");
+		
+		rateOfInterestNumberField = new NumberField();
+		rateOfInterestNumberField.setMax(100.00);
+		formLayout.addFormItem(rateOfInterestNumberField, "Rate Of Interest%");
+		
+		productEndDatePicker = new DatePicker();
+		formLayout.addFormItem(productEndDatePicker, "Product End Date");
+		
+		paymentScheduleTextField = new TextField();
+		formLayout.addFormItem(paymentScheduleTextField, "Payment Schedule");
+		
+		receiptScheduleTextField = new TextField();
+		receiptScheduleTextField.setValue("None");
+		formLayout.addFormItem(receiptScheduleTextField, "Receipt Schedule");
+		
+		accrualScheduleTextField = new TextField();
+		accrualScheduleTextField.setValue("None");
+		formLayout.addFormItem(accrualScheduleTextField, "Accrual Schedule");
+		
+		saveButton = new Button("Save");
+		formLayout.add(saveButton);
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setDisableOnClick(true);
+		// On click of Save
+		saveButton.addClickListener(event -> {
+			RenewalVO renewalVO;
+			Notification notification;
+			List<ScheduleVO> paymentScheduleVOList;
+			List<ScheduleVO> receiptScheduleVOList;
+			List<ScheduleVO> accrualScheduleVOList;
+
+			try {
+				// Validation
+				if (oldInvestmentIdTextField.getValue() == null || oldInvestmentIdTextField.getValue().equals("")) {
+					showError("Transaction Id of Investment being renewed cannot be Empty");
+					return;
+				}
+				if (investmentIdWithProviderTextField.getValue() == null || investmentIdWithProviderTextField.getValue().equals("")) {
+					showError("Investment Id with Provider cannot be Empty");
+					return;
+				}
+				if (productEndDatePicker.getValue() == null) {
+					showError("Product End Date cannot be Empty");
+					return;
+				}
+				if (paymentScheduleTextField.getValue() == null || paymentScheduleTextField.getValue().equals("")) {
+					showError("Payment Schedule cannot be Empty");
+					return;
+				}
+				try {
+					paymentScheduleVOList = UtilFuncs.parseScheduleData(paymentScheduleTextField.getValue());
+				} catch (AppException e) {
+					showError("Payment Schedule: " + e.getMessage());
+					return;
+				}
+				if (paymentScheduleVOList.isEmpty()) {
+					showError("Payment Schedule cannot be Empty");
+					return;
+				}
+				if (receiptScheduleTextField.getValue() == null || receiptScheduleTextField.getValue().equals("")) {
+					showError("Specify None if there is no Receipt Schedule");
+					return;
+				}
+				try {
+					receiptScheduleVOList = UtilFuncs.parseScheduleData(receiptScheduleTextField.getValue());
+				} catch (AppException e) {
+					showError("Receipt Schedule: " + e.getMessage());
+					return;
+				}
+				if (accrualScheduleTextField.getValue() == null || accrualScheduleTextField.getValue().equals("")) {
+					showError("Specify None if there is no Accrual Schedule");
+					return;
+				}
+				try {
+					accrualScheduleVOList = UtilFuncs.parseScheduleData(accrualScheduleTextField.getValue());
+				} catch (AppException e) {
+					showError("Accrual Schedule: " + e.getMessage());
+					return;
+				}
+				
+				// Back-end Call
+				renewalVO = new RenewalVO(
+						Long.parseLong(oldInvestmentIdTextField.getValue()),
+						investmentIdWithProviderTextField.getValue(),
+						rateOfInterestNumberField.getValue() == null ? null : (float)rateOfInterestNumberField.getValue().doubleValue(),
+						Date.valueOf(productEndDatePicker.getValue()),
+						paymentScheduleVOList,
+						receiptScheduleVOList,
+						accrualScheduleVOList);
+				try {
+					moneyTransactionService.renewal(renewalVO);
+					notification = Notification.show("Renewal Done Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				} catch (Exception e) {
+					showError(messageFromException(e));
+				}
+			} finally {
+				saveButton.setEnabled(true);
+			}
+		});
 	}
 	
 	private String messageFromException(Exception e) {
 		if (e instanceof AppException) {
+			System.out.println("AppException Caught!!!");
 			return e.getMessage();
 		} else {
-			return "Unexpected Error: " + e.getMessage() == null ? "No further details!" : e.getMessage();
+			System.out.println(e.getClass().getName() + " Caught!!!");
+			return "Unexpected Error: " + (e.getMessage() == null ? "No further details!" : e.getMessage());
 		}
 		
 	}
