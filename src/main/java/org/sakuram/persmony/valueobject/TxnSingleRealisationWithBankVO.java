@@ -13,5 +13,5 @@ public class TxnSingleRealisationWithBankVO {
 	long transactionTypeDvId;
 	Float amount;
 	Date transactionDate;
-	long bankAccountDvId;
+	Long bankAccountDvId;
 }

@@ -6,7 +6,7 @@ import java.util.List;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.repository.DomainValueRepository;
 import org.sakuram.persmony.util.Constants;
-import org.sakuram.persmony.valueobject.DomainValueVO;
+import org.sakuram.persmony.valueobject.IdValueVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,15 +37,16 @@ public class MiscService {
     	}
     }
     
-    public List<DomainValueVO> fetchDvOfCategory(String category) {
-    	List<DomainValueVO> domainValueVOList;
+    public List<IdValueVO> fetchDvsOfCategory(String category) {
+    	List<IdValueVO> idValueVOList;
     	DomainValue domainValue;
     	
-    	domainValueVOList = new ArrayList<DomainValueVO>();
+    	idValueVOList = new ArrayList<IdValueVO>();
     	for (Long dvId : Constants.categoryDvCache.get(category)) {
     		domainValue = Constants.domainValueCache.get(dvId);
-    		domainValueVOList.add(new DomainValueVO(domainValue.getId(), domainValue.getCategory(), domainValue.getValue()));
+    		idValueVOList.add(new IdValueVO(domainValue.getId(), domainValue.getValue()));
     	}
-    	return domainValueVOList;
+    	return idValueVOList;
     }
+    
 }

@@ -6,8 +6,7 @@ import lombok.Setter;
 
 @Getter @Setter
 @AllArgsConstructor
-public class DomainValueVO {
-	long domainValueId;
-	String category;
+public class IdValueVO {
+	long id;
 	String value;
 }

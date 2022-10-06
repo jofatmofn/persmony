@@ -94,8 +94,12 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		
 		investment = investmentRepository.findById(txnSingleRealisationWithBankVO.getInvestmentId())
 				.orElseThrow(() -> new AppException("Invalid Investment Id " + txnSingleRealisationWithBankVO.getInvestmentId(), null));
-		if (investment.isClosed()) {
+		if (txnSingleRealisationWithBankVO.getTransactionTypeDvId() != Constants.DVID_TRANSACTION_TYPE_ACCRUAL && investment.isClosed()) {
 			throw new AppException("Investment " + txnSingleRealisationWithBankVO.getInvestmentId() + " no longer Open", null);
+		}
+		
+		if (txnSingleRealisationWithBankVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL && (investment.getIsAccrualApplicable() == null || !investment.getIsAccrualApplicable())) {
+			throw new AppException("Accrual is not applicable for the Investment " + txnSingleRealisationWithBankVO.getInvestmentId(), null);
 		}
 		
 		investmentTransaction = new InvestmentTransaction(
@@ -103,22 +107,25 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				Constants.domainValueCache.get(txnSingleRealisationWithBankVO.getTransactionTypeDvId()),
 				txnSingleRealisationWithBankVO.getTransactionDate(),
 				txnSingleRealisationWithBankVO.getAmount(),
-				Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
+				txnSingleRealisationWithBankVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED) : Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
 				null,
 				null,
-				null,
+				txnSingleRealisationWithBankVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? txnSingleRealisationWithBankVO.getAmount() : null,
 				null,
 				null,
 				UtilFuncs.computeAssessmentYear(txnSingleRealisationWithBankVO.getTransactionDate()),
 				null);
 		investmentTransaction = investmentTransactionRepository.save(investmentTransaction);
+
+		if (txnSingleRealisationWithBankVO.getTransactionTypeDvId() != Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+			singleRealisationWithBank(new SingleRealisationWithBankVO(
+					investmentTransaction.getId(),
+					txnSingleRealisationWithBankVO.getAmount(),
+					txnSingleRealisationWithBankVO.getTransactionDate(),
+					txnSingleRealisationWithBankVO.getBankAccountDvId(),
+					null), 'T');
+		}
 		
-		singleRealisationWithBank(new SingleRealisationWithBankVO(
-				investmentTransaction.getId(),
-				txnSingleRealisationWithBankVO.getAmount(),
-				txnSingleRealisationWithBankVO.getTransactionDate(),
-				txnSingleRealisationWithBankVO.getBankAccountDvId(),
-				null), 'T');
 		System.out.println("txnSingleRealisationWithBank completed.");
 	}
 	

@@ -2,13 +2,15 @@ package org.sakuram.persmony.view;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
-import org.sakuram.persmony.valueobject.DomainValueVO;
+import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
+import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -17,6 +19,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.select.Select;
@@ -32,42 +35,57 @@ public class InvestmentTransactionView extends Div {
 	MiscService miscService;
 
 	public InvestmentTransactionView(MoneyTransactionService moneyTransactionService, MiscService miscService) {
+		Span selectSpan;
 		FormLayout formLayout;
-		Select<String> transactionTypeSelect;
+		Select<String> operationSelect;
 		
 		this.moneyTransactionService = moneyTransactionService;
 		this.miscService = miscService;
-		
+
+		selectSpan = new Span();
 		formLayout = new FormLayout();
-        formLayout.setResponsiveSteps(
+		formLayout.setResponsiveSteps(
                 // Use one column by default
                 new ResponsiveStep("0", 1));
-        
-		transactionTypeSelect = new Select<String>();
-		transactionTypeSelect.setItems("Single Realisation With Bank", "Txn + Single Realisation With Bank", "Single Last Realisation With Bank", "Invest", "Renewal");
-		transactionTypeSelect.setPlaceholder("Select Transaction Type");
-		transactionTypeSelect.addValueChangeListener(event -> {
-			// Notification.show("Selected index" + transactionTypeSelect.getItemPosition(event.getValue()));
-            switch(event.getValue()) {
-            case "Single Realisation With Bank":
-            	handleSingleRealisationWithBank(formLayout, false);
-            	break;
-            case "Txn + Single Realisation With Bank":
-            	handleTxnSingleRealisationWithBank(formLayout);
-            	break;
-            case "Single Last Realisation With Bank":
-            	handleSingleRealisationWithBank(formLayout, true);
-            	break;
-            case "Invest":
-            	handleInvest(formLayout);
-            	break;
-            case "Renewal":
-            	handleRenewal(formLayout);
-            	break;
-            }
+		
+		operationSelect = new Select<String>();
+		operationSelect.setItems("Existing Transaction, Single Realisation With Bank",
+				"Existing Transaction, Single Realisation With Bank, Close Investment",
+				"Accrual OR *New Transaction, Single Realisation With Bank*",
+				"Invest",
+				"Renewal");
+		operationSelect.setLabel("Operation");
+		operationSelect.setPlaceholder("Select Operation");
+		operationSelect.setId("PersmonyOperation");
+		operationSelect.addValueChangeListener(event -> {
+			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+			// TODO: Use id instead of label in the switch-case
+			try {
+	            switch(event.getValue()) {
+	            case "Existing Transaction, Single Realisation With Bank":
+	            	handleSingleRealisationWithBank(formLayout, false);
+	            	break;
+	            case "Accrual OR *New Transaction, Single Realisation With Bank*":
+	            	handleTxnSingleRealisationWithBank(formLayout);
+	            	break;
+	            case "Existing Transaction, Single Realisation With Bank, Close Investment":
+	            	handleSingleRealisationWithBank(formLayout, true);
+	            	break;
+	            case "Invest":
+	            	handleInvest(formLayout);
+	            	break;
+	            case "Renewal":
+	            	handleRenewal(formLayout);
+	            	break;
+	            }
+			} catch (Exception e) {
+				showError("System Error!!! Contact Support.");
+				return;
+			}
         });
 
-		formLayout.addFormItem(transactionTypeSelect, "Transaction Type");
+		selectSpan.add(operationSelect);
+		add(selectSpan);
 		add(formLayout);
 	}
 	
@@ -75,9 +93,9 @@ public class InvestmentTransactionView extends Div {
 		TextField investmentTransactionIdTextField;
 		NumberField amountNumberField;
 		DatePicker transactionDatePicker;
-		Select<DomainValueVO> bankAccountDvSelect, closureTypeDvSelect;
+		Select<IdValueVO> bankAccountDvSelect, closureTypeDvSelect;
 		Button saveButton;
-		List<DomainValueVO> domainValueVOList;
+		List<IdValueVO> idValueVOList;
 		
 		// UI Elements
 		investmentTransactionIdTextField = new TextField();
@@ -89,90 +107,176 @@ public class InvestmentTransactionView extends Div {
 		transactionDatePicker = new DatePicker();
 		formLayout.addFormItem(transactionDatePicker, "Actual Date Paid/Received");
 		
-		bankAccountDvSelect = new Select<DomainValueVO>();
+		bankAccountDvSelect = new Select<IdValueVO>();
 		formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
-		domainValueVOList = miscService.fetchDvOfCategory(Constants.CATEGORY_BANK_ACCOUNT);
-		bankAccountDvSelect.setItemLabelGenerator(domainValueVO -> {
-			return domainValueVO.getValue();
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_BANK_ACCOUNT);
+		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
+			return idValueVO.getValue();
 		});
-		bankAccountDvSelect.setItems(domainValueVOList);
+		bankAccountDvSelect.setItems(idValueVOList);
 		bankAccountDvSelect.setPlaceholder("Select Bank Account");
 
-		closureTypeDvSelect = new Select<DomainValueVO>();
+		closureTypeDvSelect = new Select<IdValueVO>();
 		if (isLast) {
 			formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
-			domainValueVOList = miscService.fetchDvOfCategory(Constants.CATEGORY_CLOSURE_TYPE);
-			closureTypeDvSelect.setItemLabelGenerator(domainValueVO -> {
-				return domainValueVO.getValue();
+			idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_CLOSURE_TYPE);
+			closureTypeDvSelect.setItemLabelGenerator(idValueVO -> {
+				return idValueVO.getValue();
 			});
-			closureTypeDvSelect.setItems(domainValueVOList);
+			closureTypeDvSelect.setItems(idValueVOList);
 			closureTypeDvSelect.setPlaceholder("Select Account Closure Type");
 		}
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setDisableOnClick(true);
 		// On click of Save
 		saveButton.addClickListener(event -> {
 			SingleRealisationWithBankVO singleRealisationWithBankVO;
 			Notification notification;
-			
-			// Validation
-			if (investmentTransactionIdTextField.getValue() == null || investmentTransactionIdTextField.getValue().equals("")) {
-				showError("Investment Transaction Id cannot be Empty");
-				return;
-			}
-			if (amountNumberField.getValue() == null || amountNumberField.getValue().equals("")) {
-				showError("Amount cannot be Empty");
-				return;
-			}
-			if (transactionDatePicker.getValue() == null || transactionDatePicker.getValue().equals("")) {
-				showError("Date cannot be Empty");
-				return;
-			}
-			if (bankAccountDvSelect.getValue() == null || bankAccountDvSelect.getValue().equals("")) {
-				showError("Account cannot be Empty");
-				return;
-			}
-			if (!isLast && (closureTypeDvSelect.getValue() == null || closureTypeDvSelect.getValue().equals(""))) {
-				showError("Account Closure Type cannot be Empty");
-				return;
-			}
-			
-			// Back-end Call
-			singleRealisationWithBankVO = new SingleRealisationWithBankVO(
-					Long.parseLong(investmentTransactionIdTextField.getValue()),
-					(float)amountNumberField.getValue().doubleValue(),
-					Date.valueOf(transactionDatePicker.getValue()),
-					bankAccountDvSelect.getValue().getDomainValueId(),
-					isLast ? closureTypeDvSelect.getValue().getDomainValueId() : null);
-			saveButton.setDisableOnClick(true);
+
 			try {
-				if (isLast) {
-					moneyTransactionService.singleLastRealisationWithBank(singleRealisationWithBankVO);
-				} else {
-					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO, null);
+				// Validation
+				if (investmentTransactionIdTextField.getValue() == null || investmentTransactionIdTextField.getValue().equals("")) {
+					showError("Investment Transaction Id cannot be Empty");
+					return;
 				}
-				notification = Notification.show("Investment Transaction Saved Successfully.");
-				notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-			} catch (Exception e) {
-				System.out.println("Exception Caught!!!");
-				showError(messageFromException(e));
+				if (amountNumberField.getValue() == null) {
+					showError("Amount cannot be Empty");
+					return;
+				}
+				if (transactionDatePicker.getValue() == null) {
+					showError("Date cannot be Empty");
+					return;
+				}
+				if (bankAccountDvSelect.getValue() == null) {
+					showError("Account cannot be Empty");
+					return;
+				}
+				if (isLast && closureTypeDvSelect.getValue() == null) {
+					showError("Account Closure Type cannot be Empty");
+					return;
+				}
+				
+				// Back-end Call
+				singleRealisationWithBankVO = new SingleRealisationWithBankVO(
+						Long.parseLong(investmentTransactionIdTextField.getValue()),
+						(float)amountNumberField.getValue().doubleValue(),
+						Date.valueOf(transactionDatePicker.getValue()),
+						bankAccountDvSelect.getValue().getId(),
+						isLast ? closureTypeDvSelect.getValue().getId() : null);
+				try {
+					if (isLast) {
+						moneyTransactionService.singleLastRealisationWithBank(singleRealisationWithBankVO);
+					} else {
+						moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO, null);
+					}
+					notification = Notification.show("Investment Transaction Saved Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				} catch (Exception e) {
+					System.out.println("Exception Caught!!!");
+					showError(messageFromException(e));
+				}
+			} finally {
+				saveButton.setEnabled(true);
 			}
-			saveButton.setEnabled(true);
 		});
 	}
 	
 	private void handleTxnSingleRealisationWithBank(FormLayout formLayout) {
+		TextField investmentIdTextField;
+		NumberField amountNumberField;
+		DatePicker transactionDatePicker;
+		Select<IdValueVO> bankAccountDvSelect, transactionTypeDvSelect;
+		Button saveButton;
+		List<IdValueVO> idValueVOList;
 		
+		// UI Elements
+		investmentIdTextField = new TextField();
+		formLayout.addFormItem(investmentIdTextField, "Investment Id");
+		
+		transactionTypeDvSelect = new Select<IdValueVO>();
+		formLayout.addFormItem(transactionTypeDvSelect, "Transaction Type");
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_TRANSACTION_TYPE);
+		transactionTypeDvSelect.setItemLabelGenerator(idValueVO -> {
+			return idValueVO.getValue();
+		});
+		transactionTypeDvSelect.setItems(idValueVOList);
+		transactionTypeDvSelect.setPlaceholder("Select Transaction Type");
+		
+		amountNumberField = new NumberField();
+		formLayout.addFormItem(amountNumberField, "Amount Paid/Received");
+		
+		transactionDatePicker = new DatePicker();
+		formLayout.addFormItem(transactionDatePicker, "Date Paid/Received");
+		
+		bankAccountDvSelect = new Select<IdValueVO>();
+		formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_BANK_ACCOUNT);
+		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
+			return idValueVO.getValue();
+		});
+		bankAccountDvSelect.setItems(idValueVOList);
+		bankAccountDvSelect.setPlaceholder("Select Bank Account");
+		
+		saveButton = new Button("Save");
+		formLayout.add(saveButton);
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setDisableOnClick(true);
+		// On click of Save
+		saveButton.addClickListener(event -> {
+			TxnSingleRealisationWithBankVO txnSingleRealisationWithBankVO;
+			Notification notification;
+
+			try {
+				// Validation
+				if (investmentIdTextField.getValue() == null || investmentIdTextField.getValue().equals("")) {
+					showError("Investment Transaction Id cannot be Empty");
+					return;
+				}
+				if (transactionTypeDvSelect.getValue() == null) {
+					showError("Transaction Type cannot be Empty");
+					return;
+				}
+				if (amountNumberField.getValue() == null) {
+					showError("Amount cannot be Empty");
+					return;
+				}
+				if (transactionDatePicker.getValue() == null) {
+					showError("Date cannot be Empty");
+					return;
+				}
+				if (transactionTypeDvSelect.getValue().getId() != Constants.DVID_TRANSACTION_TYPE_ACCRUAL && bankAccountDvSelect.getValue() == null) {
+					showError("Account cannot be Empty");
+					return;
+				}
+				
+				// Back-end Call
+				txnSingleRealisationWithBankVO = new TxnSingleRealisationWithBankVO(
+						Long.parseLong(investmentIdTextField.getValue()),
+						transactionTypeDvSelect.getValue().getId(),
+						(float)amountNumberField.getValue().doubleValue(),
+						Date.valueOf(transactionDatePicker.getValue()),
+						bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId());
+				try {
+					moneyTransactionService.txnSingleRealisationWithBank(txnSingleRealisationWithBankVO);
+					notification = Notification.show("Transaction and Realisation Saved Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				} catch (Exception e) {
+					System.out.println("Exception Caught!!!");
+					showError(messageFromException(e));
+				}
+			} finally {
+				saveButton.setEnabled(true);
+			}
+		});
 	}
 	
 	private void handleInvest(FormLayout formLayout) {
-		
 	}
 	
 	private void handleRenewal(FormLayout formLayout) {
-		
 	}
 	
 	private String messageFromException(Exception e) {
