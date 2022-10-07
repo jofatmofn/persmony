@@ -221,7 +221,6 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				null,
 				renewedInvestment.getIsAccrualApplicable(),
 				null,
-				null,
 				null);
 		
 		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
@@ -257,7 +256,6 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				null,
 				investVO.getIsAccrualApplicable(),
 				null,
-				null,
 				null);
 		
 		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getBankDvId());
@@ -272,6 +270,9 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		boolean is_first;
 		Float worth;
 		
+		if (newInvestment.getIsAccrualApplicable() != null && !newInvestment.getIsAccrualApplicable() && !accrualScheduleVOList.isEmpty()) {
+			throw new AppException("When accrual is not applicable, accrual schedule should not be there.", null);
+		}
 		newInvestment = investmentRepository.save(newInvestment);
 
 		is_first = true;
