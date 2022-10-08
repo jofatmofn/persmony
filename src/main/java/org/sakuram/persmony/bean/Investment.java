@@ -108,7 +108,11 @@ public class Investment {
 	@Column(name="dynamic_receipt_periodicity", nullable=true)
 	private Character dynamicReceiptPeriodicity;
 	
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity) {
+	@ManyToOne
+	@JoinColumn(name="provider_branch_fk", nullable=true)
+	private DomainValue providerBranch;
+	
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;
@@ -130,5 +134,6 @@ public class Investment {
 		this.isAccrualApplicable = isAccrualApplicable;
 		this.investmentTransactionList = investmentTransactionList;
 		this.dynamicReceiptPeriodicity = dynamicReceiptPeriodicity;
+		this.providerBranch = providerBranch;
 	}
 }

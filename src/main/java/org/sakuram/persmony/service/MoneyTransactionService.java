@@ -221,6 +221,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				null,
 				renewedInvestment.getIsAccrualApplicable(),
 				null,
+				null,
 				null);
 		
 		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
@@ -255,6 +256,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				null,
 				null,
 				investVO.getIsAccrualApplicable(),
+				null,
 				null,
 				null);
 		
