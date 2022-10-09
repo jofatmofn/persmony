@@ -51,7 +51,7 @@ public class ReportService {
 			if (criteriaMap.containsKey(CRITERION_IS_CLOSED) &&
 					!criteriaMap.get(CRITERION_IS_CLOSED).contains(String.valueOf(investment.isClosed())))
 				continue;
-			recordList.add(new Object[]{investment.getId(), investment.getInvestor().getValue(), investment.getProductProvider().getValue(),
+			recordList.add(new Object[]{investment.getId(), investment.getInvestor().getValue(), investment.getProductProvider().getValue() + " - " + (investment.getProviderBranch() == null ? "Central" : investment.getProviderBranch().getValue()),
 					investment.getProductName() == null ? investment.getProductType().getValue() : investment.getProductName(),
 					investment.getInvestmentIdWithProvider(), investment.isClosed()});
 			for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {

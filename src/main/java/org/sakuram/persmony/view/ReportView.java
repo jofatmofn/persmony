@@ -1,13 +1,15 @@
 package org.sakuram.persmony.view;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.ByteArrayInputStream;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.sakuram.persmony.service.ReportService;
 import org.sakuram.persmony.util.AppException;
+import org.vaadin.olli.FileDownloadWrapper;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -15,6 +17,7 @@ import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
 @Route("report")
 public class ReportView extends VerticalLayout {
@@ -24,6 +27,8 @@ public class ReportView extends VerticalLayout {
 	public ReportView(ReportService reportService) {
 		Select<String> reportSelect;
 		Button generateButton;
+		FileDownloadWrapper fileDownloadWrapper;
+		StringWriter stringWriter = new StringWriter();
 		
 		reportSelect = new Select<String>();
 		reportSelect.setItems("Pending Transactions",
@@ -37,7 +42,6 @@ public class ReportView extends VerticalLayout {
 		// On click of Save
 		generateButton.addClickListener(event -> {
 			List<Object[]> recordList = null;
-			String outFile = null;
 			try {
 				// Validation
 				if (reportSelect.getValue() == null) {
@@ -50,11 +54,9 @@ public class ReportView extends VerticalLayout {
 		            switch(reportSelect.getValue()) {
 		            case "Pending Transactions":
 	    				recordList = reportService.pendingTransactions();
-	    				outFile = "pendingTransactions.csv";
 		            	break;
 		            case "Pending Investments":
 	    				recordList = reportService.investmentsWithPendingTransactions();
-	    				outFile = "investmentsWithPendingTransactions.csv";
 		            	break;
 		            }
 				} catch (Exception e) {
@@ -63,7 +65,8 @@ public class ReportView extends VerticalLayout {
 				}
 				
 				// Generate CSV
-	    		try (CSVPrinter csvPrinter = new CSVPrinter(Files.newBufferedWriter(Paths.get(DATA_FOLDER + outFile)), CSVFormat.DEFAULT)) {
+				stringWriter.getBuffer().setLength(0);
+	    		try (CSVPrinter csvPrinter = new CSVPrinter(stringWriter, CSVFormat.DEFAULT)) {
 	    			for (Object[] record : recordList) {
 	    				csvPrinter.printRecord(record);
 	    			}
@@ -76,9 +79,19 @@ public class ReportView extends VerticalLayout {
 				generateButton.setEnabled(true);
 			}
 		});
+		fileDownloadWrapper = new FileDownloadWrapper(
+		    new StreamResource("report.csv", () -> {
+		    	try {
+					return new ByteArrayInputStream(stringWriter.toString().getBytes("utf-8"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+					return null;
+				}
+		    }));
+		fileDownloadWrapper.wrapComponent(generateButton);
 
 		add(reportSelect);
-		add(generateButton);
+		add(fileDownloadWrapper);
 	}
 	
 	private String messageFromException(Exception e) {
