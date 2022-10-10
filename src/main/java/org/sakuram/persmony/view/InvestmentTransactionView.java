@@ -86,6 +86,7 @@ public class InvestmentTransactionView extends Div {
 	            }
 			} catch (Exception e) {
 				showError("System Error!!! Contact Support.");
+				e.printStackTrace();
 				return;
 			}
         });
@@ -181,7 +182,7 @@ public class InvestmentTransactionView extends Div {
 					notification = Notification.show("Investment Transaction Saved Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
-					showError(messageFromException(e));
+					showError(UtilFuncs.messageFromException(e));
 				}
 			} finally {
 				saveButton.setEnabled(true);
@@ -269,7 +270,7 @@ public class InvestmentTransactionView extends Div {
 					notification = Notification.show("Transaction and Realisation Saved Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
-					showError(messageFromException(e));
+					showError(UtilFuncs.messageFromException(e));
 				}
 			} finally {
 				saveButton.setEnabled(true);
@@ -474,7 +475,7 @@ public class InvestmentTransactionView extends Div {
 					notification = Notification.show("Investment Created Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
-					showError(messageFromException(e));
+					showError(UtilFuncs.messageFromException(e));
 				}
 			} finally {
 				saveButton.setEnabled(true);
@@ -597,23 +598,12 @@ public class InvestmentTransactionView extends Div {
 					notification = Notification.show("Renewal Done Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
-					showError(messageFromException(e));
+					showError(UtilFuncs.messageFromException(e));
 				}
 			} finally {
 				saveButton.setEnabled(true);
 			}
 		});
-	}
-	
-	private String messageFromException(Exception e) {
-		if (e instanceof AppException) {
-			System.out.println("AppException Caught!!!");
-			return e.getMessage();
-		} else {
-			System.out.println(e.getClass().getName() + " Caught!!!");
-			return "Unexpected Error: " + (e.getMessage() == null ? "No further details!" : e.getMessage());
-		}
-		
 	}
 	
 	private void showError(String message) {

@@ -117,6 +117,17 @@ public class UtilFuncs {
     	return outList;
     }
 
+	public static String messageFromException(Exception e) {
+		if (e instanceof AppException) {
+			System.out.println("AppException Caught!!!");
+			return e.getMessage();
+		} else {
+			System.out.println(e.getClass().getName() + " Caught!!!");
+			return "Unexpected Error: " + (e.getMessage() == null ? "No further details!" : e.getMessage());
+		}
+		
+	}
+	
     public static void main(String[] args){
     	for (ScheduleVO scheduleVO : parseScheduleData("[2022-2022] [3] [31] 725.00,[2030, 2031] [3] [31] 600.00")) {
     		System.out.print(scheduleVO.getDueDate());

@@ -8,7 +8,7 @@ import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.sakuram.persmony.service.ReportService;
-import org.sakuram.persmony.util.AppException;
+import org.sakuram.persmony.util.UtilFuncs;
 import org.vaadin.olli.FileDownloadWrapper;
 
 import com.vaadin.flow.component.button.Button;
@@ -60,7 +60,7 @@ public class ReportView extends VerticalLayout {
 		            	break;
 		            }
 				} catch (Exception e) {
-					showError(messageFromException(e));
+					showError(UtilFuncs.messageFromException(e));
 					return;
 				}
 				
@@ -92,17 +92,6 @@ public class ReportView extends VerticalLayout {
 
 		add(reportSelect);
 		add(fileDownloadWrapper);
-	}
-	
-	private String messageFromException(Exception e) {
-		if (e instanceof AppException) {
-			System.out.println("AppException Caught!!!");
-			return e.getMessage();
-		} else {
-			System.out.println(e.getClass().getName() + " Caught!!!");
-			return "Unexpected Error: " + (e.getMessage() == null ? "No further details!" : e.getMessage());
-		}
-		
 	}
 	
 	private void showError(String message) {
