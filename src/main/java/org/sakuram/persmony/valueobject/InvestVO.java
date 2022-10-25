@@ -12,6 +12,7 @@ import lombok.Setter;
 public class InvestVO {
 	long investorDvId;
 	long productProviderDvId;
+	Long providerBranchDvId;
 	String productIdOfProvider;
 	String investorIdWithProvider;
 	String productName;

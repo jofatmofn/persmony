@@ -35,6 +35,8 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 	SavingsAccountTransactionRepository savingsAccountTransactionRepository;
 	@Autowired
 	RealisationRepository realisationRepository;
+	@Autowired
+	MiscService miscService;
 	
 	public void singleRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO, Character invoker) {
 		// Investment investment;
@@ -222,7 +224,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				renewedInvestment.getIsAccrualApplicable(),
 				null,
 				null,
-				null);
+				renewedInvestment.getProviderBranch());
 		
 		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
 		
@@ -236,6 +238,11 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 	public void invest(InvestVO investVO) {
 		Investment newInvestment;
 		
+		if (investVO.getProviderBranchDvId() != null) {
+			if (!miscService.fetchBranchDvsOfBank(investVO.getProductProviderDvId()).contains(investVO.getProviderBranchDvId())) {
+				throw new AppException("Given branch does not belong to the given Provider", null);
+			}
+		}
 		newInvestment = new Investment(
 				Constants.domainValueCache.get(investVO.getInvestorDvId()),
 				Constants.domainValueCache.get(investVO.getProductProviderDvId()),
@@ -258,7 +265,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				investVO.getIsAccrualApplicable(),
 				null,
 				null,
-				null);
+				Constants.domainValueCache.get(investVO.getProviderBranchDvId()));
 		
 		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getBankDvId());
 		

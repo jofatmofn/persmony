@@ -41,7 +41,7 @@ public class DomainValueFlags {
 			DvFlagsBranchVO dvFlagsBranchVO;
 			dvFlagsBranchVO = new DvFlagsBranchVO();
 			if (flagsArr.length > Constants.FLAG_POSITION_BRANCH_BANK_DVID) {
-				dvFlagsBranchVO.setBankDvId(Long.parseLong(flagsArr[Constants.FLAG_POSITION_BRANCH_BANK_DVID]));
+				dvFlagsBranchVO.setPartyDvId(Long.parseLong(flagsArr[Constants.FLAG_POSITION_BRANCH_BANK_DVID]));
 			}
 			if (flagsArr.length > Constants.FLAG_POSITION_BRANCH_IFSC) {
 				dvFlagsBranchVO.setIfsc(flagsArr[Constants.FLAG_POSITION_BRANCH_IFSC]);

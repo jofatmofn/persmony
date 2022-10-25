@@ -10,6 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class DvFlagsBranchVO implements DvFlagsVO {
 	long id;
-	long bankDvId;
+	long partyDvId;
 	String ifsc;
 }

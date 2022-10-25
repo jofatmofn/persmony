@@ -279,7 +279,7 @@ public class InvestmentTransactionView extends Div {
 	}
 	
 	private void handleInvest(FormLayout formLayout) {
-		Select<IdValueVO> investorDvSelect, productProviderDvSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
+		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchDvSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
 		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField, paymentScheduleTextField, receiptScheduleTextField, accrualScheduleTextField;
 		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup;
 		NumberField rateOfInterestNumberField;
@@ -306,6 +306,15 @@ public class InvestmentTransactionView extends Div {
 		});
 		productProviderDvSelect.setItems(idValueVOList);
 		productProviderDvSelect.setPlaceholder("Select Product Provider");
+		
+		providerBranchDvSelect = new Select<IdValueVO>();
+		formLayout.addFormItem(providerBranchDvSelect, "Provider Branch");
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_BRANCH);
+		providerBranchDvSelect.setItemLabelGenerator(idValueVO -> {
+			return idValueVO.getValue();
+		});
+		providerBranchDvSelect.setItems(idValueVOList);
+		providerBranchDvSelect.setPlaceholder("Select Provider Branch");
 		
 		productIdOfProviderTextField = new TextField();
 		formLayout.addFormItem(productIdOfProviderTextField, "Product Id of Provider");
@@ -456,6 +465,7 @@ public class InvestmentTransactionView extends Div {
 				investVO = new InvestVO(
 						investorDvSelect.getValue().getId(),
 						productProviderDvSelect.getValue().getId(),
+						providerBranchDvSelect.getValue().getId(),
 						productIdOfProviderTextField.getValue().equals("") ? null : productIdOfProviderTextField.getValue(),
 						investorIdWithProviderTextField.getValue().equals("") ? null : investorIdWithProviderTextField.getValue(),
 						productNameTextField.getValue().equals("") ? null : productNameTextField.getValue(),
