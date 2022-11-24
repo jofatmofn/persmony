@@ -27,6 +27,7 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
@@ -116,7 +117,7 @@ public class InvestmentTransactionView extends Div {
 		
 		bankAccountDvSelect = new Select<IdValueVO>();
 		formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_BANK_ACCOUNT);
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT);
 		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
 			return idValueVO.getValue();
 		});
@@ -219,7 +220,7 @@ public class InvestmentTransactionView extends Div {
 		
 		bankAccountDvSelect = new Select<IdValueVO>();
 		formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_BANK_ACCOUNT);
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT);
 		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
 			return idValueVO.getValue();
 		});
@@ -282,58 +283,64 @@ public class InvestmentTransactionView extends Div {
 		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchDvSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
 		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField, paymentScheduleTextField, receiptScheduleTextField, accrualScheduleTextField;
 		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup;
-		NumberField rateOfInterestNumberField;
+		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField;
 		DatePicker productEndDatePicker;
 		List<IdValueVO> idValueVOList;
+		HorizontalLayout hLayout;
 		
 		Button saveButton;
 		
 		// UI Elements
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Investor");
 		investorDvSelect = new Select<IdValueVO>();
-		formLayout.addFormItem(investorDvSelect, "Investor");
+		investorDvSelect.setLabel("Investor");
 		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_INVESTOR);
 		investorDvSelect.setItemLabelGenerator(idValueVO -> {
 			return idValueVO.getValue();
 		});
 		investorDvSelect.setItems(idValueVOList);
 		investorDvSelect.setPlaceholder("Select Investor");
+		investorIdWithProviderTextField = new TextField("Id with Provider");
+		hLayout.add(investorDvSelect, investorIdWithProviderTextField);
 
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Provider");
 		productProviderDvSelect = new Select<IdValueVO>();
-		formLayout.addFormItem(productProviderDvSelect, "Product Provider");
+		productProviderDvSelect.setLabel("Provider");
 		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_PARTY);
 		productProviderDvSelect.setItemLabelGenerator(idValueVO -> {
 			return idValueVO.getValue();
 		});
 		productProviderDvSelect.setItems(idValueVOList);
 		productProviderDvSelect.setPlaceholder("Select Product Provider");
-		
 		providerBranchDvSelect = new Select<IdValueVO>();
-		formLayout.addFormItem(providerBranchDvSelect, "Provider Branch");
+		providerBranchDvSelect.setLabel("Branch");
 		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_BRANCH);
 		providerBranchDvSelect.setItemLabelGenerator(idValueVO -> {
 			return idValueVO.getValue();
 		});
 		providerBranchDvSelect.setItems(idValueVOList);
 		providerBranchDvSelect.setPlaceholder("Select Provider Branch");
+		hLayout.add(productProviderDvSelect, providerBranchDvSelect);
 		
-		productIdOfProviderTextField = new TextField();
-		formLayout.addFormItem(productIdOfProviderTextField, "Product Id of Provider");
-
-		investorIdWithProviderTextField = new TextField();
-		formLayout.addFormItem(investorIdWithProviderTextField, "Investor Id with Provider");
-
-		productNameTextField = new TextField();
-		formLayout.addFormItem(productNameTextField, "Product Name");
-
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Product");
 		productTypeDvSelect = new Select<IdValueVO>();
-		formLayout.addFormItem(productTypeDvSelect, "Product Type");
+		productTypeDvSelect.setLabel("Product Type");
 		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_PRODUCT_TYPE);
 		productTypeDvSelect.setItemLabelGenerator(idValueVO -> {
 			return idValueVO.getValue();
 		});
 		productTypeDvSelect.setItems(idValueVOList);
 		productTypeDvSelect.setPlaceholder("Select Product Type");
-		
+		productNameTextField = new TextField("Product Name");
+		productIdOfProviderTextField = new TextField("Id of Provider");
+		hLayout.add(productTypeDvSelect, productNameTextField, productIdOfProviderTextField);
+
+		investmentIdWithProviderTextField = new TextField();
+		formLayout.addFormItem(investmentIdWithProviderTextField, "Investment Id with Provider");
+
 		dematAccountDvSelect = new Select<IdValueVO>();
 		formLayout.addFormItem(dematAccountDvSelect, "Demat Account");
 		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT);
@@ -360,16 +367,21 @@ public class InvestmentTransactionView extends Div {
 		
 		bankAccountDvSelect = new Select<IdValueVO>();
 		formLayout.addFormItem(bankAccountDvSelect, "Investment from Bank Account");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_BANK_ACCOUNT);
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT);
 		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
 			return idValueVO.getValue();
 		});
 		bankAccountDvSelect.setItems(idValueVOList);
 		bankAccountDvSelect.setPlaceholder("Select Bank Account");
 
-		investmentIdWithProviderTextField = new TextField();
-		formLayout.addFormItem(investmentIdWithProviderTextField, "Investment Id with Provider");
-
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Price");
+		faceValueNumberField = new NumberField("Face Value");
+		cleanPriceNumberField = new NumberField("Clean Price");
+		accruedInterestNumberField = new NumberField("Accrued Interest");
+		chargesNumberField = new NumberField("Charges");
+		hLayout.add(faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField);
+		
 		rateOfInterestNumberField = new NumberField();
 		rateOfInterestNumberField.setMax(100.00);
 		formLayout.addFormItem(rateOfInterestNumberField, "Rate Of Interest%");
@@ -414,14 +426,18 @@ public class InvestmentTransactionView extends Div {
 					showError("Product Type cannot be Empty");
 					return;
 				}
-				if (bankAccountDvSelect.getValue() == null) {
-					showError("Bank Account cannot be Empty");
-					return;
-				}
 				if (investmentIdWithProviderTextField.getValue() == null || investmentIdWithProviderTextField.getValue().equals("")) {
 					showError("Investment Id With Provider cannot be Empty");
 					return;
 				}				
+				if (bankAccountDvSelect.getValue() == null) {
+					showError("Bank Account cannot be Empty");
+					return;
+				}
+				if (faceValueNumberField.getValue() == null) {
+					showError("Face Value cannot be Empty");
+					return;
+				}
 				if (productEndDatePicker.getValue() == null) {
 					showError("Product End Date cannot be Empty");
 					return;
@@ -465,7 +481,7 @@ public class InvestmentTransactionView extends Div {
 				investVO = new InvestVO(
 						investorDvSelect.getValue().getId(),
 						productProviderDvSelect.getValue().getId(),
-						providerBranchDvSelect.getValue().getId(),
+						providerBranchDvSelect.getValue() == null ? null : providerBranchDvSelect.getValue().getId(),
 						productIdOfProviderTextField.getValue().equals("") ? null : productIdOfProviderTextField.getValue(),
 						investorIdWithProviderTextField.getValue().equals("") ? null : investorIdWithProviderTextField.getValue(),
 						productNameTextField.getValue().equals("") ? null : productNameTextField.getValue(),
@@ -475,6 +491,10 @@ public class InvestmentTransactionView extends Div {
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
 						bankAccountDvSelect.getValue().getId(),
 						investmentIdWithProviderTextField.getValue(),
+						(float)faceValueNumberField.getValue().doubleValue(),
+						cleanPriceNumberField.getValue() == null ? null : (float)cleanPriceNumberField.getValue().doubleValue(),
+						accruedInterestNumberField.getValue() == null ? null : (float)accruedInterestNumberField.getValue().doubleValue(),
+						chargesNumberField.getValue() == null ? null : (float)chargesNumberField.getValue().doubleValue(),
 						rateOfInterestNumberField.getValue() == null ? null : (float)rateOfInterestNumberField.getValue().doubleValue(),
 						Date.valueOf(productEndDatePicker.getValue()),
 						paymentScheduleVOList,
@@ -495,7 +515,7 @@ public class InvestmentTransactionView extends Div {
 	
 	private void handleRenewal(FormLayout formLayout) {
 		TextField oldInvestmentIdTextField, investmentIdWithProviderTextField, paymentScheduleTextField, receiptScheduleTextField, accrualScheduleTextField;
-		NumberField rateOfInterestNumberField;
+		NumberField rateOfInterestNumberField, faceValueNumberField;
 		DatePicker productEndDatePicker;
 		Label label1;
 		Button saveButton;
@@ -515,6 +535,10 @@ public class InvestmentTransactionView extends Div {
 		investmentIdWithProviderTextField = new TextField();
 		formLayout.addFormItem(investmentIdWithProviderTextField, "Investment Id with Provider");
 		
+		faceValueNumberField = new NumberField();
+		faceValueNumberField.setLabel("Face Value");
+		formLayout.add(faceValueNumberField);
+		
 		rateOfInterestNumberField = new NumberField();
 		rateOfInterestNumberField.setMax(100.00);
 		formLayout.addFormItem(rateOfInterestNumberField, "Rate Of Interest%");
@@ -522,6 +546,10 @@ public class InvestmentTransactionView extends Div {
 		productEndDatePicker = new DatePicker();
 		formLayout.addFormItem(productEndDatePicker, "Product End Date");
 		
+		if (faceValueNumberField.getValue() == null) {
+			showError("Face Value cannot be Empty");
+			return;
+		}
 		paymentScheduleTextField = new TextField();
 		formLayout.addFormItem(paymentScheduleTextField, "Payment Schedule");
 		
@@ -557,6 +585,10 @@ public class InvestmentTransactionView extends Div {
 				}
 				if (productEndDatePicker.getValue() == null) {
 					showError("Product End Date cannot be Empty");
+					return;
+				}
+				if (faceValueNumberField.getValue() == null) {
+					showError("Face Value cannot be Empty");
 					return;
 				}
 				if (paymentScheduleTextField.getValue() == null || paymentScheduleTextField.getValue().equals("")) {
@@ -598,6 +630,7 @@ public class InvestmentTransactionView extends Div {
 				renewalVO = new RenewalVO(
 						Long.parseLong(oldInvestmentIdTextField.getValue()),
 						investmentIdWithProviderTextField.getValue(),
+						(float)faceValueNumberField.getValue().doubleValue(),
 						rateOfInterestNumberField.getValue() == null ? null : (float)rateOfInterestNumberField.getValue().doubleValue(),
 						Date.valueOf(productEndDatePicker.getValue()),
 						paymentScheduleVOList,

@@ -212,6 +212,9 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				renewalVO.getInvestmentIdWithProvider(),
 				renewedInvestment.getProductName(),
 				renewedInvestment.getProductType(),
+				renewalVO.getFaceValue(),
+				null,
+				null,
 				null,
 				renewalVO.getRateOfInterest(),
 				renewedInvestment.getTaxability(),
@@ -253,7 +256,10 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				investVO.getInvestmentIdWithProvider(),
 				investVO.getProductName(),
 				Constants.domainValueCache.get(investVO.getProductTypeDvId()),
-				null,
+				investVO.getFaceValue(),
+				investVO.getCleanPrice(),
+				investVO.getAccruedInterest(),
+				investVO.getCharges(),
 				investVO.getRateOfInterest(),
 				Constants.domainValueCache.get(investVO.getTaxabilityDvId()),
 				null,
@@ -277,7 +283,6 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		Realisation niPaymentRealisation = null;
 		SavingsAccountTransaction niSavingsAccountTransaction = null;
 		boolean is_first;
-		Float worth;
 		
 		if (newInvestment.getIsAccrualApplicable() != null && !newInvestment.getIsAccrualApplicable() && !accrualScheduleVOList.isEmpty()) {
 			throw new AppException("When accrual is not applicable, accrual schedule should not be there.", null);
@@ -285,7 +290,6 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		newInvestment = investmentRepository.save(newInvestment);
 
 		is_first = true;
-		worth = 0F;
 		for(ScheduleVO paymentScheduleVO : paymentScheduleVOList) {
 			niPaymentTransaction = new InvestmentTransaction(
 					newInvestment,
@@ -301,8 +305,6 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 					UtilFuncs.computeAssessmentYear(paymentScheduleVO.getDueDate()),
 					null);
 			niPaymentTransaction = investmentTransactionRepository.save(niPaymentTransaction);
-			
-			worth += paymentScheduleVO.getDueAmount();
 			
 			if (is_first) {
 				if (bankDvId != null) {
@@ -321,11 +323,6 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				niPaymentRealisation = realisationRepository.save(niPaymentRealisation);
 				is_first = false;
 			}
-		}
-		
-		if (worth > 0) {
-			newInvestment.setWorth(worth);
-			investmentRepository.save(newInvestment);
 		}
 		
 		for(ScheduleVO receiptScheduleVO : receiptScheduleVOList) {

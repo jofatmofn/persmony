@@ -8,7 +8,7 @@ import org.sakuram.persmony.repository.DomainValueRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.DomainValueFlags;
-import org.sakuram.persmony.valueobject.DvFlagsBankAccVO;
+import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,20 +49,27 @@ public class MiscService {
     	for (Long dvId : Constants.categoryDvCache.get(category)) {
     		String label;
     		domainValue = Constants.domainValueCache.get(dvId);
+    		label = "? ERROR ?";
     		switch(category) {
-    		case Constants.CATEGORY_BANK_ACCOUNT:
+    		case Constants.CATEGORY_ACCOUNT:
     			try {
-    				DvFlagsBankAccVO dvFlagsBankAccVO;
+    				DvFlagsAccountVO dvFlagsAccountVO;
 	    			DvFlagsBranchVO dvFlagsBranchVO;
 	    			DomainValue branchDv, partyDv;
-	    			dvFlagsBankAccVO = (DvFlagsBankAccVO) DomainValueFlags.getDvFlagsVO(domainValue);
-	    			branchDv = Constants.domainValueCache.get(dvFlagsBankAccVO.getBranchDvId());
-	    			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
-	    			partyDv = Constants.domainValueCache.get(dvFlagsBranchVO.getPartyDvId());
-	    			label = dvFlagsBankAccVO.getAccType() + "::" +
-	    					partyDv.getValue() + "::" +
-	    					branchDv.getValue() + "::" +
-	    					dvFlagsBankAccVO.getAccId();
+	    			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(domainValue);
+	    			if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_SAVINGS)) {
+		    			branchDv = Constants.domainValueCache.get(dvFlagsAccountVO.getBranchDvId());
+		    			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
+		    			partyDv = Constants.domainValueCache.get(dvFlagsBranchVO.getPartyDvId());
+		    			label = dvFlagsAccountVO.getAccType() + "::" +
+		    					partyDv.getValue() + "::" +
+		    					branchDv.getValue() + "::" +
+		    					dvFlagsAccountVO.getAccId();
+	    			} else if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_FUNDS)) {
+		    			partyDv = Constants.domainValueCache.get(dvFlagsAccountVO.getPartyDvId());
+		    			label =  dvFlagsAccountVO.getAccType() + "::" +
+		    					partyDv.getValue();
+    				}
     			} catch (Exception e) {
     				throw new AppException("Invalid Configuration of Bank Account " + dvId, null);
     			}

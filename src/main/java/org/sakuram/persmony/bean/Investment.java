@@ -69,6 +69,15 @@ public class Investment {
 	@Column(name="worth", nullable=true)
 	private Float worth;
 	
+	@Column(name="clean_price", nullable=true)
+	private Float cleanPrice;
+	
+	@Column(name="accrued_interest", nullable=true)
+	private Float accruedInterest;
+	
+	@Column(name="charges", nullable=true)
+	private Float charges;
+	
 	@Column(name="rate_of_interest", nullable=true)
 	private Float rateOfInterest;
 	
@@ -112,7 +121,7 @@ public class Investment {
 	@JoinColumn(name="provider_branch_fk", nullable=true)
 	private DomainValue providerBranch;
 	
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float cleanPrice, Float accruedInterest, Float charges, Float rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;
@@ -123,6 +132,9 @@ public class Investment {
 		this.productName = productName;
 		this.productType = productType;
 		this.worth = worth;
+		this.cleanPrice = cleanPrice;
+		this.accruedInterest = accruedInterest;
+		this.charges = charges;
 		this.rateOfInterest = rateOfInterest;
 		this.taxability = taxability;
 		this.previousInvestment = previousInvestment;
