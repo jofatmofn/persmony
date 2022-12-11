@@ -242,7 +242,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		Investment newInvestment;
 		
 		if (investVO.getProviderBranchDvId() != null) {
-			if (!miscService.fetchBranchDvsOfBank(investVO.getProductProviderDvId()).contains(investVO.getProviderBranchDvId())) {
+			if (!miscService.fetchBranchDvIdsOfParty(investVO.getProductProviderDvId()).contains(investVO.getProviderBranchDvId())) {
 				throw new AppException("Given branch does not belong to the given Provider", null);
 			}
 		}

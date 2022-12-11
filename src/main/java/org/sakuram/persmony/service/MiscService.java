@@ -23,21 +23,21 @@ public class MiscService {
 	DomainValueRepository domainValueRepository;
 	
     public void loadCache() {
-    	List<Long> categoryDvList;
+    	List<Long> categoryDvIdList;
     	
     	System.out.println("Loading Cache");
     	Constants.domainValueCache = new HashMap<Long, DomainValue>();
-    	Constants.categoryDvCache = new HashMap<String, List<Long>>();
+    	Constants.categoryDvIdCache = new HashMap<String, List<Long>>();
     	
     	for(DomainValue domainValue : domainValueRepository.findAll()) {
     		Constants.domainValueCache.put(domainValue.getId(), domainValue);
-    		if (Constants.categoryDvCache.containsKey(domainValue.getCategory())) {
-    			categoryDvList = Constants.categoryDvCache.get(domainValue.getCategory());
+    		if (Constants.categoryDvIdCache.containsKey(domainValue.getCategory())) {
+    			categoryDvIdList = Constants.categoryDvIdCache.get(domainValue.getCategory());
     		} else {
-    			categoryDvList = new ArrayList<Long>();
-    			Constants.categoryDvCache.put(domainValue.getCategory(), categoryDvList);
+    			categoryDvIdList = new ArrayList<Long>();
+    			Constants.categoryDvIdCache.put(domainValue.getCategory(), categoryDvIdList);
     		}
-    		categoryDvList.add(domainValue.getId());
+    		categoryDvIdList.add(domainValue.getId());
     	}
     }
     
@@ -46,7 +46,7 @@ public class MiscService {
     	DomainValue domainValue;
     	
     	idValueVOList = new ArrayList<IdValueVO>();
-    	for (Long dvId : Constants.categoryDvCache.get(category)) {
+    	for (Long dvId : Constants.categoryDvIdCache.get(category)) {
     		String label;
     		domainValue = Constants.domainValueCache.get(dvId);
     		label = "? ERROR ?";
@@ -95,11 +95,11 @@ public class MiscService {
     	return idValueVOList;
     }
     
-    public List<Long> fetchBranchDvsOfBank(long partyDvId) {
+    public List<Long> fetchBranchDvIdsOfParty(long partyDvId) {
     	List<Long> branchDVIdList;
     	
     	branchDVIdList = new ArrayList<Long>();
-    	for (Long dvId : Constants.categoryDvCache.get(Constants.CATEGORY_BRANCH)) {
+    	for (Long dvId : Constants.categoryDvIdCache.get(Constants.CATEGORY_BRANCH)) {
 			try {
     			DvFlagsBranchVO dvFlagsBranchVO;
     			DomainValue branchDv;

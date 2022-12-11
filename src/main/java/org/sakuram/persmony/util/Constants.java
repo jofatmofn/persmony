@@ -55,5 +55,5 @@ public class Constants {
 	public static final Character DYNAMIC_REALISATION_PERIODICITY_YEAR = 'Y';
 	
 	public static Map<Long, DomainValue> domainValueCache;
-	public static Map<String, List<Long>> categoryDvCache;
+	public static Map<String, List<Long>> categoryDvIdCache;
 }
