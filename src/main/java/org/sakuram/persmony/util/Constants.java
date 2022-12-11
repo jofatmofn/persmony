@@ -35,10 +35,11 @@ public class Constants {
 
 	public static final int FLAG_POSITION_ACCOUNT_TYPE = 0;
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;
-	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_ID = 2;
-	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_INVESTOR_DVID = 3;
-	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_OPEN_OR_CLOSED = 4;
+	public static final int FLAG_POSITION_ACCOUNT_ID = 2;
+	public static final int FLAG_POSITION_ACCOUNT_INVESTOR_DVID = 3;
+	public static final int FLAG_POSITION_ACCOUNT_OPEN_OR_CLOSED = 4;
 	public static final int FLAG_POSITION_FUNDS_ACCOUNT_PARTY_DVID = 1;
+	
 	public static final int FLAG_POSITION_BRANCH_BANK_DVID = 0;
 	public static final int FLAG_POSITION_BRANCH_IFSC = 1;
 	public static final int FLAG_POSITION_PARTY_ROLES = 0;
