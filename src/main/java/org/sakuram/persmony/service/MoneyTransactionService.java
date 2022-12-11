@@ -226,7 +226,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				null,
 				renewedInvestment.getIsAccrualApplicable(),
 				null,
-				null,
+				renewedInvestment.getDynamicReceiptPeriodicity(),
 				renewedInvestment.getProviderBranch());
 		
 		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
@@ -270,7 +270,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 				null,
 				investVO.getIsAccrualApplicable(),
 				null,
-				null,
+				investVO.getDynamicReceiptPeriodicity(),
 				Constants.domainValueCache.get(investVO.getProviderBranchDvId()));
 		
 		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getBankDvId());

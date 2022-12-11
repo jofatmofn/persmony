@@ -27,5 +27,6 @@ public class InvestVO {
 	Date productEndDate;
 	List<ScheduleVO> paymentScheduleVOList;
 	List<ScheduleVO> receiptScheduleVOList;
+	Character dynamicReceiptPeriodicity;
 	List<ScheduleVO> accrualScheduleVOList;
 }

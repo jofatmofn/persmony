@@ -282,7 +282,7 @@ public class InvestmentTransactionView extends Div {
 	private void handleInvest(FormLayout formLayout) {
 		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchDvSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
 		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField, paymentScheduleTextField, receiptScheduleTextField, accrualScheduleTextField;
-		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup;
+		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup, dynamicReceiptPeriodicityRadioButtonGroup;
 		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField;
 		DatePicker productEndDatePicker;
 		List<IdValueVO> idValueVOList;
@@ -396,6 +396,11 @@ public class InvestmentTransactionView extends Div {
 		receiptScheduleTextField.setValue("None");
 		formLayout.addFormItem(receiptScheduleTextField, "Receipt Schedule");
 		
+		dynamicReceiptPeriodicityRadioButtonGroup = new RadioButtonGroup<>();
+		formLayout.addFormItem(dynamicReceiptPeriodicityRadioButtonGroup, "Dynamic Receipt Periodicity");
+		dynamicReceiptPeriodicityRadioButtonGroup.setItems("Not Applicable", "Yearly");
+		dynamicReceiptPeriodicityRadioButtonGroup.setValue("Not Applicable");
+		
 		accrualScheduleTextField = new TextField();
 		accrualScheduleTextField.setValue("None");
 		formLayout.addFormItem(accrualScheduleTextField, "Accrual Schedule");
@@ -499,6 +504,7 @@ public class InvestmentTransactionView extends Div {
 						Date.valueOf(productEndDatePicker.getValue()),
 						paymentScheduleVOList,
 						receiptScheduleVOList,
+						(dynamicReceiptPeriodicityRadioButtonGroup.getValue().equals("Not Applicable") ? null : 'Y'),
 						accrualScheduleVOList);
 				try {
 					moneyTransactionService.invest(investVO);
