@@ -109,10 +109,30 @@ public class MiscService {
     				branchDVIdList.add(dvId);
     			}
 			} catch (Exception e) {
-				throw new AppException("Invalid Configuration of Bank Account " + dvId, null);
+				throw new AppException("Invalid Configuration of Branch " + dvId, null);
 			}
     	}
     	return branchDVIdList;
+    }
+    
+    public List<IdValueVO> fetchBranchesOfParty(long partyDvId) {
+    	List<IdValueVO> idValueVOList;
+    	
+    	idValueVOList = new ArrayList<IdValueVO>();
+    	for (Long dvId : Constants.categoryDvIdCache.get(Constants.CATEGORY_BRANCH)) {
+			try {
+    			DvFlagsBranchVO dvFlagsBranchVO;
+    			DomainValue branchDv;
+    			branchDv = Constants.domainValueCache.get(dvId);
+    			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
+    			if (dvFlagsBranchVO.getPartyDvId() == partyDvId) {
+    				idValueVOList.add(new IdValueVO(branchDv.getId(), branchDv.getValue()));
+    			}
+			} catch (Exception e) {
+				throw new AppException("Invalid Configuration of Branch " + dvId, null);
+			}
+    	}
+    	return idValueVOList;
     }
     
 }

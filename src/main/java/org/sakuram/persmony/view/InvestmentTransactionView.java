@@ -315,12 +315,13 @@ public class InvestmentTransactionView extends Div {
 		productProviderDvSelect.setItems(idValueVOList);
 		productProviderDvSelect.setPlaceholder("Select Product Provider");
 		providerBranchDvSelect = new Select<IdValueVO>();
-		providerBranchDvSelect.setLabel("Branch");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_BRANCH);
-		providerBranchDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
+		productProviderDvSelect.addValueChangeListener(event -> {
+			providerBranchDvSelect.setItemLabelGenerator(idValueVO -> {
+				return idValueVO.getValue();
+			});
+			providerBranchDvSelect.setItems(miscService.fetchBranchesOfParty(productProviderDvSelect.getValue().getId()));
 		});
-		providerBranchDvSelect.setItems(idValueVOList);
+		providerBranchDvSelect.setLabel("Branch");
 		providerBranchDvSelect.setPlaceholder("Select Provider Branch");
 		hLayout.add(productProviderDvSelect, providerBranchDvSelect);
 		
