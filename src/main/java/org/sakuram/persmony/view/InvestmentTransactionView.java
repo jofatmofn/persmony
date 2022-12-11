@@ -367,12 +367,13 @@ public class InvestmentTransactionView extends Div {
 		accrualApplicabilityRadioButtonGroup.setValue("Not Known");
 		
 		bankAccountDvSelect = new Select<IdValueVO>();
-		formLayout.addFormItem(bankAccountDvSelect, "Investment from Bank Account");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT);
-		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
+		investorDvSelect.addValueChangeListener(event -> {
+			bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
+				return idValueVO.getValue();
+			});
+			bankAccountDvSelect.setItems(miscService.fetchAccountsOfInvestor(investorDvSelect.getValue().getId()));
 		});
-		bankAccountDvSelect.setItems(idValueVOList);
+		formLayout.addFormItem(bankAccountDvSelect, "Investment from Bank Account");
 		bankAccountDvSelect.setPlaceholder("Select Bank Account");
 
 		hLayout = new HorizontalLayout();

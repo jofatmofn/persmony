@@ -135,4 +135,24 @@ public class MiscService {
     	return idValueVOList;
     }
     
+    public List<IdValueVO> fetchAccountsOfInvestor(long investorDvId) {
+    	List<IdValueVO> idValueVOList;
+    	
+    	idValueVOList = new ArrayList<IdValueVO>();
+    	for (Long dvId : Constants.categoryDvIdCache.get(Constants.CATEGORY_ACCOUNT)) {
+			try {
+    			DvFlagsAccountVO dvFlagsAccountVO;
+    			DomainValue accountDv;
+    			accountDv = Constants.domainValueCache.get(dvId);
+    			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(accountDv);
+    			if (dvFlagsAccountVO.getInvestorDvId() == investorDvId) {
+    				idValueVOList.add(new IdValueVO(accountDv.getId(), accountDv.getValue()));
+    			}
+			} catch (Exception e) {
+				throw new AppException("Invalid Configuration of Account " + dvId, null);
+			}
+    	}
+    	return idValueVOList;
+    }
+    
 }
