@@ -1,7 +1,10 @@
 package org.sakuram.persmony.view;
 
 import java.sql.Date;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.sakuram.persmony.service.MiscService;
@@ -45,48 +48,58 @@ public class InvestmentTransactionView extends Div {
 	public InvestmentTransactionView(MoneyTransactionService moneyTransactionService, MiscService miscService) {
 		Span selectSpan;
 		FormLayout formLayout;
-		Select<String> operationSelect;
+		Select<Map.Entry<Integer,String>> operationSelect;
+		List<Map.Entry<Integer, String>> operationItemsList;
 		
 		this.moneyTransactionService = moneyTransactionService;
 		this.miscService = miscService;
 
+		operationItemsList = new ArrayList<Map.Entry<Integer,String>>() {
+			private static final long serialVersionUID = 1L;
+
+			{
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Existing Transaction, Single Realisation With Bank"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "Existing Transaction, Single Realisation With Bank, Close Investment"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Accrual OR *New Transaction + Single Realisation With Bank*"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(4, "Invest"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(5, "Renewal"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(6, "Existing Investment, Receipt Dues"));
+			}
+		};
 		selectSpan = new Span();
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(
                 // Use one column by default
                 new ResponsiveStep("0", 1));
 		
-		operationSelect = new Select<String>();
-		operationSelect.setItems("Existing Transaction, Single Realisation With Bank",
-				"Existing Transaction, Single Realisation With Bank, Close Investment",
-				"Accrual OR *New Transaction + Single Realisation With Bank*",
-				"Invest",
-				"Renewal",
-				"Existing Investment, Receipt Dues");
+		operationSelect = new Select<Map.Entry<Integer,String>>();
+		operationSelect.setItems(operationItemsList);
+		operationSelect.setItemLabelGenerator(operationItem -> {
+			return operationItem.getValue();
+		});
 		operationSelect.setLabel("Operation");
 		operationSelect.setPlaceholder("Select Operation");
 		operationSelect.setId("PersmonyOperation");
 		operationSelect.addValueChangeListener(event -> {
 			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
-			// TODO: Use id instead of label in the switch-case
 			try {
-	            switch(event.getValue()) {
-	            case "Existing Transaction, Single Realisation With Bank":
+	            switch(event.getValue().getKey()) {
+	            case 1:
 	            	handleSingleRealisationWithBank(formLayout, false);
 	            	break;
-	            case "Accrual OR *New Transaction + Single Realisation With Bank*":
-	            	handleTxnSingleRealisationWithBank(formLayout);
-	            	break;
-	            case "Existing Transaction, Single Realisation With Bank, Close Investment":
+	            case 2:
 	            	handleSingleRealisationWithBank(formLayout, true);
 	            	break;
-	            case "Invest":
+	            case 3:
+	            	handleTxnSingleRealisationWithBank(formLayout);
+	            	break;
+	            case 4:
 	            	handleInvest(formLayout);
 	            	break;
-	            case "Renewal":
+	            case 5:
 	            	handleRenewal(formLayout);
 	            	break;
-	            case "Existing Investment, Receipt Dues":
+	            case 6:
 	            	handleReceiptDues(formLayout);
 	            	break;
 	            }
@@ -549,8 +562,7 @@ public class InvestmentTransactionView extends Div {
 		formLayout.addFormItem(investmentIdWithProviderTextField, "Investment Id with Provider");
 		
 		faceValueNumberField = new NumberField();
-		faceValueNumberField.setLabel("Face Value");
-		formLayout.add(faceValueNumberField);
+		formLayout.addFormItem(faceValueNumberField, "Face Value");
 		
 		rateOfInterestNumberField = new NumberField();
 		rateOfInterestNumberField.setMax(100.00);
@@ -559,10 +571,6 @@ public class InvestmentTransactionView extends Div {
 		productEndDatePicker = new DatePicker();
 		formLayout.addFormItem(productEndDatePicker, "Product End Date");
 		
-		if (faceValueNumberField.getValue() == null) {
-			showError("Face Value cannot be Empty");
-			return;
-		}
 		paymentScheduleTextField = new TextField();
 		formLayout.addFormItem(paymentScheduleTextField, "Payment Schedule");
 		
