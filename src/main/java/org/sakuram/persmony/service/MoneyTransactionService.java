@@ -19,6 +19,7 @@ import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.InvestVO;
+import org.sakuram.persmony.valueobject.ReceiptDuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
@@ -277,9 +278,41 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		
 		System.out.println("invest completed.");
 	}
+
+	public void addReceiptDues(ReceiptDuesVO receiptDuesVO) {
+		Investment investment;
+		
+		investment = investmentRepository.findById(receiptDuesVO.getInvestmentId())
+				.orElseThrow(() -> new AppException("Invalid Investment Id " + receiptDuesVO.getInvestmentId(), null));
+		if (investment.isClosed()) {
+			throw new AppException("Investment " + receiptDuesVO.getInvestmentId() + " no longer Open", null);
+		}
+		
+		saveSchedule(receiptDuesVO.getReceiptScheduleVOList(), investment, Constants.DVID_TRANSACTION_TYPE_RECEIPT);
+	}
+	
+	private void saveSchedule(List<ScheduleVO> scheduleVOList, Investment investment, long transactionType) {
+		InvestmentTransaction invesmentTransaction;
+		for(ScheduleVO scheduleVO : scheduleVOList) {
+			invesmentTransaction = new InvestmentTransaction(
+					investment,
+					Constants.domainValueCache.get(transactionType),
+					scheduleVO.getDueDate(),
+					scheduleVO.getDueAmount(),
+					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
+					null,
+					null,
+					scheduleVO.getDueAmount(),
+					null,
+					null,
+					UtilFuncs.computeAssessmentYear(scheduleVO.getDueDate()),
+					null);
+			investmentTransactionRepository.save(invesmentTransaction);
+		}
+	}
 	
 	private Realisation openNew(Investment newInvestment, List<ScheduleVO> paymentScheduleVOList, List<ScheduleVO> receiptScheduleVOList, List<ScheduleVO> accrualScheduleVOList, Long riReceiptRealisationId, Long bankDvId) {
-		InvestmentTransaction niPaymentTransaction, niReceiptTransaction, niAccrualTransaction;
+		InvestmentTransaction niPaymentTransaction;
 		Realisation niPaymentRealisation = null;
 		SavingsAccountTransaction niSavingsAccountTransaction = null;
 		boolean is_first;
@@ -325,41 +358,12 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 			}
 		}
 		
-		for(ScheduleVO receiptScheduleVO : receiptScheduleVOList) {
-			niReceiptTransaction = new InvestmentTransaction(
-					newInvestment,
-					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_RECEIPT),
-					receiptScheduleVO.getDueDate(),
-					receiptScheduleVO.getDueAmount(),
-					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
-					null,
-					null,
-					receiptScheduleVO.getDueAmount(),
-					null,
-					null,
-					UtilFuncs.computeAssessmentYear(receiptScheduleVO.getDueDate()),
-					null);
-			niReceiptTransaction = investmentTransactionRepository.save(niReceiptTransaction);
-		}
+		saveSchedule(receiptScheduleVOList, newInvestment, Constants.DVID_TRANSACTION_TYPE_RECEIPT);
 		// TODO: For last receipt, due amount = principal amount + interest amount and returned principal amount = principal amount
 		
-		for(ScheduleVO accrualScheduleVO : accrualScheduleVOList) {
-			niAccrualTransaction = new InvestmentTransaction(
-					newInvestment,
-					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_ACCRUAL),
-					accrualScheduleVO.getDueDate(),
-					accrualScheduleVO.getDueAmount(),
-					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
-					null,
-					null,
-					accrualScheduleVO.getDueAmount(),
-					null,
-					null,
-					UtilFuncs.computeAssessmentYear(accrualScheduleVO.getDueDate()),
-					null);
-			niAccrualTransaction = investmentTransactionRepository.save(niAccrualTransaction);
-		}
+		saveSchedule(accrualScheduleVOList, newInvestment, Constants.DVID_TRANSACTION_TYPE_ACCRUAL);
 		
 		return niPaymentRealisation;
 	}
+	
 }

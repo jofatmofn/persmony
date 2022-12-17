@@ -11,6 +11,7 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestVO;
+import org.sakuram.persmony.valueobject.ReceiptDuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
@@ -58,9 +59,10 @@ public class InvestmentTransactionView extends Div {
 		operationSelect = new Select<String>();
 		operationSelect.setItems("Existing Transaction, Single Realisation With Bank",
 				"Existing Transaction, Single Realisation With Bank, Close Investment",
-				"Accrual OR *New Transaction, Single Realisation With Bank*",
+				"Accrual OR *New Transaction + Single Realisation With Bank*",
 				"Invest",
-				"Renewal");
+				"Renewal",
+				"Existing Investment, Receipt Dues");
 		operationSelect.setLabel("Operation");
 		operationSelect.setPlaceholder("Select Operation");
 		operationSelect.setId("PersmonyOperation");
@@ -72,7 +74,7 @@ public class InvestmentTransactionView extends Div {
 	            case "Existing Transaction, Single Realisation With Bank":
 	            	handleSingleRealisationWithBank(formLayout, false);
 	            	break;
-	            case "Accrual OR *New Transaction, Single Realisation With Bank*":
+	            case "Accrual OR *New Transaction + Single Realisation With Bank*":
 	            	handleTxnSingleRealisationWithBank(formLayout);
 	            	break;
 	            case "Existing Transaction, Single Realisation With Bank, Close Investment":
@@ -83,6 +85,9 @@ public class InvestmentTransactionView extends Div {
 	            	break;
 	            case "Renewal":
 	            	handleRenewal(formLayout);
+	            	break;
+	            case "Existing Investment, Receipt Dues":
+	            	handleReceiptDues(formLayout);
 	            	break;
 	            }
 			} catch (Exception e) {
@@ -584,7 +589,7 @@ public class InvestmentTransactionView extends Div {
 			try {
 				// Validation
 				if (oldInvestmentIdTextField.getValue() == null || oldInvestmentIdTextField.getValue().equals("")) {
-					showError("Transaction Id of Investment being renewed cannot be Empty");
+					showError("Id of old Investment being renewed cannot be Empty");
 					return;
 				}
 				if (investmentIdWithProviderTextField.getValue() == null || investmentIdWithProviderTextField.getValue().equals("")) {
@@ -647,6 +652,58 @@ public class InvestmentTransactionView extends Div {
 				try {
 					moneyTransactionService.renewal(renewalVO);
 					notification = Notification.show("Renewal Done Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				} catch (Exception e) {
+					showError(UtilFuncs.messageFromException(e));
+				}
+			} finally {
+				saveButton.setEnabled(true);
+			}
+		});
+	}
+	
+	private void handleReceiptDues(FormLayout formLayout) {
+		TextField investmentIdTextField, receiptScheduleTextField;
+		Button saveButton;
+		
+		investmentIdTextField = new TextField();
+		formLayout.addFormItem(investmentIdTextField, "Persmony Investment Id");
+		
+		receiptScheduleTextField = new TextField();
+		formLayout.addFormItem(receiptScheduleTextField, "Receipt Schedule");
+		
+		saveButton = new Button("Save");
+		formLayout.add(saveButton);
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setDisableOnClick(true);
+		// On click of Save
+		saveButton.addClickListener(event -> {
+			ReceiptDuesVO receiptDuesVO;
+			Notification notification;
+			List<ScheduleVO> receiptScheduleVOList;
+			
+			try {
+				// Validation
+				if (investmentIdTextField.getValue() == null || investmentIdTextField.getValue().equals("")) {
+					showError("Id of Investment cannot be Empty");
+					return;
+				}
+				if (receiptScheduleTextField.getValue() == null || receiptScheduleTextField.getValue().equals("") || receiptScheduleTextField.getValue().equals("None")) {
+					showError("Receipt Schedule cannot be Empty");
+					return;
+				}
+				try {
+					receiptScheduleVOList = UtilFuncs.parseScheduleData(receiptScheduleTextField.getValue());
+				} catch (AppException e) {
+					showError("Receipt Schedule: " + e.getMessage());
+					return;
+				}
+				
+				// Back-end Call
+				receiptDuesVO = new ReceiptDuesVO(Long.parseLong(investmentIdTextField.getValue()), receiptScheduleVOList);
+				try {
+					moneyTransactionService.addReceiptDues(receiptDuesVO);
+					notification = Notification.show("Receipt Dues Added Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
 					showError(UtilFuncs.messageFromException(e));
