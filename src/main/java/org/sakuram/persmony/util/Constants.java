@@ -37,15 +37,19 @@ public class Constants {
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;
 	public static final int FLAG_POSITION_ACCOUNT_ID = 2;
 	public static final int FLAG_POSITION_ACCOUNT_INVESTOR_DVID = 3;
-	public static final int FLAG_POSITION_ACCOUNT_OPEN_OR_CLOSED = 4;
+	public static final int FLAG_POSITION_ACCOUNT_STATUS = 4;
 	public static final int FLAG_POSITION_FUNDS_ACCOUNT_PARTY_DVID = 1;
 	
 	public static final int FLAG_POSITION_BRANCH_BANK_DVID = 0;
 	public static final int FLAG_POSITION_BRANCH_IFSC = 1;
 	public static final int FLAG_POSITION_PARTY_ROLES = 0;
+	public static final int FLAG_POSITION_REAL_INVESTORS = 0;
 
 	public static final String ACCOUNT_TYPE_SAVINGS = "SB";
 	public static final String ACCOUNT_TYPE_FUNDS = "Funds";
+	
+	public static final char ACCOUNT_STATUS_OPEN = 'O';
+	public static final char ACCOUNT_STATUS_CLOSED = 'C';
 	
 	public static final byte ASSESSMENT_YEAR_START_MONTH = 4;
 	public static final String CSV_DATE_FORMAT = "M/d/yyyy";

@@ -3,6 +3,8 @@ package org.sakuram.persmony.service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.LongStream;
+
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.repository.DomainValueRepository;
 import org.sakuram.persmony.util.AppException;
@@ -10,6 +12,7 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.DomainValueFlags;
 import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
+import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -137,7 +140,20 @@ public class MiscService {
     
     public List<IdValueVO> fetchAccountsOfInvestor(long investorDvId) {
     	List<IdValueVO> idValueVOList;
+    	DvFlagsInvestorVO dvFlagsInvestorVO;
+		DomainValue investorDv;
+		long investors[];
     	
+		investorDv = Constants.domainValueCache.get(investorDvId);
+		dvFlagsInvestorVO = (DvFlagsInvestorVO) DomainValueFlags.getDvFlagsVO(investorDv);
+		if (dvFlagsInvestorVO == null) {
+			investors = new long[1];
+		} else {
+			investors = new long[dvFlagsInvestorVO.getRealInvestors().length + 1];
+			System.arraycopy(dvFlagsInvestorVO.getRealInvestors(), 0, investors, 1, dvFlagsInvestorVO.getRealInvestors().length);
+		}
+		investors[0] = investorDvId;
+		
     	idValueVOList = new ArrayList<IdValueVO>();
     	for (Long dvId : Constants.categoryDvIdCache.get(Constants.CATEGORY_ACCOUNT)) {
 			try {
@@ -145,7 +161,7 @@ public class MiscService {
     			DomainValue accountDv;
     			accountDv = Constants.domainValueCache.get(dvId);
     			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(accountDv);
-    			if (dvFlagsAccountVO.getInvestorDvId() == investorDvId) {
+    			if (LongStream.of(investors).anyMatch(x -> x == dvFlagsAccountVO.getInvestorDvId()) && dvFlagsAccountVO.isOpen()) {
     				idValueVOList.add(new IdValueVO(accountDv.getId(), accountDv.getValue()));
     			}
 			} catch (Exception e) {

@@ -1,8 +1,11 @@
 package org.sakuram.persmony.util;
 
+import java.util.Arrays;
+
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
+import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
 import org.sakuram.persmony.valueobject.DvFlagsPartyVO;
 import org.sakuram.persmony.valueobject.DvFlagsVO;
 
@@ -39,8 +42,8 @@ public class DomainValueFlags {
 				if (flagsArr.length > Constants.FLAG_POSITION_ACCOUNT_INVESTOR_DVID) {
 					dvFlagsAccountVO.setInvestorDvId(Long.parseLong(flagsArr[Constants.FLAG_POSITION_ACCOUNT_INVESTOR_DVID]));
 				}
-				if (flagsArr.length > Constants.FLAG_POSITION_ACCOUNT_OPEN_OR_CLOSED) {
-					dvFlagsAccountVO.setOpenOrClosed(flagsArr[Constants.FLAG_POSITION_ACCOUNT_OPEN_OR_CLOSED].charAt(0));
+				if (flagsArr.length > Constants.FLAG_POSITION_ACCOUNT_STATUS) {
+					dvFlagsAccountVO.setOpen(flagsArr[Constants.FLAG_POSITION_ACCOUNT_STATUS].charAt(0) == Constants.ACCOUNT_STATUS_OPEN);
 				}
 			}
 			
@@ -62,6 +65,16 @@ public class DomainValueFlags {
 				dvFlagsPartyVO.setRoles(flagsArr[Constants.FLAG_POSITION_PARTY_ROLES].split(Constants.DV_FLAGS_LEVEL2_SEPARATOR));
 			}
 			return dvFlagsPartyVO;
+		case Constants.CATEGORY_INVESTOR:
+			DvFlagsInvestorVO dvFlagsInvestorVO;
+			dvFlagsInvestorVO = new DvFlagsInvestorVO();
+			if (flagsArr.length > Constants.FLAG_POSITION_REAL_INVESTORS) {
+				dvFlagsInvestorVO.setRealInvestors(Arrays
+						.stream(flagsArr[Constants.FLAG_POSITION_REAL_INVESTORS].split(Constants.DV_FLAGS_LEVEL2_SEPARATOR))
+						.mapToLong(Long::parseLong)
+						.toArray());
+			}
+			return dvFlagsInvestorVO;
 		default:
 			return null;
 		}

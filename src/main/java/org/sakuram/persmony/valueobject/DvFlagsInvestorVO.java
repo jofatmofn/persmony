@@ -8,14 +8,7 @@ import lombok.Setter;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DvFlagsAccountVO implements DvFlagsVO {
+public class DvFlagsInvestorVO implements DvFlagsVO {
 	long id;
-	String accType;
-	/* Bank Savings Account */
-	Long branchDvId;
-	String accId;
-	long investorDvId;
-	boolean isOpen;
-	/* Fund Account */
-	long partyDvId;
+	long realInvestors[];
 }
