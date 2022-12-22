@@ -1,7 +1,9 @@
 package org.sakuram.persmony.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.sakuram.persmony.repository.InvestmentRepository;
+import org.sakuram.persmony.valueobject.InvestmentVO;
 import org.sakuram.persmony.valueobject.SearchCriterionFEVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,7 +13,17 @@ public class SearchService {
 	@Autowired
 	InvestmentRepository investmentRepository;
 	
-	public List<Object[]> searchInvestments(List<SearchCriterionFEVO> searchCriterionFEVOList) {
-		return investmentRepository.searchInvestments();
+	public List<InvestmentVO> searchInvestments(List<SearchCriterionFEVO> searchCriterionFEVOList) {
+		List<Object[]> investments;
+		List<InvestmentVO> investmentVOList;
+		InvestmentVO investmentVO;
+		
+		investments = investmentRepository.searchInvestments();
+		investmentVOList = new ArrayList<InvestmentVO>(investments.size());
+		for(Object[] columns : investments) {
+			investmentVO = new InvestmentVO(columns);
+			investmentVOList.add(investmentVO);
+		}
+		return investmentVOList;
 	}
 }

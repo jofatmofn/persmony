@@ -14,6 +14,7 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.FieldSpecFEVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
+import org.sakuram.persmony.valueobject.InvestmentVO;
 import org.sakuram.persmony.valueobject.SearchCriterionFEVO;
 
 import com.vaadin.flow.component.Component;
@@ -50,6 +51,7 @@ public class SearchView extends Div {
 		Button addButton, searchButton;
 		TextField valuesDummyTextField;
 		List<SearchCriterionFEVO> searchCriterionFEVOList;
+		Grid<InvestmentVO> investmentsGrid;
 		
 		fieldSpecMap = new HashMap<String, FieldSpecFEVO>() {
 			private static final long serialVersionUID = 1L;
@@ -69,6 +71,8 @@ public class SearchView extends Div {
 		add(searchCriteriaGrid);
 		searchButton = new Button("Search");
 		add(searchButton);
+		investmentsGrid = new Grid<>(InvestmentVO.class);
+		add(investmentsGrid);
 		
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addButton.setDisableOnClick(true);
@@ -172,12 +176,13 @@ public class SearchView extends Div {
 		searchButton.setDisableOnClick(true);
 		// On click of Search
 		searchButton.addClickListener(event -> {
-			List<Object[]> recordList = null;
+			List<InvestmentVO> recordList = null;
 			try {
 				// Validation
 				// Back-end Call
 				try {
 	    			recordList = searchService.searchInvestments(searchCriterionFEVOList);
+	    			investmentsGrid.setItems(recordList);
 				} catch (Exception e) {
 					showError(UtilFuncs.messageFromException(e));
 					e.printStackTrace();
