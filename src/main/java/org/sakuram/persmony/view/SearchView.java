@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
 
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
+import org.sakuram.persmony.service.SearchService;
 import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.FieldSpecFEVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.SearchCriterionFEVO;
@@ -18,6 +20,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -34,8 +37,9 @@ public class SearchView extends Div {
 
 	MoneyTransactionService moneyTransactionService;
 	MiscService miscService;
+	SearchService searchService;
 
-	public SearchView(MoneyTransactionService moneyTransactionService, MiscService miscService) {
+	public SearchView(MoneyTransactionService moneyTransactionService, MiscService miscService, SearchService searchService) {
 		Map<String, FieldSpecFEVO> fieldSpecMap;
 		Select<String> fieldNameSelect, operatorSelect;
 		Grid<SearchCriterionFEVO> searchCriteriaGrid;
@@ -43,8 +47,9 @@ public class SearchView extends Div {
 		Editor<SearchCriterionFEVO> criterionEditor;
 		Grid.Column<SearchCriterionFEVO> fieldNameColumn, operatorColumn, valuesCSVColumn;
 		GridListDataView<SearchCriterionFEVO> searchCriteriaGridLDV;
-		Button addButton;
+		Button addButton, searchButton;
 		TextField valuesDummyTextField;
+		List<SearchCriterionFEVO> searchCriterionFEVOList;
 		
 		fieldSpecMap = new HashMap<String, FieldSpecFEVO>() {
 			private static final long serialVersionUID = 1L;
@@ -59,8 +64,11 @@ public class SearchView extends Div {
 		addButton = new Button("Add Row");
 		add(addButton);
 		searchCriteriaGrid = new Grid<>(SearchCriterionFEVO.class, false);
-		searchCriteriaGridLDV = searchCriteriaGrid.setItems(new ArrayList<SearchCriterionFEVO>());
+		searchCriterionFEVOList = new ArrayList<SearchCriterionFEVO>();
+		searchCriteriaGridLDV = searchCriteriaGrid.setItems(searchCriterionFEVOList);
 		add(searchCriteriaGrid);
+		searchButton = new Button("Search");
+		add(searchButton);
 		
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addButton.setDisableOnClick(true);
@@ -159,6 +167,31 @@ public class SearchView extends Div {
 		        ((Focusable) editorComponent).focus();
 		    }
 		});
+		
+		searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		searchButton.setDisableOnClick(true);
+		// On click of Search
+		searchButton.addClickListener(event -> {
+			List<Object[]> recordList = null;
+			try {
+				// Validation
+				// Back-end Call
+				try {
+	    			recordList = searchService.searchInvestments(searchCriterionFEVOList);
+				} catch (Exception e) {
+					showError(UtilFuncs.messageFromException(e));
+					e.printStackTrace();
+					return;
+				}
+				System.out.println("No. of investments fetched: " + recordList.size());
+				
+			/* } catch (Exception e) {
+				showError("System Error!!! Contact Support.");
+				return; */
+			} finally {
+				searchButton.setEnabled(true);
+			}
+		});
 	}
 	
     private static void addCloseHandler(Component criteriaField,
@@ -166,4 +199,15 @@ public class SearchView extends Div {
     	criteriaField.getElement().addEventListener("keydown", e -> editor.cancel())
                 .setFilter("event.key === 'Escape' || event.key === 'Esc'");
     }
+	
+	private void showError(String message) {
+		ConfirmDialog errorDialog;
+		
+		errorDialog = new ConfirmDialog();
+		errorDialog.setHeader("Attention! Error!!");
+		errorDialog.setText(message);
+		errorDialog.setConfirmText("OK");
+		errorDialog.open();
+		
+	}
 }
