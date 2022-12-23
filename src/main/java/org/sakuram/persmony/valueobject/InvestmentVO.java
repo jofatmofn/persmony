@@ -8,9 +8,10 @@ import lombok.Setter;
 
 @Getter @Setter
 public class InvestmentVO {
+	private long investmentId;
 	private String investor;
 	private String productProvider;
-	private String dematAccount;	
+	private String dematAccount;
 	private String facilitator;
 	private String investorIdWithProvider;
 	private String productIdOfProvider;
@@ -58,5 +59,6 @@ public class InvestmentVO {
 		this.isAccrualApplicable = (Boolean) columns[21];
 		this.dynamicReceiptPeriodicity = (Character) columns[22];	
 		this.providerBranch = (String) columns[23];
+		this.investmentId = ((BigInteger) columns[24]).longValue();
 	}
 }

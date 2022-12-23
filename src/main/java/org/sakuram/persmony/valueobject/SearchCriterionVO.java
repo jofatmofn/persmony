@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SearchCriterionFEVO {
+public class SearchCriterionVO {
 	String fieldName;
 	String operator;
 	String valuesCSV;

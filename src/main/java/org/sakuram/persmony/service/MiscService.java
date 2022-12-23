@@ -45,6 +45,10 @@ public class MiscService {
     }
     
     public List<IdValueVO> fetchDvsOfCategory(String category) {
+    	return fetchDvsOfCategory(category, true);
+    }
+    
+    public List<IdValueVO> fetchDvsOfCategory(String category, boolean enhanced) {
     	List<IdValueVO> idValueVOList;
     	DomainValue domainValue;
     	
@@ -52,46 +56,46 @@ public class MiscService {
     	for (Long dvId : Constants.categoryDvIdCache.get(category)) {
     		String label;
     		domainValue = Constants.domainValueCache.get(dvId);
-    		label = "? ERROR ?";
-    		switch(category) {
-    		case Constants.CATEGORY_ACCOUNT:
-    			try {
-    				DvFlagsAccountVO dvFlagsAccountVO;
-	    			DvFlagsBranchVO dvFlagsBranchVO;
-	    			DomainValue branchDv, partyDv;
-	    			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(domainValue);
-	    			if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_SAVINGS)) {
-		    			branchDv = Constants.domainValueCache.get(dvFlagsAccountVO.getBranchDvId());
-		    			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
-		    			partyDv = Constants.domainValueCache.get(dvFlagsBranchVO.getPartyDvId());
-		    			label = dvFlagsAccountVO.getAccType() + "::" +
-		    					partyDv.getValue() + "::" +
-		    					branchDv.getValue() + "::" +
-		    					dvFlagsAccountVO.getAccId();
-	    			} else if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_FUNDS)) {
-		    			partyDv = Constants.domainValueCache.get(dvFlagsAccountVO.getPartyDvId());
-		    			label =  dvFlagsAccountVO.getAccType() + "::" +
-		    					partyDv.getValue();
-    				}
-    			} catch (Exception e) {
-    				throw new AppException("Invalid Configuration of Bank Account " + dvId, null);
-    			}
-    			break;
-    		case Constants.CATEGORY_BRANCH:
-    			try {
-        			DvFlagsBranchVO dvFlagsBranchVO;
-        			DomainValue branchDv, partyDv;
-        			branchDv = Constants.domainValueCache.get(dvId);
-        			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
-        			partyDv = Constants.domainValueCache.get(dvFlagsBranchVO.getPartyDvId());
-        			label = partyDv.getValue() + "::" +
-        					branchDv.getValue();
+			label = domainValue.getValue();
+    		if (enhanced) {
+	    		switch(category) {
+	    		case Constants.CATEGORY_ACCOUNT:
+	    			try {
+	    				DvFlagsAccountVO dvFlagsAccountVO;
+		    			DvFlagsBranchVO dvFlagsBranchVO;
+		    			DomainValue branchDv, partyDv;
+		    			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(domainValue);
+		    			if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_SAVINGS)) {
+			    			branchDv = Constants.domainValueCache.get(dvFlagsAccountVO.getBranchDvId());
+			    			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
+			    			partyDv = Constants.domainValueCache.get(dvFlagsBranchVO.getPartyDvId());
+			    			label = dvFlagsAccountVO.getAccType() + "::" +
+			    					partyDv.getValue() + "::" +
+			    					branchDv.getValue() + "::" +
+			    					dvFlagsAccountVO.getAccId();
+		    			} else if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_FUNDS)) {
+			    			partyDv = Constants.domainValueCache.get(dvFlagsAccountVO.getPartyDvId());
+			    			label =  dvFlagsAccountVO.getAccType() + "::" +
+			    					partyDv.getValue();
+	    				}
+	    			} catch (Exception e) {
+	    				throw new AppException("Invalid Configuration of Bank Account " + dvId, null);
+	    			}
+	    			break;
+	    		case Constants.CATEGORY_BRANCH:
+	    			try {
+	        			DvFlagsBranchVO dvFlagsBranchVO;
+	        			DomainValue branchDv, partyDv;
+	        			branchDv = Constants.domainValueCache.get(dvId);
+	        			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
+	        			partyDv = Constants.domainValueCache.get(dvFlagsBranchVO.getPartyDvId());
+	        			label = partyDv.getValue() + "::" +
+	        					branchDv.getValue();
         			} catch (Exception e) {
         				throw new AppException("Invalid Configuration of Branch " + dvId, null);
         			}
-    			break;
-    		default:
-    				label = domainValue.getValue();
+	    			break;
+	    		}
     		}
     		idValueVOList.add(new IdValueVO(domainValue.getId(), label));
     	}

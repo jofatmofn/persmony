@@ -2,9 +2,7 @@ package org.sakuram.persmony.view;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.sakuram.persmony.service.MiscService;
@@ -12,10 +10,10 @@ import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.service.SearchService;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
-import org.sakuram.persmony.valueobject.FieldSpecFEVO;
+import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestmentVO;
-import org.sakuram.persmony.valueobject.SearchCriterionFEVO;
+import org.sakuram.persmony.valueobject.SearchCriterionVO;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
@@ -23,10 +21,13 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -41,37 +42,30 @@ public class SearchView extends Div {
 	SearchService searchService;
 
 	public SearchView(MoneyTransactionService moneyTransactionService, MiscService miscService, SearchService searchService) {
-		Map<String, FieldSpecFEVO> fieldSpecMap;
 		Select<String> fieldNameSelect, operatorSelect;
-		Grid<SearchCriterionFEVO> searchCriteriaGrid;
-		Binder<SearchCriterionFEVO> searchCriteriaBinder;
-		Editor<SearchCriterionFEVO> criterionEditor;
-		Grid.Column<SearchCriterionFEVO> fieldNameColumn, operatorColumn, valuesCSVColumn;
-		GridListDataView<SearchCriterionFEVO> searchCriteriaGridLDV;
+		Grid<SearchCriterionVO> searchCriteriaGrid;
+		Binder<SearchCriterionVO> searchCriteriaBinder;
+		Editor<SearchCriterionVO> criterionEditor;
+		Grid.Column<SearchCriterionVO> fieldNameColumn, operatorColumn, valuesCSVColumn;
+		GridListDataView<SearchCriterionVO> searchCriteriaGridLDV;
 		Button addButton, searchButton;
 		TextField valuesDummyTextField;
-		List<SearchCriterionFEVO> searchCriterionFEVOList;
+		List<SearchCriterionVO> searchCriterionVOList;
 		Grid<InvestmentVO> investmentsGrid;
 		
-		fieldSpecMap = new HashMap<String, FieldSpecFEVO>() {
-			private static final long serialVersionUID = 1L;
-
-			{
-				put("is_closed", new FieldSpecFEVO("Is Closed?", FieldSpecFEVO.UiControl.CHECKBOX, null, null, null, null));
-				put("product_end_date", new FieldSpecFEVO("Product End Date", null, true, null, null, null));
-				put("investor_fk", new FieldSpecFEVO("Investor", FieldSpecFEVO.UiControl.SELECT, null, null, true, Constants.CATEGORY_INVESTOR));
-			}
-		};
-
 		addButton = new Button("Add Row");
 		add(addButton);
-		searchCriteriaGrid = new Grid<>(SearchCriterionFEVO.class, false);
-		searchCriterionFEVOList = new ArrayList<SearchCriterionFEVO>();
-		searchCriteriaGridLDV = searchCriteriaGrid.setItems(searchCriterionFEVOList);
+		searchCriteriaGrid = new Grid<>(SearchCriterionVO.class, false);
+		searchCriterionVOList = new ArrayList<SearchCriterionVO>();
+		searchCriteriaGridLDV = searchCriteriaGrid.setItems(searchCriterionVOList);
 		add(searchCriteriaGrid);
 		searchButton = new Button("Search");
 		add(searchButton);
 		investmentsGrid = new Grid<>(InvestmentVO.class);
+		investmentsGrid.setColumns("investmentId", "investor", "productProvider", "providerBranch", "investmentIdWithProvider", "investorIdWithProvider", "productType", "productName", "rateOfInterest", "dematAccount", "worth", "cleanPrice", "accruedInterest", "charges", "taxability", "isAccrualApplicable", "productEndDate", "dynamicReceiptPeriodicity", "previousInvestment", "newInvestmentReason", "closed", "closureDate", "closureType");
+		for (Column<InvestmentVO> column : investmentsGrid.getColumns()) {
+			column.setResizable(true);
+		}
 		add(investmentsGrid);
 		
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -79,19 +73,19 @@ public class SearchView extends Div {
 		// On click of Add Row
 		addButton.addClickListener(event -> {
 			try {
-				searchCriteriaGridLDV.addItem(new SearchCriterionFEVO());
+				searchCriteriaGridLDV.addItem(new SearchCriterionVO());
 				System.out.println("Length: " + searchCriteriaGridLDV.getItemCount());
 			} finally {
 				addButton.setEnabled(true);
 			}
 		});
 
-		fieldNameColumn = searchCriteriaGrid.addColumn(SearchCriterionFEVO::getFieldName).setHeader("Field name");
-		operatorColumn = searchCriteriaGrid.addColumn(SearchCriterionFEVO::getOperator).setHeader("Operator");
-		valuesCSVColumn = searchCriteriaGrid.addColumn(SearchCriterionFEVO::getValuesCSV).setHeader("Values");
+		fieldNameColumn = searchCriteriaGrid.addColumn(SearchCriterionVO::getFieldName).setHeader("Field name");
+		operatorColumn = searchCriteriaGrid.addColumn(SearchCriterionVO::getOperator).setHeader("Operator");
+		valuesCSVColumn = searchCriteriaGrid.addColumn(SearchCriterionVO::getValuesCSV).setHeader("Values");
 		searchCriteriaGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		
-		searchCriteriaBinder = new Binder<>(SearchCriterionFEVO.class);
+		searchCriteriaBinder = new Binder<>(SearchCriterionVO.class);
 		criterionEditor = searchCriteriaGrid.getEditor();
 		criterionEditor.setBinder(searchCriteriaBinder);
 
@@ -100,19 +94,17 @@ public class SearchView extends Div {
 		valuesDummyTextField = new TextField();
 		addCloseHandler(valuesDummyTextField, criterionEditor);
 		searchCriteriaBinder.forField(valuesDummyTextField)
-			.asRequired("Values must not be empty")
-			.bind(SearchCriterionFEVO::getValuesCSV, SearchCriterionFEVO::setValuesCSV);
+			.bind(SearchCriterionVO::getValuesCSV, SearchCriterionVO::setValuesCSV);
 		valuesCSVColumn.setEditorComponent(valuesDummyTextField);
 		valuesDummyTextField.setVisible(true);
 		
-		fieldNameSelect.setItems(fieldSpecMap.keySet());	// TODO: Label instead of field name.
+		fieldNameSelect.setItems(Constants.SEARCH_FIELD_SPEC_MAP.keySet());	// TODO: Label instead of field name.
 		addCloseHandler(fieldNameSelect, criterionEditor);
 		searchCriteriaBinder.forField(fieldNameSelect)
-			.asRequired("Field name must not be empty")
-			.bind(SearchCriterionFEVO::getFieldName, SearchCriterionFEVO::setFieldName);
+			.bind(SearchCriterionVO::getFieldName, SearchCriterionVO::setFieldName);
 		fieldNameColumn.setEditorComponent(fieldNameSelect);
 		fieldNameSelect.addValueChangeListener(event -> {
-			FieldSpecFEVO fieldSpecFEVO;
+			FieldSpecVO fieldSpecVO;
 			List<IdValueVO> idValueVOList;
 			Select<String> valueDvSelect = null;
 			TextField valuesTextField = null;
@@ -123,34 +115,32 @@ public class SearchView extends Div {
 			System.out.println("Value Changed to: " + fieldNameSelect.getValue());
 			/* searchCriteriaBinder.removeBinding(valuesTextField);
 			searchCriteriaBinder.removeBinding(valueDvSelect); */
-			fieldSpecFEVO = fieldSpecMap.get(fieldNameSelect.getValue());
-			if (fieldSpecFEVO.getIsDvSelect() == null || !fieldSpecFEVO.getIsDvSelect()) {
+			fieldSpecVO = Constants.SEARCH_FIELD_SPEC_MAP.get(fieldNameSelect.getValue());
+			operatorSelect.setItems(new String[0]);
+			if (fieldSpecVO.getIsDvSelect() == null || !fieldSpecVO.getIsDvSelect()) {
 				valuesTextField = new TextField();
 				addCloseHandler(valuesTextField, criterionEditor);
 				searchCriteriaBinder.forField(valuesTextField)
-					.asRequired("Values must not be empty")
-					.bind(SearchCriterionFEVO::getValuesCSV, SearchCriterionFEVO::setValuesCSV);
+					.bind(SearchCriterionVO::getValuesCSV, SearchCriterionVO::setValuesCSV);
 				valuesCSVColumn.setEditorComponent(valuesTextField);
 				System.out.println("Setting Editor to TextField");
 			}
-			if (fieldSpecFEVO.getIsSequencable() != null && fieldSpecFEVO.getIsSequencable()) {
-				operatorSelect.setItems(Arrays.stream(FieldSpecFEVO.SeqOperator.values()).map(Enum::name).toArray(String[]::new));
-			} else if (fieldSpecFEVO.getIsFreeText() != null && fieldSpecFEVO.getIsFreeText()) {
-				operatorSelect.setItems(Arrays.stream(FieldSpecFEVO.TxtOperator.values()).map(Enum::name).toArray(String[]::new));
-			} else if (fieldSpecFEVO.getIsDvSelect() != null && fieldSpecFEVO.getIsDvSelect()) {
-				operatorSelect.setItems("IN");
+			
+			if (fieldSpecVO.getIsSequencable() != null && fieldSpecVO.getIsSequencable()) {
+				operatorSelect.setItems(Arrays.stream(FieldSpecVO.SeqOperator.values()).map(Enum::name).toArray(String[]::new));
+			} else if (fieldSpecVO.getIsFreeText() != null && fieldSpecVO.getIsFreeText()) {
+				operatorSelect.setItems(Arrays.stream(FieldSpecVO.TxtOperator.values()).map(Enum::name).toArray(String[]::new));
+			} else if (fieldSpecVO.getIsDvSelect() != null && fieldSpecVO.getIsDvSelect()) {
 				valueDvSelect = new Select<String>();
-				idValueVOList = miscService.fetchDvsOfCategory(fieldSpecFEVO.getDvCategory());
+				idValueVOList = miscService.fetchDvsOfCategory(fieldSpecVO.getDvCategory(), false);
 				valueDvSelect.setItems(idValueVOList.stream().map(IdValueVO::getValue).collect(Collectors.toList()));
-				valueDvSelect.setPlaceholder("Select " + fieldSpecFEVO.getLabel());
+				valueDvSelect.setPlaceholder("Select " + fieldSpecVO.getLabel());
 				addCloseHandler(valueDvSelect, criterionEditor);
 				searchCriteriaBinder.forField(valueDvSelect)
-					.asRequired("Values must not be empty")
-					.bind(SearchCriterionFEVO::getValuesCSV, SearchCriterionFEVO::setValuesCSV);
+					.bind(SearchCriterionVO::getValuesCSV, SearchCriterionVO::setValuesCSV);
 				valuesCSVColumn.setEditorComponent(valueDvSelect);
 				System.out.println("Setting Editor to DropDown");
 			} else {
-				operatorSelect.setItems("EQ");
 			}
 
 			criterionEditor.refresh();	// Required for the editor component of values to take effect immediately
@@ -159,8 +149,7 @@ public class SearchView extends Div {
 
 		addCloseHandler(operatorSelect, criterionEditor);
 		searchCriteriaBinder.forField(operatorSelect)
-			.asRequired("Operator must not be empty")
-			.bind(SearchCriterionFEVO::getOperator, SearchCriterionFEVO::setOperator);
+			.bind(SearchCriterionVO::getOperator, SearchCriterionVO::setOperator);
 		operatorColumn.setEditorComponent(operatorSelect);
 
 		searchCriteriaGrid.addItemDoubleClickListener(e -> {
@@ -177,22 +166,24 @@ public class SearchView extends Div {
 		// On click of Search
 		searchButton.addClickListener(event -> {
 			List<InvestmentVO> recordList = null;
+			Notification notification;
 			try {
 				// Validation
 				// Back-end Call
 				try {
-	    			recordList = searchService.searchInvestments(searchCriterionFEVOList);
+	    			recordList = searchService.searchInvestments(searchCriterionVOList);
 	    			investmentsGrid.setItems(recordList);
 				} catch (Exception e) {
 					showError(UtilFuncs.messageFromException(e));
 					e.printStackTrace();
 					return;
 				}
-				System.out.println("No. of investments fetched: " + recordList.size());
+				notification = Notification.show("No. of investments fetched: " + recordList.size());
+				notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				
-			/* } catch (Exception e) {
+			} catch (Exception e) {
 				showError("System Error!!! Contact Support.");
-				return; */
+				return;
 			} finally {
 				searchButton.setEnabled(true);
 			}
@@ -200,7 +191,7 @@ public class SearchView extends Div {
 	}
 	
     private static void addCloseHandler(Component criteriaField,
-            Editor<SearchCriterionFEVO> editor) {
+            Editor<SearchCriterionVO> editor) {
     	criteriaField.getElement().addEventListener("keydown", e -> editor.cancel())
                 .setFilter("event.key === 'Escape' || event.key === 'Esc'");
     }

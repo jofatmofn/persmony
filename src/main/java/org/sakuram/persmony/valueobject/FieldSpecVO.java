@@ -6,14 +6,11 @@ import lombok.Setter;
 
 @Getter @Setter
 @AllArgsConstructor
-public class FieldSpecFEVO {
-	public enum UiControl {
-		TEXTFIELD,
-		NUMBERFIELD,
-		DATEPICKER,
-		SELECT,
-		RADIOBUTTONGROUP,
-		CHECKBOX
+public class FieldSpecVO {
+	public enum DataType {
+		BOOLEAN,
+		DATE,
+		OTHERS
 	}
 	public enum SeqOperator {
 		EQ,
@@ -32,7 +29,7 @@ public class FieldSpecFEVO {
 		CONTAINS
 	}
 	String label;
-	UiControl uiControl;
+	DataType dataType;
 	Boolean isSequencable;
 	Boolean isFreeText;
 	Boolean isDvSelect;

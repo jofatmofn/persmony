@@ -1,9 +1,11 @@
 package org.sakuram.persmony.util;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.sakuram.persmony.bean.DomainValue;
+import org.sakuram.persmony.valueobject.FieldSpecVO;
 
 public class Constants {
 
@@ -59,6 +61,38 @@ public class Constants {
 	
 	public static final Character DYNAMIC_REALISATION_PERIODICITY_YEAR = 'Y';
 	
+	public static final Map<String, FieldSpecVO> SEARCH_FIELD_SPEC_MAP = new HashMap<String, FieldSpecVO>() {
+		private static final long serialVersionUID = 1L;
+
+		{
+			put("I.id", new FieldSpecVO("Investment Id", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("closure_date", new FieldSpecVO("Closure Date", FieldSpecVO.DataType.DATE, true, false, false, null));
+			put("investment_id_with_provider", new FieldSpecVO("Investment Id With Provider", FieldSpecVO.DataType.OTHERS, false, true, false, null));
+			put("investor_id_with_provider", new FieldSpecVO("Investor Id With Provider", FieldSpecVO.DataType.OTHERS, false, true, false, null));
+			put("is_closed", new FieldSpecVO("Is Closed?", FieldSpecVO.DataType.BOOLEAN, false, false, false, null));
+			put("product_end_date", new FieldSpecVO("Product End Date", FieldSpecVO.DataType.DATE, true, false, false, null));
+			put("product_id_of_provider", new FieldSpecVO("Provider's Product Id", FieldSpecVO.DataType.OTHERS, false, true, false, null));
+			put("product_name", new FieldSpecVO("Product Name", FieldSpecVO.DataType.OTHERS, false, true, false, null));
+			put("rate_of_interest", new FieldSpecVO("Rate of Interest%", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("worth", new FieldSpecVO("Worth", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("closure_type_fk", new FieldSpecVO("Closure Type", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_CLOSURE_TYPE));
+			put("demat_account_fk", new FieldSpecVO("Demat Account", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_DEMAT_ACCOUNT));
+			put("facilitator_fk", new FieldSpecVO("Facilitator", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_PARTY));
+			put("investor_fk", new FieldSpecVO("Investor", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_INVESTOR));
+			put("new_investment_reason_fk", new FieldSpecVO("New Investment Reason", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_NEW_INVESTMENT_REASON));
+			// previous_investment_fk
+			put("product_provider_fk", new FieldSpecVO("Product Provider", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_PARTY));
+			put("product_type_fk", new FieldSpecVO("Product Type", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_PRODUCT_TYPE));
+			put("taxability_fk", new FieldSpecVO("Taxability", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_TAXABILITY));
+			put("is_accrual_applicable", new FieldSpecVO("Is Accrual Applicable?", FieldSpecVO.DataType.BOOLEAN, false, false, false, null));
+			// put("dynamic_receipt_periodicity", new FieldSpecVO("Dynamic Receipt Periodicity", FieldSpecVO.DataType.OTHERS, false, false, false, null));
+			put("provider_branch_fk", new FieldSpecVO("Provider Branch", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_BRANCH));
+			put("accrued_interest", new FieldSpecVO("Accrued Interest", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("charges", new FieldSpecVO("Charges", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("clean_price", new FieldSpecVO("Clean Price", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+		}
+	};
+
 	public static Map<Long, DomainValue> domainValueCache;
 	public static Map<String, List<Long>> categoryDvIdCache;
 }
