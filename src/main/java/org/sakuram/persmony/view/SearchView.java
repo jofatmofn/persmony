@@ -26,6 +26,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.select.Select;
@@ -83,6 +85,14 @@ public class SearchView extends Div {
 		fieldNameColumn = searchCriteriaGrid.addColumn(SearchCriterionVO::getFieldName).setHeader("Field name");
 		operatorColumn = searchCriteriaGrid.addColumn(SearchCriterionVO::getOperator).setHeader("Operator");
 		valuesCSVColumn = searchCriteriaGrid.addColumn(SearchCriterionVO::getValuesCSV).setHeader("Values");
+		searchCriteriaGrid.addComponentColumn(searchCriterionVO -> {
+			Button delButton = new Button();
+			delButton.setIcon(new Icon(VaadinIcon.TRASH));
+			delButton.addClickListener(e->{
+				searchCriteriaGridLDV.removeItem(searchCriterionVO);
+			});
+			return delButton;
+		}).setWidth("120px").setFlexGrow(0);
 		searchCriteriaGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		
 		searchCriteriaBinder = new Binder<>(SearchCriterionVO.class);
@@ -113,8 +123,6 @@ public class SearchView extends Div {
 				return;
 			}
 			System.out.println("Value Changed to: " + fieldNameSelect.getValue());
-			/* searchCriteriaBinder.removeBinding(valuesTextField);
-			searchCriteriaBinder.removeBinding(valueDvSelect); */
 			fieldSpecVO = Constants.SEARCH_FIELD_SPEC_MAP.get(fieldNameSelect.getValue());
 			operatorSelect.setItems(new String[0]);
 			if (fieldSpecVO.getIsDvSelect() == null || !fieldSpecVO.getIsDvSelect()) {
