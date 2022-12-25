@@ -34,10 +34,10 @@ public class SavingsAccountTransaction {
 	@Column(name="transaction_date", nullable=true)
 	private Date transactionDate;
 	
-	@Column(name="amount", nullable=true)
-	private Float amount;
+	@Column(name="amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double amount;
 
-	public SavingsAccountTransaction(DomainValue bankAccount, Date transactionDate, Float amount) {
+	public SavingsAccountTransaction(DomainValue bankAccount, Date transactionDate, Double amount) {
 		this.bankAccount = bankAccount;
 		this.transactionDate = transactionDate;
 		this.amount = amount;

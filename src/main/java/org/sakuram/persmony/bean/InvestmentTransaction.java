@@ -45,24 +45,24 @@ public class InvestmentTransaction {
 	@Column(name="due_date", nullable=true)
 	private Date dueDate;
 	
-	@Column(name="due_amount", nullable=true)
-	private Float dueAmount;
+	@Column(name="due_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double dueAmount;
 	
 	@ManyToOne
 	@JoinColumn(name="status_fk", nullable=false)
 	private DomainValue status;
 	
-	@Column(name="settled_amount", nullable=true)
-	private Float settledAmount; /* Only when not equal to dueAmount */
+	@Column(name="settled_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double settledAmount; /* Only when not equal to dueAmount */
 	
-	@Column(name="returned_principal_amount", nullable=true)
-	private Float returnedPrincipalAmount;
+	@Column(name="returned_principal_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double returnedPrincipalAmount;
 	
-	@Column(name="interest_amount", nullable=true)
-	private Float interestAmount;
+	@Column(name="interest_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double interestAmount;
 	
-	@Column(name="tds_amount", nullable=true)
-	private Float tdsAmount; /* Only for Accruals and Receipts */
+	@Column(name="tds_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double tdsAmount; /* Only for Accruals and Receipts */
 	
 	@ManyToOne
 	@JoinColumn(name="taxability_fk", nullable=true)
@@ -75,7 +75,7 @@ public class InvestmentTransaction {
 	@OneToMany(mappedBy = "investmentTransaction", cascade = CascadeType.ALL)
 	private List<Realisation> realisationList;
 
-	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Float dueAmount, DomainValue status, Float settledAmount, Float returnedPrincipalAmount, Float interestAmount, Float tdsAmount, DomainValue taxability, BigDecimal assessmentYear, List<Realisation> realisationList) {
+	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Double dueAmount, DomainValue status, Double settledAmount, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxability, BigDecimal assessmentYear, List<Realisation> realisationList) {
 		this.investment = investment;
 		this.transactionType = transactionType;
 		this.dueDate = dueDate;

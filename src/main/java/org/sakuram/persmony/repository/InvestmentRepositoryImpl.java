@@ -85,8 +85,8 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 						valuesArr[1] = "'" + valuesArr[1] + "'";
 					} else {
 						try {
-							Float.valueOf(valuesArr[0]);
-							Float.valueOf(valuesArr[1]);
+							Double.valueOf(valuesArr[0]);
+							Double.valueOf(valuesArr[1]);
 						} catch (NumberFormatException e) {
 							throw new AppException("Numeric value expected for " + searchCriterionVO.getFieldName(), null);
 						}
@@ -99,7 +99,7 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 				} else {
 					if (fieldSpecVO.getDataType() == FieldSpecVO.DataType.OTHERS) {
 						try {
-							Float.valueOf(searchCriterionVO.getValuesCSV());
+							Double.valueOf(searchCriterionVO.getValuesCSV());
 						} catch (NumberFormatException e) {
 							throw new AppException("Numeric value expected for " + searchCriterionVO.getFieldName(), null);
 						}

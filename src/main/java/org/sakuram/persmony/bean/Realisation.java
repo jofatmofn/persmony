@@ -42,10 +42,10 @@ public class Realisation {
 	@Column(name="details_reference", nullable=true)
 	private Long detailsReference;	/* Could be id of realisation or saving account transaction */
 	
-	@Column(name="amount", nullable=true)
-	private Float amount;
+	@Column(name="amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double amount;
 
-	public Realisation(InvestmentTransaction investmentTransaction, Date realisationDate, DomainValue realisationType, Long detailsReference, Float amount) {
+	public Realisation(InvestmentTransaction investmentTransaction, Date realisationDate, DomainValue realisationType, Long detailsReference, Double amount) {
 		this.investmentTransaction = investmentTransaction;
 		this.realisationDate = realisationDate;
 		this.realisationType = realisationType;

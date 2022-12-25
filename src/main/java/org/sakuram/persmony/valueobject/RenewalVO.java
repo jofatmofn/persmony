@@ -14,8 +14,8 @@ public class RenewalVO {
 	long investmentId;
 	// New
 	String investmentIdWithProvider;
-	Float faceValue;
-	Float rateOfInterest;
+	Double faceValue;
+	Double rateOfInterest;
 	Date productEndDate;
 	List<ScheduleVO> paymentScheduleVOList;
 	List<ScheduleVO> receiptScheduleVOList;

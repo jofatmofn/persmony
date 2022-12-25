@@ -52,7 +52,7 @@ public class UtilFuncs {
     	List<ScheduleVO> scheduleVOList;
     	Matcher matcher;
     	List<Integer> yearsList, monthsList, daysList;
-    	Float value;
+    	Double value;
     	int matcherEnd;
     	
     	scheduleVOList = new ArrayList<ScheduleVO>();
@@ -69,7 +69,7 @@ public class UtilFuncs {
         	yearsList = parseListStr(matcher.group(1));
         	monthsList = parseListStr(matcher.group(2));
         	daysList = parseListStr(matcher.group(3));
-        	value = Float.valueOf(matcher.group(4));
+        	value = Double.valueOf(matcher.group(4));
         	for (Integer year : yearsList) {
         		for (Integer month : monthsList) {
         			for (Integer day : daysList) {

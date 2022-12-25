@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class SingleRealisationWithBankVO {
 	long investmentTransactionId;
-	Float amount;
+	Double amount;
 	Date transactionDate;
 	long bankAccountDvId;
 	Long closureTypeDvId;

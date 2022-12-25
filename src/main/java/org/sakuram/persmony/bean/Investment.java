@@ -66,20 +66,20 @@ public class Investment {
 	@JoinColumn(name="product_type_fk", nullable=true)
 	private DomainValue productType;
 	
-	@Column(name="worth", nullable=true)
-	private Float worth;
+	@Column(name="worth", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double worth;
 	
-	@Column(name="clean_price", nullable=true)
-	private Float cleanPrice;
+	@Column(name="clean_price", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double cleanPrice;
 	
-	@Column(name="accrued_interest", nullable=true)
-	private Float accruedInterest;
+	@Column(name="accrued_interest", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double accruedInterest;
 	
-	@Column(name="charges", nullable=true)
-	private Float charges;
+	@Column(name="charges", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double charges;
 	
-	@Column(name="rate_of_interest", nullable=true)
-	private Float rateOfInterest;
+	@Column(name="rate_of_interest", nullable=true, columnDefinition="NUMERIC", precision=6, scale=4)
+	private Double rateOfInterest;
 	
 	@ManyToOne
 	@JoinColumn(name="taxability_fk", nullable=true)
@@ -121,7 +121,7 @@ public class Investment {
 	@JoinColumn(name="provider_branch_fk", nullable=true)
 	private DomainValue providerBranch;
 	
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Float worth, Float cleanPrice, Float accruedInterest, Float charges, Float rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;

@@ -188,7 +188,7 @@ public class InvestmentTransactionView extends Div {
 				// Back-end Call
 				singleRealisationWithBankVO = new SingleRealisationWithBankVO(
 						Long.parseLong(investmentTransactionIdTextField.getValue()),
-						(float)amountNumberField.getValue().doubleValue(),
+						(double)amountNumberField.getValue().doubleValue(),
 						Date.valueOf(transactionDatePicker.getValue()),
 						bankAccountDvSelect.getValue().getId(),
 						isLast ? closureTypeDvSelect.getValue().getId() : null);
@@ -281,7 +281,7 @@ public class InvestmentTransactionView extends Div {
 				txnSingleRealisationWithBankVO = new TxnSingleRealisationWithBankVO(
 						Long.parseLong(investmentIdTextField.getValue()),
 						transactionTypeDvSelect.getValue().getId(),
-						(float)amountNumberField.getValue().doubleValue(),
+						(double)amountNumberField.getValue().doubleValue(),
 						Date.valueOf(transactionDatePicker.getValue()),
 						bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId());
 				try {
@@ -516,11 +516,11 @@ public class InvestmentTransactionView extends Div {
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
 						bankAccountDvSelect.getValue().getId(),
 						investmentIdWithProviderTextField.getValue(),
-						(float)faceValueNumberField.getValue().doubleValue(),
-						cleanPriceNumberField.getValue() == null ? null : (float)cleanPriceNumberField.getValue().doubleValue(),
-						accruedInterestNumberField.getValue() == null ? null : (float)accruedInterestNumberField.getValue().doubleValue(),
-						chargesNumberField.getValue() == null ? null : (float)chargesNumberField.getValue().doubleValue(),
-						rateOfInterestNumberField.getValue() == null ? null : (float)rateOfInterestNumberField.getValue().doubleValue(),
+						(double)faceValueNumberField.getValue().doubleValue(),
+						cleanPriceNumberField.getValue() == null ? null : (double)cleanPriceNumberField.getValue().doubleValue(),
+						accruedInterestNumberField.getValue() == null ? null : (double)accruedInterestNumberField.getValue().doubleValue(),
+						chargesNumberField.getValue() == null ? null : (double)chargesNumberField.getValue().doubleValue(),
+						rateOfInterestNumberField.getValue() == null ? null : (double)rateOfInterestNumberField.getValue().doubleValue(),
 						Date.valueOf(productEndDatePicker.getValue()),
 						paymentScheduleVOList,
 						receiptScheduleVOList,
@@ -651,8 +651,8 @@ public class InvestmentTransactionView extends Div {
 				renewalVO = new RenewalVO(
 						Long.parseLong(oldInvestmentIdTextField.getValue()),
 						investmentIdWithProviderTextField.getValue(),
-						(float)faceValueNumberField.getValue().doubleValue(),
-						rateOfInterestNumberField.getValue() == null ? null : (float)rateOfInterestNumberField.getValue().doubleValue(),
+						(double)faceValueNumberField.getValue().doubleValue(),
+						rateOfInterestNumberField.getValue() == null ? null : (double)rateOfInterestNumberField.getValue().doubleValue(),
 						Date.valueOf(productEndDatePicker.getValue()),
 						paymentScheduleVOList,
 						receiptScheduleVOList,

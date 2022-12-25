@@ -157,7 +157,7 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		InvestmentTransaction riReceiptTransaction;
 		Realisation riReceiptRealisation, niPaymentRealisation;
 		Date realisationDate;
-		Float realisationAmount;
+		Double realisationAmount;
 		
 		realisationDate = renewalVO.getPaymentScheduleVOList().get(0).getDueDate();
 		realisationAmount = renewalVO.getPaymentScheduleVOList().get(0).getDueAmount();

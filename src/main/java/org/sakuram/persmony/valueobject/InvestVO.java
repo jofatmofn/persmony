@@ -22,8 +22,8 @@ public class InvestVO {
 	Boolean isAccrualApplicable;
 	Long bankDvId;
 	String investmentIdWithProvider;
-	Float faceValue, cleanPrice, accruedInterest, charges;
-	Float rateOfInterest;
+	Double faceValue, cleanPrice, accruedInterest, charges;
+	Double rateOfInterest;
 	Date productEndDate;
 	List<ScheduleVO> paymentScheduleVOList;
 	List<ScheduleVO> receiptScheduleVOList;

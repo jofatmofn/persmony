@@ -10,5 +10,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ScheduleVO {
 	private Date dueDate;
-	private Float dueAmount;
+	private Double dueAmount;
 }
