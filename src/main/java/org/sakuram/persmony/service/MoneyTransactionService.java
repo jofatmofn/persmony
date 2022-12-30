@@ -1,6 +1,7 @@
 package org.sakuram.persmony.service;
 
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.sakuram.persmony.bean.Investment;
@@ -19,8 +20,12 @@ import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.InvestVO;
+import org.sakuram.persmony.valueobject.InvestmentDetailsVO;
+import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
+import org.sakuram.persmony.valueobject.RealisationVO;
 import org.sakuram.persmony.valueobject.ReceiptDuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
+import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
@@ -290,6 +295,64 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		
 		saveSchedule(receiptDuesVO.getReceiptScheduleVOList(), investment, Constants.DVID_TRANSACTION_TYPE_RECEIPT);
 	}
+
+    public InvestmentDetailsVO fetchInvestmentDetails(long investmentId) {
+    	InvestmentDetailsVO investmentDetailsVO;
+    	List<InvestmentTransactionVO> investmentTransactionVOList;
+    	List<RealisationVO> realisationVOList;
+    	List<SavingsAccountTransactionVO> savingsAccountTransactionVOList;
+		Investment investment;
+		SavingsAccountTransaction savingsAccountTransaction;
+		
+		investmentDetailsVO = new InvestmentDetailsVO();
+		investment = investmentRepository.findById(investmentId)
+				.orElseThrow(() -> new AppException("Invalid Investment Id " + investmentId, null));
+    	investmentTransactionVOList = new ArrayList<InvestmentTransactionVO>(investment.getInvestmentTransactionList().size());
+    	investmentDetailsVO.setInvestmentTransactionVOList(investmentTransactionVOList);
+    	realisationVOList = new ArrayList<RealisationVO>();
+    	investmentDetailsVO.setRealisationVOList(realisationVOList);
+    	savingsAccountTransactionVOList = new ArrayList<SavingsAccountTransactionVO>();
+    	investmentDetailsVO.setSavingsAccountTransactionVOList(savingsAccountTransactionVOList);
+    	
+    	for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
+    		investmentTransactionVOList.add(new InvestmentTransactionVO(
+    				investmentTransaction.getId(),
+    				investmentTransaction.getTransactionType().getValue(),
+    				investmentTransaction.getDueDate(),
+    				investmentTransaction.getDueAmount(),
+    				investmentTransaction.getStatus().getValue(),
+    				investmentTransaction.getSettledAmount(),
+    				investmentTransaction.getReturnedPrincipalAmount(),
+    				investmentTransaction.getInterestAmount(),
+    				investmentTransaction.getTdsAmount(),
+    				investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getValue(),
+    				investmentTransaction.getAssessmentYear().shortValue()
+    				));
+    		for (Realisation realisation : investmentTransaction.getRealisationList()) {
+    			// TODO: Handle possible Duplicates
+    			realisationVOList.add(new RealisationVO(
+    					realisation.getId(),
+    					investmentTransaction.getId(),
+    					realisation.getRealisationDate(),
+    					realisation.getRealisationType().getValue(),
+    					realisation.getDetailsReference(),
+    					realisation.getAmount()
+    					));
+    			if (realisation.getRealisationType().getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
+        			// TODO: Handle possible Duplicates
+    				savingsAccountTransaction = savingsAccountTransactionRepository.findById(realisation.getDetailsReference())
+    						.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + realisation.getDetailsReference(), null));
+    				savingsAccountTransactionVOList.add(new SavingsAccountTransactionVO(
+    						savingsAccountTransaction.getId(),
+    						savingsAccountTransaction.getBankAccount().getValue(),
+    						savingsAccountTransaction.getTransactionDate(),
+    						savingsAccountTransaction.getAmount()
+    						));
+    			}
+    		}
+    	}
+    	return investmentDetailsVO;
+    }
 	
 	private void saveSchedule(List<ScheduleVO> scheduleVOList, Investment investment, long transactionType) {
 		InvestmentTransaction invesmentTransaction;

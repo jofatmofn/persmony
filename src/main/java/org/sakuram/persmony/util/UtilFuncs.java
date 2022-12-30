@@ -119,11 +119,10 @@ public class UtilFuncs {
 
 	public static String messageFromException(Exception e) {
 		if (e instanceof AppException) {
-			System.out.println("AppException Caught!!!");
 			return e.getMessage();
 		} else {
-			System.out.println(e.getClass().getName() + " Caught!!!");
-			return "Unexpected Error: " + (e.getMessage() == null ? "No further details!" : e.getMessage());
+			e.printStackTrace();
+			return "Unexpected Error: " + (e.getMessage() == null ? e.getClass().getName() : e.getMessage());
 		}
 		
 	}

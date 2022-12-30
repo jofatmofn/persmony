@@ -12,7 +12,11 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
+import org.sakuram.persmony.valueobject.InvestmentDetailsVO;
+import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
 import org.sakuram.persmony.valueobject.InvestmentVO;
+import org.sakuram.persmony.valueobject.RealisationVO;
+import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SearchCriterionVO;
 
 import com.vaadin.flow.component.Component;
@@ -20,6 +24,7 @@ import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -30,6 +35,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -183,7 +189,6 @@ public class SearchView extends Div {
 	    			investmentsGrid.setItems(recordList);
 				} catch (Exception e) {
 					showError(UtilFuncs.messageFromException(e));
-					e.printStackTrace();
 					return;
 				}
 				notification = Notification.show("No. of investments fetched: " + recordList.size());
@@ -196,6 +201,69 @@ public class SearchView extends Div {
 				searchButton.setEnabled(true);
 			}
 		});
+		
+		investmentsGrid.addItemDoubleClickListener(event -> {
+			InvestmentDetailsVO investmentDetailsVO;
+			Notification notification;
+			Dialog dialog;
+			VerticalLayout verticalLayout;
+			Grid<InvestmentTransactionVO> investmentTransactionsGrid;
+			Grid<RealisationVO> realisationGrid;
+			Grid<SavingsAccountTransactionVO> savingsAccountTransactionGrid;
+			Button closeButton;
+			
+			try {
+				dialog = new Dialog();
+				dialog.setHeaderTitle("Investment Details");
+				closeButton = new Button(new Icon("lumo", "cross"),
+				        (e) -> dialog.close());
+				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+				dialog.getHeader().add(closeButton);
+				verticalLayout = new VerticalLayout();
+				verticalLayout.getStyle().set("width", "90rem");
+				dialog.add(verticalLayout);
+				
+				investmentTransactionsGrid = new Grid<>(InvestmentTransactionVO.class);
+				investmentTransactionsGrid.setColumns("investmentTransactionId", "transactionType", "dueDate", "assessmentYear", "dueAmount", "status", "settledAmount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "taxability");
+				for (Column<InvestmentTransactionVO> column : investmentTransactionsGrid.getColumns()) {
+					column.setResizable(true);
+				}
+				verticalLayout.add("Investment Transactions");
+				verticalLayout.add(investmentTransactionsGrid);
+				
+				realisationGrid = new Grid<>(RealisationVO.class);
+				realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "detailsReference", "amount");
+				for (Column<RealisationVO> column : realisationGrid.getColumns()) {
+					column.setResizable(true);
+				}
+				verticalLayout.add("Realisations");
+				verticalLayout.add(realisationGrid);
+				
+				savingsAccountTransactionGrid = new Grid<>(SavingsAccountTransactionVO.class);
+				savingsAccountTransactionGrid.setColumns("savingsAccountTransactionId", "bankAccount", "transactionDate", "amount");
+				for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionGrid.getColumns()) {
+					column.setResizable(true);
+				}
+				verticalLayout.add("Savings Account Transactions");
+				verticalLayout.add(savingsAccountTransactionGrid);
+				
+    			investmentDetailsVO = moneyTransactionService.fetchInvestmentDetails(event.getItem().getInvestmentId());
+    			
+    			investmentTransactionsGrid.setItems(investmentDetailsVO.getInvestmentTransactionVOList());
+    			realisationGrid.setItems(investmentDetailsVO.getRealisationVOList());
+    			savingsAccountTransactionGrid.setItems(investmentDetailsVO.getSavingsAccountTransactionVOList());
+    			
+    			dialog.open();
+			} catch (Exception e) {
+				showError(UtilFuncs.messageFromException(e));
+				return;
+			}
+			notification = Notification.show("No. of investment transactions: " + investmentDetailsVO.getInvestmentTransactionVOList().size() +
+					"\nNo. of realisations: " + investmentDetailsVO.getRealisationVOList().size() +
+					"\nNo. of savings account transactions: " + investmentDetailsVO.getSavingsAccountTransactionVOList().size());
+			notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+		});
+		
 	}
 	
     private static void addCloseHandler(Component criteriaField,
@@ -203,7 +271,7 @@ public class SearchView extends Div {
     	criteriaField.getElement().addEventListener("keydown", e -> editor.cancel())
                 .setFilter("event.key === 'Escape' || event.key === 'Esc'");
     }
-	
+
 	private void showError(String message) {
 		ConfirmDialog errorDialog;
 		

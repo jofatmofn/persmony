@@ -159,6 +159,13 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 				case Constants.CATEGORY_INVESTOR:
 					stringBuffer.append("iDV");
 					break;
+				case Constants.CATEGORY_PARTY:
+					if (fieldSpecVO.getLabel().equals("Product Provider")) {	// TODO: Clean this dependency on label
+						stringBuffer.append("ppDV");
+					} else {
+						stringBuffer.append("fDV");
+					}
+					break;
 				case Constants.CATEGORY_DEMAT_ACCOUNT:
 					stringBuffer.append("daDV");
 					break;
