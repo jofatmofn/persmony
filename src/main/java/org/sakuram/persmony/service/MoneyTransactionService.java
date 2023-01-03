@@ -32,7 +32,7 @@ import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
 @Service
 @Transactional
-public class MoneyTransactionService implements MoneyTransactionServiceInterface {
+public class MoneyTransactionService {
 	@Autowired
 	InvestmentRepository investmentRepository;
 	@Autowired
@@ -44,15 +44,15 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 	@Autowired
 	MiscService miscService;
 	
-	public void singleRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO, Character invoker) {
-		// Investment investment;
+	public void singleRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO) {
+		Investment investment;
 		InvestmentTransaction investmentTransaction, dynamicReceiptIt;
 		SavingsAccountTransaction savingsAccountTransaction;
 		Realisation realisation;
 		Date dynamicReceiptDueDate;
 		
 		investmentTransaction = investmentTransactionRepository.findById(singleRealisationWithBankVO.getInvestmentTransactionId())
-			.orElseThrow(() -> new AppException("Invalid Group Type " + singleRealisationWithBankVO.getInvestmentTransactionId(), null));
+			.orElseThrow(() -> new AppException("Invalid Investment Transaction Id " + singleRealisationWithBankVO.getInvestmentTransactionId(), null));
 		if (investmentTransaction.getStatus().getId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
 			throw new AppException("Transaction " + singleRealisationWithBankVO.getInvestmentTransactionId() + " no longer Pending ", null);
 		}
@@ -69,10 +69,19 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 		realisation = new Realisation(investmentTransaction, singleRealisationWithBankVO.getTransactionDate(), Constants.domainValueCache.get(Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT), savingsAccountTransaction.getId(), singleRealisationWithBankVO.getAmount());
 		realisation = realisationRepository.save(realisation);
 		
-		if (invoker == null && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
-			if (investmentTransaction.getInvestment().getDynamicReceiptPeriodicity() == null) {
+		if (singleRealisationWithBankVO.getClosureTypeDvId() != null) {
+			investment = investmentTransaction.getInvestment();
+			investment.setClosed(true);
+			investment.setClosureDate(singleRealisationWithBankVO.getTransactionDate());
+			investment.setClosureType(Constants.domainValueCache.get(singleRealisationWithBankVO.getClosureTypeDvId()));
+
+			for(InvestmentTransaction childInvestmentTransaction : investment.getInvestmentTransactionList()) {
+				if(childInvestmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING) {
+					childInvestmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_CANCELLED));
+				}
 			}
-			else if (investmentTransaction.getInvestment().getDynamicReceiptPeriodicity().equals(Constants.DYNAMIC_REALISATION_PERIODICITY_YEAR)) {
+		} else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT && investmentTransaction.getInvestment().getDynamicReceiptPeriodicity() != null) {
+			if (investmentTransaction.getInvestment().getDynamicReceiptPeriodicity().equals(Constants.DYNAMIC_REALISATION_PERIODICITY_YEAR)) {
 				dynamicReceiptDueDate = Date.valueOf(investmentTransaction.getDueDate().toLocalDate().plusYears(1));
 				dynamicReceiptIt = new InvestmentTransaction(
 						investmentTransaction.getInvestment(),
@@ -131,29 +140,10 @@ public class MoneyTransactionService implements MoneyTransactionServiceInterface
 					txnSingleRealisationWithBankVO.getAmount(),
 					txnSingleRealisationWithBankVO.getTransactionDate(),
 					txnSingleRealisationWithBankVO.getBankAccountDvId(),
-					null), 'T');
+					null));
 		}
 		
 		System.out.println("txnSingleRealisationWithBank completed.");
-	}
-	
-	public void singleLastRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO) {
-		Investment investment;
-		InvestmentTransaction investmentTransaction;
-		
-		singleRealisationWithBank(singleRealisationWithBankVO, 'L');
-		investmentTransaction = investmentTransactionRepository.findById(singleRealisationWithBankVO.getInvestmentTransactionId())
-				.orElseThrow(() -> new AppException("Invalid Group Type " + singleRealisationWithBankVO.getInvestmentTransactionId(), null));
-		investment = investmentTransaction.getInvestment();
-		investment.setClosed(true);
-		investment.setClosureDate(singleRealisationWithBankVO.getTransactionDate());
-		investment.setClosureType(Constants.domainValueCache.get(singleRealisationWithBankVO.getClosureTypeDvId()));
-		
-		for(InvestmentTransaction childInvestmentTransaction : investment.getInvestmentTransactionList()) {
-			if(childInvestmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING) {
-				childInvestmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_CANCELLED));
-			}
-		}
 	}
 	
 	public void renewal(RenewalVO renewalVO) {

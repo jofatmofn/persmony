@@ -71,6 +71,14 @@ public class InvestmentTransaction {
 	@Column(name="assessment_year", nullable=true, precision=4, scale=0)
 	private BigDecimal assessmentYear;	/* Why not Short? */
 
+	/*
+	 * (1) In a receipt transaction, returned_principal_amount + interest_amount - tds_amount need not match due_amount or settled_amount. 
+	 * Other accrual transactions may contribute to the due_amount.
+	 * (2) When creating a transaction, if tds_amount is known, then due_amount is post tds, else it's before tds.
+	 * When the transaction is realised, tds_amount is to be updated, but not the due_amount.
+	 * (3) When due_amount <> realised amount, settled_amount is to be updated.
+	 */
+
 	@JsonIgnore
 	@OneToMany(mappedBy = "investmentTransaction", cascade = CascadeType.ALL)
 	private List<Realisation> realisationList;

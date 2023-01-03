@@ -59,7 +59,6 @@ public class InvestmentTransactionView extends Div {
 
 			{
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Existing Transaction, Single Realisation With Bank"));
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "Existing Transaction, Single Realisation With Bank, Close Investment"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Accrual OR *New Transaction + Single Realisation With Bank*"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(4, "Invest"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(5, "Renewal"));
@@ -85,10 +84,7 @@ public class InvestmentTransactionView extends Div {
 			try {
 	            switch(event.getValue().getKey()) {
 	            case 1:
-	            	handleSingleRealisationWithBank(formLayout, false);
-	            	break;
-	            case 2:
-	            	handleSingleRealisationWithBank(formLayout, true);
+	            	handleSingleRealisationWithBank(formLayout);
 	            	break;
 	            case 3:
 	            	handleTxnSingleRealisationWithBank(formLayout);
@@ -115,7 +111,7 @@ public class InvestmentTransactionView extends Div {
 		add(formLayout);
 	}
 	
-	private void handleSingleRealisationWithBank(FormLayout formLayout, boolean isLast) {
+	private void handleSingleRealisationWithBank(FormLayout formLayout) {
 		TextField investmentTransactionIdTextField;
 		NumberField amountNumberField;
 		DatePicker transactionDatePicker;
@@ -143,15 +139,13 @@ public class InvestmentTransactionView extends Div {
 		bankAccountDvSelect.setPlaceholder("Select Bank Account");
 
 		closureTypeDvSelect = new Select<IdValueVO>();
-		if (isLast) {
-			formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
-			idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_CLOSURE_TYPE);
-			closureTypeDvSelect.setItemLabelGenerator(idValueVO -> {
-				return idValueVO.getValue();
-			});
-			closureTypeDvSelect.setItems(idValueVOList);
-			closureTypeDvSelect.setPlaceholder("Select Account Closure Type");
-		}
+		formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_CLOSURE_TYPE);
+		closureTypeDvSelect.setItemLabelGenerator(idValueVO -> {
+			return idValueVO.getValue();
+		});
+		closureTypeDvSelect.setItems(idValueVOList);
+		closureTypeDvSelect.setPlaceholder("Select Account Closure Type");
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -180,10 +174,6 @@ public class InvestmentTransactionView extends Div {
 					showError("Account cannot be Empty");
 					return;
 				}
-				if (isLast && closureTypeDvSelect.getValue() == null) {
-					showError("Account Closure Type cannot be Empty");
-					return;
-				}
 				
 				// Back-end Call
 				singleRealisationWithBankVO = new SingleRealisationWithBankVO(
@@ -191,13 +181,9 @@ public class InvestmentTransactionView extends Div {
 						(double)amountNumberField.getValue().doubleValue(),
 						Date.valueOf(transactionDatePicker.getValue()),
 						bankAccountDvSelect.getValue().getId(),
-						isLast ? closureTypeDvSelect.getValue().getId() : null);
+						closureTypeDvSelect.getValue() == null? null : closureTypeDvSelect.getValue().getId());
 				try {
-					if (isLast) {
-						moneyTransactionService.singleLastRealisationWithBank(singleRealisationWithBankVO);
-					} else {
-						moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO, null);
-					}
+					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
 					notification = Notification.show("Investment Transaction Saved Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
