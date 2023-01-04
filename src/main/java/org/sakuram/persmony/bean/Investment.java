@@ -56,7 +56,7 @@ public class Investment {
 	@Column(name="product_id_of_provider", length=31, nullable=true)
 	private String productIdOfProvider;
 	
-	@Column(name="investment_id_with_provider", length=63, nullable=false)
+	@Column(name="investment_id_with_provider", length=63, nullable=true)
 	private String investmentIdWithProvider;
 	
 	@Column(name="product_name", length=127, nullable=true)

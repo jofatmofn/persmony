@@ -9,26 +9,21 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.sakuram.persmony.service.ReportService;
 import org.sakuram.persmony.util.UtilFuncs;
-import org.vaadin.olli.FileDownloadWrapper;
+import org.vaadin.stefan.LazyDownloadButton;
 
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
 
 @Route("report")
 public class ReportView extends VerticalLayout {
 	private static final long serialVersionUID = 7744877036031319646L;
-	static final String DATA_FOLDER = "D:\\RSureshK\\RSKPers\\PersMony\\";
 	
 	public ReportView(ReportService reportService) {
 		Select<String> reportSelect;
-		Button generateButton;
-		FileDownloadWrapper fileDownloadWrapper;
-		StringWriter stringWriter = new StringWriter();
+		LazyDownloadButton generateButton;
 		
 		reportSelect = new Select<String>();
 		reportSelect.setItems("Pending Transactions",
@@ -36,62 +31,58 @@ public class ReportView extends VerticalLayout {
 		reportSelect.setLabel("Report");
 		reportSelect.setPlaceholder("Select Report");
 
-		generateButton = new Button("Generate");
-		generateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		generateButton.setDisableOnClick(true);
-		// On click of Save
-		generateButton.addClickListener(event -> {
-			List<Object[]> recordList = null;
-			try {
-				// Validation
-				if (reportSelect.getValue() == null) {
-					showError("Select a Report before clicking Generate");
-					return;
-				}
-				
-				// Back-end Call
-				try {
-		            switch(reportSelect.getValue()) {
-		            case "Pending Transactions":
-	    				recordList = reportService.pendingTransactions();
-		            	break;
-		            case "Pending Investments":
-	    				recordList = reportService.investmentsWithPendingTransactions();
-		            	break;
-		            }
-				} catch (Exception e) {
-					showError(UtilFuncs.messageFromException(e));
-					return;
-				}
-				
-				// Generate CSV
-				stringWriter.getBuffer().setLength(0);
-	    		try (CSVPrinter csvPrinter = new CSVPrinter(stringWriter, CSVFormat.DEFAULT)) {
-	    			for (Object[] record : recordList) {
-	    				csvPrinter.printRecord(record);
-	    			}
-	    			csvPrinter.flush();
-	    		}
-			} catch (Exception e) {
-				showError("System Error!!! Contact Support.");
-				return;
-			} finally {
-				generateButton.setEnabled(true);
-			}
+		generateButton = new LazyDownloadButton("Generate",
+				() -> {
+					return reportSelect.getValue() + ".csv";
+				},
+				() -> {
+					StringWriter stringWriter;
+					List<Object[]> recordList = null;
+					try {
+						// Back-end Call
+						try {
+							if (reportSelect.getValue() == null) {
+								showError("Select a Report before clicking Generate");
+								return new ByteArrayInputStream(new byte[0]);
+							}
+							System.out.println(reportSelect.getValue());
+				            switch(reportSelect.getValue()) {
+				            case "Pending Transactions":
+			    				recordList = reportService.pendingTransactions();
+				            	break;
+				            case "Pending Investments":
+			    				recordList = reportService.investmentsWithPendingTransactions();
+				            	break;
+				            }
+						} catch (Exception e) {
+							showError(UtilFuncs.messageFromException(e));
+							return new ByteArrayInputStream(new byte[0]);
+						}
+						
+						// Generate CSV
+						stringWriter = new StringWriter();
+						stringWriter.getBuffer().setLength(0);
+			    		try (CSVPrinter csvPrinter = new CSVPrinter(stringWriter, CSVFormat.DEFAULT)) {
+			    			for (Object[] record : recordList) {
+			    				csvPrinter.printRecord(record);
+			    			}
+			    			csvPrinter.flush();
+			    			try {
+			    				return new ByteArrayInputStream(stringWriter.toString().getBytes("utf-8"));
+			    			} catch (UnsupportedEncodingException e) {
+			    				e.printStackTrace();
+			    				return new ByteArrayInputStream(new byte[0]);
+			    			}
+			    		}
+					} catch (Exception e) {
+						showError("System Error!!! Contact Support.");
+						return new ByteArrayInputStream(new byte[0]);
+					}
 		});
-		fileDownloadWrapper = new FileDownloadWrapper(
-		    new StreamResource("report.csv", () -> {
-		    	try {
-					return new ByteArrayInputStream(stringWriter.toString().getBytes("utf-8"));
-				} catch (UnsupportedEncodingException e) {
-					e.printStackTrace();
-					return null;
-				}
-		    }));
-		fileDownloadWrapper.wrapComponent(generateButton);
+		generateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
 		add(reportSelect);
-		add(fileDownloadWrapper);
+		add(generateButton);
 	}
 	
 	private void showError(String message) {
@@ -101,7 +92,9 @@ public class ReportView extends VerticalLayout {
 		errorDialog.setHeader("Attention! Error!!");
 		errorDialog.setText(message);
 		errorDialog.setConfirmText("OK");
-		errorDialog.open();
+		getUI().ifPresent(ui -> ui.access(() -> {
+			errorDialog.open();
+			}));
 		
 	}
 }

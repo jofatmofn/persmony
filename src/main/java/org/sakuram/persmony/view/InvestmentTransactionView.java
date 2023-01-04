@@ -437,20 +437,12 @@ public class InvestmentTransactionView extends Div {
 					showError("Product Type cannot be Empty");
 					return;
 				}
-				if (investmentIdWithProviderTextField.getValue() == null || investmentIdWithProviderTextField.getValue().equals("")) {
-					showError("Investment Id With Provider cannot be Empty");
-					return;
-				}				
 				if (bankAccountDvSelect.getValue() == null) {
 					showError("Bank Account cannot be Empty");
 					return;
 				}
 				if (faceValueNumberField.getValue() == null) {
 					showError("Face Value cannot be Empty");
-					return;
-				}
-				if (productEndDatePicker.getValue() == null) {
-					showError("Product End Date cannot be Empty");
 					return;
 				}
 				if (paymentScheduleTextField.getValue() == null || paymentScheduleTextField.getValue().equals("")) {
@@ -501,13 +493,13 @@ public class InvestmentTransactionView extends Div {
 						taxabilityDvSelect.getValue() == null ? null : taxabilityDvSelect.getValue().getId(),
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
 						bankAccountDvSelect.getValue().getId(),
-						investmentIdWithProviderTextField.getValue(),
+						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),
 						cleanPriceNumberField.getValue() == null ? null : (double)cleanPriceNumberField.getValue().doubleValue(),
 						accruedInterestNumberField.getValue() == null ? null : (double)accruedInterestNumberField.getValue().doubleValue(),
 						chargesNumberField.getValue() == null ? null : (double)chargesNumberField.getValue().doubleValue(),
 						rateOfInterestNumberField.getValue() == null ? null : (double)rateOfInterestNumberField.getValue().doubleValue(),
-						Date.valueOf(productEndDatePicker.getValue()),
+						productEndDatePicker.getValue() == null ? null : Date.valueOf(productEndDatePicker.getValue()),
 						paymentScheduleVOList,
 						receiptScheduleVOList,
 						(dynamicReceiptPeriodicityRadioButtonGroup.getValue().equals("Not Applicable") ? null : 'Y'),

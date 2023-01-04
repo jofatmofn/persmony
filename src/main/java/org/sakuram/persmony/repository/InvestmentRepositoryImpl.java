@@ -50,7 +50,8 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 		stringBuffer.append("LEFT OUTER JOIN domain_value pbDV ON I.provider_branch_fk = pbDV.id ");
 		isFirstTime = true;
 		for (SearchCriterionVO searchCriterionVO : searchCriterionVOList) {
-			if(searchCriterionVO.getFieldName() == null || searchCriterionVO.getValuesCSV() == null) {
+			if(searchCriterionVO.getFieldName() == null || searchCriterionVO.getValuesCSV() == null ||
+					searchCriterionVO.getFieldName().equals("") || searchCriterionVO.getValuesCSV().equals("")) {
 				continue;
 			}
 			stringBuffer.append(isFirstTime ? "WHERE " : "AND ");
