@@ -63,21 +63,45 @@ public class MiscService {
 	    			try {
 	    				DvFlagsAccountVO dvFlagsAccountVO;
 		    			DvFlagsBranchVO dvFlagsBranchVO;
-		    			DomainValue branchDv, partyDv;
+		    			DvFlagsInvestorVO dvFlagsInvestorVO;
+		    			DomainValue branchDv, partyDv, investorDv;
+		    			long investors[];
+		    			StringBuffer labelSB;
+		    			
+		    			labelSB = new StringBuffer();
 		    			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(domainValue);
+		    			if (!dvFlagsAccountVO.isOpen())
+		    				continue;
+		    			investorDv = Constants.domainValueCache.get(dvFlagsAccountVO.getInvestorDvId());
+		    			dvFlagsInvestorVO = (DvFlagsInvestorVO) DomainValueFlags.getDvFlagsVO(investorDv);
+		    			if (dvFlagsInvestorVO == null) {
+		    				investors = new long[1];
+			    			investors[0] = dvFlagsAccountVO.getInvestorDvId();
+		    			} else {
+		    				investors = new long[dvFlagsInvestorVO.getRealInvestors().length];
+		    				System.arraycopy(dvFlagsInvestorVO.getRealInvestors(), 0, investors, 0, dvFlagsInvestorVO.getRealInvestors().length);
+		    			}
+		    			for (int ind = 0; ind < investors.length; ind++) {
+			    			labelSB.append(ind == 0 ? "" : " & ");
+			    			labelSB.append(Constants.domainValueCache.get(investors[ind]).getValue());
+		    			}
+		    			labelSB.append("::");
+		    			labelSB.append(dvFlagsAccountVO.getAccType());
+		    			labelSB.append("::");
 		    			if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_SAVINGS)) {
 			    			branchDv = Constants.domainValueCache.get(dvFlagsAccountVO.getBranchDvId());
 			    			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
 			    			partyDv = Constants.domainValueCache.get(dvFlagsBranchVO.getPartyDvId());
-			    			label = dvFlagsAccountVO.getAccType() + "::" +
-			    					partyDv.getValue() + "::" +
-			    					branchDv.getValue() + "::" +
-			    					dvFlagsAccountVO.getAccId();
+			    			labelSB.append(partyDv.getValue());
+			    			labelSB.append("::");
+			    			labelSB.append(branchDv.getValue());
+			    			labelSB.append("::");
+			    			labelSB.append(dvFlagsAccountVO.getAccId());
 		    			} else if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_FUNDS)) {
 			    			partyDv = Constants.domainValueCache.get(dvFlagsAccountVO.getPartyDvId());
-			    			label =  dvFlagsAccountVO.getAccType() + "::" +
-			    					partyDv.getValue();
+			    			labelSB.append(partyDv.getValue());
 	    				}
+		    			label = labelSB.toString();
 	    			} catch (Exception e) {
 	    				throw new AppException("Invalid Configuration of Bank Account " + dvId, null);
 	    			}
