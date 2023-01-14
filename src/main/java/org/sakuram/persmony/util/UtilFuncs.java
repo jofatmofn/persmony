@@ -73,7 +73,7 @@ public class UtilFuncs {
         	for (Integer year : yearsList) {
         		for (Integer month : monthsList) {
         			for (Integer day : daysList) {
-        				scheduleVOList.add(new ScheduleVO(Date.valueOf(year + "-" + month + "-" + day), value == 0? null : value));
+        				scheduleVOList.add(new ScheduleVO(Date.valueOf(year + "-" + month + "-" + day), value == 0? null : value, null, null, null));
         			}
         		}
         	}

@@ -347,6 +347,9 @@ public class MoneyTransactionService {
 	private void saveSchedule(List<ScheduleVO> scheduleVOList, Investment investment, long transactionType) {
 		InvestmentTransaction invesmentTransaction;
 		for(ScheduleVO scheduleVO : scheduleVOList) {
+			if (scheduleVO.getDueDate() == null ) {
+				continue;
+			}
 			invesmentTransaction = new InvestmentTransaction(
 					investment,
 					Constants.domainValueCache.get(transactionType),
@@ -354,9 +357,9 @@ public class MoneyTransactionService {
 					scheduleVO.getDueAmount(),
 					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
 					null,
-					null,
-					scheduleVO.getDueAmount(),
-					null,
+					scheduleVO.getReturnedPrincipalAmount(),
+					scheduleVO.getInterestAmount(),
+					scheduleVO.getTdsAmount(),
 					null,
 					UtilFuncs.computeAssessmentYear(scheduleVO.getDueDate()),
 					null);
@@ -377,6 +380,9 @@ public class MoneyTransactionService {
 
 		is_first = true;
 		for(ScheduleVO paymentScheduleVO : paymentScheduleVOList) {
+			if (paymentScheduleVO.getDueDate() == null ) {
+				continue;
+			}
 			niPaymentTransaction = new InvestmentTransaction(
 					newInvestment,
 					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_PAYMENT),
@@ -384,9 +390,9 @@ public class MoneyTransactionService {
 					paymentScheduleVO.getDueAmount(),
 					Constants.domainValueCache.get(is_first? Constants.DVID_TRANSACTION_STATUS_COMPLETED : Constants.DVID_TRANSACTION_STATUS_PENDING),
 					null,
-					null,
-					null,
-					null,
+					paymentScheduleVO.getReturnedPrincipalAmount(),
+					paymentScheduleVO.getInterestAmount(),
+					paymentScheduleVO.getTdsAmount(),
 					null,
 					UtilFuncs.computeAssessmentYear(paymentScheduleVO.getDueDate()),
 					null);
@@ -412,7 +418,6 @@ public class MoneyTransactionService {
 		}
 		
 		saveSchedule(receiptScheduleVOList, newInvestment, Constants.DVID_TRANSACTION_TYPE_RECEIPT);
-		// TODO: For last receipt, due amount = principal amount + interest amount and returned principal amount = principal amount
 		
 		saveSchedule(accrualScheduleVOList, newInvestment, Constants.DVID_TRANSACTION_TYPE_ACCRUAL);
 		

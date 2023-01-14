@@ -20,22 +20,35 @@ import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.converter.LocalDateToDateConverter;
 import com.vaadin.flow.router.Route;
 
 @Route("operation")
@@ -285,15 +298,17 @@ public class OperationView extends Div {
 	
 	private void handleInvest(FormLayout formLayout) {
 		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchDvSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
-		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField, paymentScheduleTextField, receiptScheduleTextField, accrualScheduleTextField;
+		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField;
 		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup, dynamicReceiptPeriodicityRadioButtonGroup;
 		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField;
 		DatePicker productEndDatePicker;
 		List<IdValueVO> idValueVOList;
-		HorizontalLayout hLayout;
-		
-		Button saveButton;
-		
+		HorizontalLayout hLayout;		
+		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
+		List<ScheduleVO> paymentScheduleVOList;
+		List<ScheduleVO> receiptScheduleVOList;
+		List<ScheduleVO> accrualScheduleVOList;
+
 		// UI Elements
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Investor");
@@ -393,21 +408,29 @@ public class OperationView extends Div {
 		productEndDatePicker = new DatePicker();
 		formLayout.addFormItem(productEndDatePicker, "Product End Date");
 		
-		paymentScheduleTextField = new TextField();
-		formLayout.addFormItem(paymentScheduleTextField, "Payment Schedule");
-		
-		receiptScheduleTextField = new TextField();
-		receiptScheduleTextField.setValue("None");
-		formLayout.addFormItem(receiptScheduleTextField, "Receipt Schedule");
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Schedule");
+		paymentScheduleVOList = new ArrayList<ScheduleVO>();
+		paymentScheduleButton = new Button("Payment");
+		paymentScheduleButton.addClickListener(event -> {
+			acceptSchedule("Payment", paymentScheduleVOList);
+		});
+		receiptScheduleVOList = new ArrayList<ScheduleVO>();
+		receiptScheduleButton = new Button("Receipt");
+		receiptScheduleButton.addClickListener(event -> {
+			acceptSchedule("Receipt", receiptScheduleVOList);
+		});
+		accrualScheduleVOList = new ArrayList<ScheduleVO>();
+		accrualScheduleButton = new Button("Accrual");
+		accrualScheduleButton.addClickListener(event -> {
+			acceptSchedule("Accrual", accrualScheduleVOList);
+		});
+		hLayout.add(paymentScheduleButton, receiptScheduleButton, accrualScheduleButton);
 		
 		dynamicReceiptPeriodicityRadioButtonGroup = new RadioButtonGroup<>();
 		formLayout.addFormItem(dynamicReceiptPeriodicityRadioButtonGroup, "Dynamic Receipt Periodicity");
 		dynamicReceiptPeriodicityRadioButtonGroup.setItems("Not Applicable", "Yearly");
 		dynamicReceiptPeriodicityRadioButtonGroup.setValue("Not Applicable");
-		
-		accrualScheduleTextField = new TextField();
-		accrualScheduleTextField.setValue("None");
-		formLayout.addFormItem(accrualScheduleTextField, "Accrual Schedule");
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -417,9 +440,6 @@ public class OperationView extends Div {
 		saveButton.addClickListener(event -> {
 			InvestVO investVO;
 			Notification notification;
-			List<ScheduleVO> paymentScheduleVOList;
-			List<ScheduleVO> receiptScheduleVOList;
-			List<ScheduleVO> accrualScheduleVOList;
 
 			try {
 				// Validation
@@ -443,38 +463,8 @@ public class OperationView extends Div {
 					showError("Face Value cannot be Empty");
 					return;
 				}
-				if (paymentScheduleTextField.getValue() == null || paymentScheduleTextField.getValue().equals("")) {
+				if (paymentScheduleVOList == null || paymentScheduleVOList.isEmpty()) {
 					showError("Payment Schedule cannot be Empty");
-					return;
-				}
-				try {
-					paymentScheduleVOList = UtilFuncs.parseScheduleData(paymentScheduleTextField.getValue());
-				} catch (AppException e) {
-					showError("Payment Schedule: " + e.getMessage());
-					return;
-				}
-				if (paymentScheduleVOList.isEmpty()) {
-					showError("Payment Schedule cannot be Empty");
-					return;
-				}
-				if (receiptScheduleTextField.getValue() == null || receiptScheduleTextField.getValue().equals("")) {
-					showError("Specify None if there is no Receipt Schedule");
-					return;
-				}
-				try {
-					receiptScheduleVOList = UtilFuncs.parseScheduleData(receiptScheduleTextField.getValue());
-				} catch (AppException e) {
-					showError("Receipt Schedule: " + e.getMessage());
-					return;
-				}
-				if (accrualScheduleTextField.getValue() == null || accrualScheduleTextField.getValue().equals("")) {
-					showError("Specify None if there is no Accrual Schedule");
-					return;
-				}
-				try {
-					accrualScheduleVOList = UtilFuncs.parseScheduleData(accrualScheduleTextField.getValue());
-				} catch (AppException e) {
-					showError("Accrual Schedule: " + e.getMessage());
 					return;
 				}
 				
@@ -708,4 +698,107 @@ public class OperationView extends Div {
 		errorDialog.open();
 		
 	}
+	
+	private void acceptSchedule(String label, List<ScheduleVO> scheduleVOList) {
+		Dialog dialog;
+		VerticalLayout verticalLayout;
+		Button addButton, closeButton;
+		Grid<ScheduleVO> scheduleGrid;
+		Binder<ScheduleVO> scheduleBinder;
+		Editor<ScheduleVO> scheduleEditor;
+		GridListDataView<ScheduleVO> scheduleGridLDV;
+		NumberField dueAmountNumberField, returnedPrincipalAmountNumberField, interestAmountNumberField, tdsAmountNumberField;
+		DatePicker dueDatePicker;
+		Grid.Column<ScheduleVO> dueDateColumn, dueAmountColumn, returnedPrincipalAmountColumn, interestAmountColumn, tdsAmountColumn;
+		
+		dialog = new Dialog();
+		dialog.setHeaderTitle(label + " Schedule");
+		closeButton = new Button(new Icon("lumo", "cross"),
+		        (e) -> dialog.close());
+		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		dialog.getHeader().add(closeButton);
+		verticalLayout = new VerticalLayout();
+		verticalLayout.getStyle().set("width", "75rem");
+		dialog.add(verticalLayout);
+		
+		scheduleGrid = new Grid<>(ScheduleVO.class, false);
+		scheduleGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+		scheduleGridLDV = scheduleGrid.setItems(scheduleVOList);
+		verticalLayout.add(scheduleGrid);
+		
+		addButton = new Button("Add Row");
+		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		addButton.setDisableOnClick(true);
+		// On click of Add Row
+		addButton.addClickListener(event -> {
+			try {
+				scheduleGridLDV.addItem(new ScheduleVO());
+			} finally {
+				addButton.setEnabled(true);
+			}
+		});
+		verticalLayout.add(addButton);
+				
+		dueDateColumn = scheduleGrid.addColumn(ScheduleVO::getDueDate).setHeader("Date");
+		dueAmountColumn = scheduleGrid.addColumn(ScheduleVO::getDueAmount).setHeader("Due Amount");
+		returnedPrincipalAmountColumn = scheduleGrid.addColumn(ScheduleVO::getReturnedPrincipalAmount).setHeader("Principal");
+		interestAmountColumn = scheduleGrid.addColumn(ScheduleVO::getInterestAmount).setHeader("Interest");
+		tdsAmountColumn = scheduleGrid.addColumn(ScheduleVO::getTdsAmount).setHeader("TDS");
+		scheduleGrid.addComponentColumn(scheduleVO -> {
+			Button delButton = new Button();
+			delButton.setIcon(new Icon(VaadinIcon.TRASH));
+			delButton.addClickListener(e->{
+				scheduleGridLDV.removeItem(scheduleVO);
+			});
+			return delButton;
+		}).setWidth("120px").setFlexGrow(0);
+		
+		scheduleBinder = new Binder<>(ScheduleVO.class);
+		scheduleEditor = scheduleGrid.getEditor();
+		scheduleEditor.setBinder(scheduleBinder);
+		
+		dueDatePicker = new DatePicker();
+		addCloseHandler(dueDatePicker, scheduleEditor);
+		scheduleBinder.forField(dueDatePicker)
+			.withConverter(new LocalDateToDateConverter())
+			.bind(ScheduleVO::getDueDateUtil, ScheduleVO::setDueDateUtil);
+		dueDateColumn.setEditorComponent(dueDatePicker);
+		dueAmountNumberField = new NumberField();
+		addCloseHandler(dueAmountNumberField, scheduleEditor);
+		scheduleBinder.forField(dueAmountNumberField)
+			.bind(ScheduleVO::getDueAmount, ScheduleVO::setDueAmount);
+		dueAmountColumn.setEditorComponent(dueAmountNumberField);
+		returnedPrincipalAmountNumberField = new NumberField();
+		addCloseHandler(returnedPrincipalAmountNumberField, scheduleEditor);
+		scheduleBinder.forField(returnedPrincipalAmountNumberField)
+			.bind(ScheduleVO::getReturnedPrincipalAmount, ScheduleVO::setReturnedPrincipalAmount);
+		returnedPrincipalAmountColumn.setEditorComponent(returnedPrincipalAmountNumberField);
+		interestAmountNumberField = new NumberField();
+		addCloseHandler(interestAmountNumberField, scheduleEditor);
+		scheduleBinder.forField(interestAmountNumberField)
+			.bind(ScheduleVO::getInterestAmount, ScheduleVO::setInterestAmount);
+		interestAmountColumn.setEditorComponent(interestAmountNumberField);
+		tdsAmountNumberField = new NumberField();
+		addCloseHandler(tdsAmountNumberField, scheduleEditor);
+		scheduleBinder.forField(tdsAmountNumberField)
+			.bind(ScheduleVO::getTdsAmount, ScheduleVO::setTdsAmount);
+		tdsAmountColumn.setEditorComponent(tdsAmountNumberField);
+
+		scheduleGrid.addItemDoubleClickListener(e -> {
+			scheduleEditor.editItem(e.getItem());
+		    Component editorComponent = e.getColumn().getEditorComponent();
+		    if (editorComponent instanceof Focusable) {
+		        ((Focusable) editorComponent).focus();
+		    }
+		});
+		
+		dialog.open();
+	}
+	
+    private static void addCloseHandler(Component scheduleField,
+            Editor<ScheduleVO> editor) {
+    	scheduleField.getElement().addEventListener("keydown", e -> editor.cancel())
+                .setFilter("event.key === 'Escape' || event.key === 'Esc'");
+    }
+
 }
