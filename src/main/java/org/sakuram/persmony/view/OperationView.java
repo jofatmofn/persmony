@@ -38,14 +38,14 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
-@Route("itran")
-public class InvestmentTransactionView extends Div {
+@Route("operation")
+public class OperationView extends Div {
 	private static final long serialVersionUID = 6529685098267757690L;
 	
 	MoneyTransactionService moneyTransactionService;
 	MiscService miscService;
 
-	public InvestmentTransactionView(MoneyTransactionService moneyTransactionService, MiscService miscService) {
+	public OperationView(MoneyTransactionService moneyTransactionService, MiscService miscService) {
 		Span selectSpan;
 		FormLayout formLayout;
 		Select<Map.Entry<Integer,String>> operationSelect;
