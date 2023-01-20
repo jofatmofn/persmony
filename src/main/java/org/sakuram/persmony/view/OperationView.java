@@ -642,14 +642,19 @@ public class OperationView extends Div {
 	}
 	
 	private void handleReceiptDues(FormLayout formLayout) {
-		TextField investmentIdTextField, receiptScheduleTextField;
-		Button saveButton;
+		TextField investmentIdTextField;
+		Button saveButton, receiptScheduleButton;
+		List<ScheduleVO> receiptScheduleVOList;
 		
 		investmentIdTextField = new TextField();
 		formLayout.addFormItem(investmentIdTextField, "Persmony Investment Id");
 		
-		receiptScheduleTextField = new TextField();
-		formLayout.addFormItem(receiptScheduleTextField, "Receipt Schedule");
+		receiptScheduleVOList = new ArrayList<ScheduleVO>();
+		receiptScheduleButton = new Button("Receipt (0)");
+		receiptScheduleButton.addClickListener(event -> {
+			acceptSchedule("Receipt", receiptScheduleButton, receiptScheduleVOList);
+		});
+		formLayout.addFormItem(receiptScheduleButton,"Schedule");
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -659,7 +664,6 @@ public class OperationView extends Div {
 		saveButton.addClickListener(event -> {
 			ReceiptDuesVO receiptDuesVO;
 			Notification notification;
-			List<ScheduleVO> receiptScheduleVOList;
 			
 			try {
 				// Validation
@@ -667,14 +671,8 @@ public class OperationView extends Div {
 					showError("Id of Investment cannot be Empty");
 					return;
 				}
-				if (receiptScheduleTextField.getValue() == null || receiptScheduleTextField.getValue().equals("") || receiptScheduleTextField.getValue().equals("None")) {
+				if (receiptScheduleVOList.isEmpty()) {
 					showError("Receipt Schedule cannot be Empty");
-					return;
-				}
-				try {
-					receiptScheduleVOList = UtilFuncs.parseScheduleData(receiptScheduleTextField.getValue());
-				} catch (AppException e) {
-					showError("Receipt Schedule: " + e.getMessage());
 					return;
 				}
 				
@@ -682,6 +680,8 @@ public class OperationView extends Div {
 				receiptDuesVO = new ReceiptDuesVO(Long.parseLong(investmentIdTextField.getValue()), receiptScheduleVOList);
 				try {
 					moneyTransactionService.addReceiptDues(receiptDuesVO);
+					receiptScheduleVOList.clear();
+					receiptScheduleButton.setText("Receipt (0)");
 					notification = Notification.show("Receipt Dues Added Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
