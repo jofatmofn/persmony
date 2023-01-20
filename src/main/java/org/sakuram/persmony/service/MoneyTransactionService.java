@@ -59,7 +59,7 @@ public class MoneyTransactionService {
 		investmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
 		if (investmentTransaction.getDueAmount() == null) {
 			investmentTransaction.setDueAmount(singleRealisationWithBankVO.getAmount());
-		} else if (investmentTransaction.getDueAmount() != singleRealisationWithBankVO.getAmount()) {
+		} else if (!investmentTransaction.getDueAmount().equals(singleRealisationWithBankVO.getAmount())) {
 			investmentTransaction.setSettledAmount(singleRealisationWithBankVO.getAmount());
 		}
 		
@@ -185,7 +185,7 @@ public class MoneyTransactionService {
 		riReceiptTransaction = investmentTransactionList.get(0);
 		if(riReceiptTransaction.getDueAmount() == null) {
 			riReceiptTransaction.setDueAmount(realisationAmount);
-		} else if (riReceiptTransaction.getDueAmount() != realisationAmount) {
+		} else if (!riReceiptTransaction.getDueAmount().equals(realisationAmount)) {
 			riReceiptTransaction.setSettledAmount(realisationAmount);
 		}
 		riReceiptTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));

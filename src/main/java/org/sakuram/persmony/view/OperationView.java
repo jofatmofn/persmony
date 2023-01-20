@@ -304,9 +304,7 @@ public class OperationView extends Div {
 		List<IdValueVO> idValueVOList;
 		HorizontalLayout hLayout;		
 		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
-		List<ScheduleVO> paymentScheduleVOList;
-		List<ScheduleVO> receiptScheduleVOList;
-		List<ScheduleVO> accrualScheduleVOList;
+		List<ScheduleVO> paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList;
 
 		// UI Elements
 		hLayout = new HorizontalLayout();
@@ -511,11 +509,13 @@ public class OperationView extends Div {
 	}
 	
 	private void handleRenewal(FormLayout formLayout) {
-		TextField oldInvestmentIdTextField, investmentIdWithProviderTextField, paymentScheduleTextField, receiptScheduleTextField, accrualScheduleTextField;
+		TextField oldInvestmentIdTextField, investmentIdWithProviderTextField;
 		NumberField rateOfInterestNumberField, faceValueNumberField;
 		DatePicker productEndDatePicker;
 		Label label1;
-		Button saveButton;
+		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
+		List<ScheduleVO> paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList;
+		HorizontalLayout hLayout;
 		
 		// UI Elements
 		label1 = new Label();
@@ -542,16 +542,24 @@ public class OperationView extends Div {
 		productEndDatePicker = new DatePicker();
 		formLayout.addFormItem(productEndDatePicker, "Product End Date");
 		
-		paymentScheduleTextField = new TextField();
-		formLayout.addFormItem(paymentScheduleTextField, "Payment Schedule");
-		
-		receiptScheduleTextField = new TextField();
-		receiptScheduleTextField.setValue("None");
-		formLayout.addFormItem(receiptScheduleTextField, "Receipt Schedule");
-		
-		accrualScheduleTextField = new TextField();
-		accrualScheduleTextField.setValue("None");
-		formLayout.addFormItem(accrualScheduleTextField, "Accrual Schedule");
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Schedule");
+		paymentScheduleVOList = new ArrayList<ScheduleVO>();
+		paymentScheduleButton = new Button("Payment (0)");
+		paymentScheduleButton.addClickListener(event -> {
+			acceptSchedule("Payment", paymentScheduleButton, paymentScheduleVOList);
+		});
+		receiptScheduleVOList = new ArrayList<ScheduleVO>();
+		receiptScheduleButton = new Button("Receipt (0)");
+		receiptScheduleButton.addClickListener(event -> {
+			acceptSchedule("Receipt", receiptScheduleButton, receiptScheduleVOList);
+		});
+		accrualScheduleVOList = new ArrayList<ScheduleVO>();
+		accrualScheduleButton = new Button("Accrual (0)");
+		accrualScheduleButton.addClickListener(event -> {
+			acceptSchedule("Accrual", accrualScheduleButton, accrualScheduleVOList);
+		});
+		hLayout.add(paymentScheduleButton, receiptScheduleButton, accrualScheduleButton);
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -561,9 +569,6 @@ public class OperationView extends Div {
 		saveButton.addClickListener(event -> {
 			RenewalVO renewalVO;
 			Notification notification;
-			List<ScheduleVO> paymentScheduleVOList;
-			List<ScheduleVO> receiptScheduleVOList;
-			List<ScheduleVO> accrualScheduleVOList;
 
 			try {
 				// Validation
@@ -583,38 +588,8 @@ public class OperationView extends Div {
 					showError("Face Value cannot be Empty");
 					return;
 				}
-				if (paymentScheduleTextField.getValue() == null || paymentScheduleTextField.getValue().equals("")) {
-					showError("Payment Schedule cannot be Empty");
-					return;
-				}
-				try {
-					paymentScheduleVOList = UtilFuncs.parseScheduleData(paymentScheduleTextField.getValue());
-				} catch (AppException e) {
-					showError("Payment Schedule: " + e.getMessage());
-					return;
-				}
 				if (paymentScheduleVOList.isEmpty()) {
 					showError("Payment Schedule cannot be Empty");
-					return;
-				}
-				if (receiptScheduleTextField.getValue() == null || receiptScheduleTextField.getValue().equals("")) {
-					showError("Specify None if there is no Receipt Schedule");
-					return;
-				}
-				try {
-					receiptScheduleVOList = UtilFuncs.parseScheduleData(receiptScheduleTextField.getValue());
-				} catch (AppException e) {
-					showError("Receipt Schedule: " + e.getMessage());
-					return;
-				}
-				if (accrualScheduleTextField.getValue() == null || accrualScheduleTextField.getValue().equals("")) {
-					showError("Specify None if there is no Accrual Schedule");
-					return;
-				}
-				try {
-					accrualScheduleVOList = UtilFuncs.parseScheduleData(accrualScheduleTextField.getValue());
-				} catch (AppException e) {
-					showError("Accrual Schedule: " + e.getMessage());
 					return;
 				}
 				
@@ -630,6 +605,12 @@ public class OperationView extends Div {
 						accrualScheduleVOList);
 				try {
 					moneyTransactionService.renewal(renewalVO);
+					paymentScheduleVOList.clear();
+					paymentScheduleButton.setText("Payment (0)");
+					receiptScheduleVOList.clear();
+					receiptScheduleButton.setText("Receipt (0)");
+					accrualScheduleVOList.clear();
+					accrualScheduleButton.setText("Accrual (0)");
 					notification = Notification.show("Renewal Done Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
