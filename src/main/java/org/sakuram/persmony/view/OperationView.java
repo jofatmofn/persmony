@@ -31,7 +31,6 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
@@ -411,19 +410,19 @@ public class OperationView extends Div {
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Schedule");
 		paymentScheduleVOList = new ArrayList<ScheduleVO>();
-		paymentScheduleButton = new Button("Payment");
+		paymentScheduleButton = new Button("Payment (0)");
 		paymentScheduleButton.addClickListener(event -> {
-			acceptSchedule("Payment", paymentScheduleVOList);
+			acceptSchedule("Payment", paymentScheduleButton, paymentScheduleVOList);
 		});
 		receiptScheduleVOList = new ArrayList<ScheduleVO>();
-		receiptScheduleButton = new Button("Receipt");
+		receiptScheduleButton = new Button("Receipt (0)");
 		receiptScheduleButton.addClickListener(event -> {
-			acceptSchedule("Receipt", receiptScheduleVOList);
+			acceptSchedule("Receipt", receiptScheduleButton, receiptScheduleVOList);
 		});
 		accrualScheduleVOList = new ArrayList<ScheduleVO>();
-		accrualScheduleButton = new Button("Accrual");
+		accrualScheduleButton = new Button("Accrual (0)");
 		accrualScheduleButton.addClickListener(event -> {
-			acceptSchedule("Accrual", accrualScheduleVOList);
+			acceptSchedule("Accrual", accrualScheduleButton, accrualScheduleVOList);
 		});
 		hLayout.add(paymentScheduleButton, receiptScheduleButton, accrualScheduleButton);
 		
@@ -494,6 +493,12 @@ public class OperationView extends Div {
 						accrualScheduleVOList);
 				try {
 					moneyTransactionService.invest(investVO);
+					paymentScheduleVOList.clear();
+					paymentScheduleButton.setText("Payment (0)");
+					receiptScheduleVOList.clear();
+					receiptScheduleButton.setText("Receipt (0)");
+					accrualScheduleVOList.clear();
+					accrualScheduleButton.setText("Accrual (0)");
 					notification = Notification.show("Investment Created Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
@@ -699,10 +704,11 @@ public class OperationView extends Div {
 		
 	}
 	
-	private void acceptSchedule(String label, List<ScheduleVO> scheduleVOList) {
+	private void acceptSchedule(String label, Button scheduleButton, List<ScheduleVO> scheduleVOList) {
 		Dialog dialog;
 		VerticalLayout verticalLayout;
-		Button addButton, closeButton;
+		HorizontalLayout hLayout;
+		Button addButton, closeButton, returnButton, patternToListButton;
 		Grid<ScheduleVO> scheduleGrid;
 		Binder<ScheduleVO> scheduleBinder;
 		Editor<ScheduleVO> scheduleEditor;
@@ -710,22 +716,61 @@ public class OperationView extends Div {
 		NumberField dueAmountNumberField, returnedPrincipalAmountNumberField, interestAmountNumberField, tdsAmountNumberField;
 		DatePicker dueDatePicker;
 		Grid.Column<ScheduleVO> dueDateColumn, dueAmountColumn, returnedPrincipalAmountColumn, interestAmountColumn, tdsAmountColumn;
+		List<ScheduleVO> preEditScheduleVOList;
+		TextField scheduleTextField;
+		
+		preEditScheduleVOList = new ArrayList<ScheduleVO>(scheduleVOList.size());
+		preEditScheduleVOList.addAll(scheduleVOList);
 		
 		dialog = new Dialog();
 		dialog.setHeaderTitle(label + " Schedule");
 		closeButton = new Button(new Icon("lumo", "cross"),
-		        (e) -> dialog.close());
+		        (e) -> {
+		        	scheduleVOList.clear();
+		    		scheduleVOList.addAll(preEditScheduleVOList);
+		        	dialog.close();
+		        });
 		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		dialog.getHeader().add(closeButton);
 		verticalLayout = new VerticalLayout();
 		verticalLayout.getStyle().set("width", "75rem");
 		dialog.add(verticalLayout);
 		
+		hLayout = new HorizontalLayout();
+		verticalLayout.add(hLayout);
+		scheduleTextField = new TextField("Schedule Pattern");
+		hLayout.add(scheduleTextField);
+		
 		scheduleGrid = new Grid<>(ScheduleVO.class, false);
 		scheduleGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		scheduleGridLDV = scheduleGrid.setItems(scheduleVOList);
+		
+		patternToListButton = new Button("Pattern To List");
+		patternToListButton.addClickListener(event -> {
+			Notification notification;
+			try {
+				List<ScheduleVO> fromPatternScheduleVOList;
+				fromPatternScheduleVOList = UtilFuncs.parseScheduleData(scheduleTextField.getValue());
+				if (scheduleVOList.size() == 0) {
+					scheduleGridLDV.addItems(fromPatternScheduleVOList);
+				} else {
+					scheduleGridLDV.addItemsAfter(fromPatternScheduleVOList, scheduleVOList.get(scheduleVOList.size() - 1));
+				}
+			} catch (AppException e) {
+				showError("Schedule: " + e.getMessage());
+				return;
+			}
+			scheduleTextField.setValue("");
+			notification = Notification.show("Pattern added to list.");
+			notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+		});
+		patternToListButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		hLayout.add(patternToListButton);
+		
 		verticalLayout.add(scheduleGrid);
 		
+		hLayout = new HorizontalLayout();
+		verticalLayout.add(hLayout);
 		addButton = new Button("Add Row");
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addButton.setDisableOnClick(true);
@@ -737,8 +782,16 @@ public class OperationView extends Div {
 				addButton.setEnabled(true);
 			}
 		});
-		verticalLayout.add(addButton);
-				
+		hLayout.add(addButton);
+
+		returnButton = new Button("Return");
+		returnButton.addClickListener(event -> {
+			scheduleButton.setText(scheduleButton.getText().replaceFirst("\\(\\d+\\)", "(" + Integer.toString(scheduleVOList.size()) + ")"));
+			dialog.close();
+		});
+		returnButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		hLayout.add(returnButton);
+
 		dueDateColumn = scheduleGrid.addColumn(ScheduleVO::getDueDate).setHeader("Date");
 		dueAmountColumn = scheduleGrid.addColumn(ScheduleVO::getDueAmount).setHeader("Due Amount");
 		returnedPrincipalAmountColumn = scheduleGrid.addColumn(ScheduleVO::getReturnedPrincipalAmount).setHeader("Principal");

@@ -66,6 +66,7 @@ public class UtilFuncs {
         	if (matcher.start(0) != matcherEnd) {
             	throw new AppException("Invalid structure for Scheduled-Values.", null);
         	}
+        	try {
         	yearsList = parseListStr(matcher.group(1));
         	monthsList = parseListStr(matcher.group(2));
         	daysList = parseListStr(matcher.group(3));
@@ -78,6 +79,9 @@ public class UtilFuncs {
         		}
         	}
         	matcherEnd = matcher.end();
+        	} catch (Exception e) {
+            	throw new AppException("Invalid structure for Scheduled-Values.", null);
+        	}
         }
         
         if (inStr != null && inStr != "" && (scheduleVOList.size() == 0 || matcherEnd != inStr.length())) {
