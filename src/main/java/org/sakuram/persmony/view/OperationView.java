@@ -387,8 +387,8 @@ public class OperationView extends Div {
 			return idValueVO.getValue();
 		});
 		bankAccountDvSelect.setItems(miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT));
-		formLayout.addFormItem(bankAccountDvSelect, "Investment from Bank Account");
-		bankAccountDvSelect.setPlaceholder("Select Bank Account");
+		formLayout.addFormItem(bankAccountDvSelect, "Realisation from Account");
+		bankAccountDvSelect.setPlaceholder("Select Account");
 
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Price");
@@ -452,10 +452,6 @@ public class OperationView extends Div {
 					showError("Product Type cannot be Empty");
 					return;
 				}
-				if (bankAccountDvSelect.getValue() == null) {
-					showError("Bank Account cannot be Empty");
-					return;
-				}
 				if (faceValueNumberField.getValue() == null) {
 					showError("Face Value cannot be Empty");
 					return;
@@ -477,7 +473,7 @@ public class OperationView extends Div {
 						dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(),
 						taxabilityDvSelect.getValue() == null ? null : taxabilityDvSelect.getValue().getId(),
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
-						bankAccountDvSelect.getValue().getId(),
+						(bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()),
 						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),
 						cleanPriceNumberField.getValue() == null ? null : (double)cleanPriceNumberField.getValue().doubleValue(),

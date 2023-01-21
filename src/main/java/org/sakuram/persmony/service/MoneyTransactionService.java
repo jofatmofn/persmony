@@ -388,7 +388,7 @@ public class MoneyTransactionService {
 					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_PAYMENT),
 					paymentScheduleVO.getDueDate(),
 					paymentScheduleVO.getDueAmount(),
-					Constants.domainValueCache.get(is_first? Constants.DVID_TRANSACTION_STATUS_COMPLETED : Constants.DVID_TRANSACTION_STATUS_PENDING),
+					Constants.domainValueCache.get(is_first && (bankDvId != null || riReceiptRealisationId != null) ? Constants.DVID_TRANSACTION_STATUS_COMPLETED : Constants.DVID_TRANSACTION_STATUS_PENDING),
 					null,
 					paymentScheduleVO.getReturnedPrincipalAmount(),
 					paymentScheduleVO.getInterestAmount(),
@@ -406,13 +406,15 @@ public class MoneyTransactionService {
 							paymentScheduleVO.getDueAmount());
 					niSavingsAccountTransaction = savingsAccountTransactionRepository.save(niSavingsAccountTransaction);
 				}
-				niPaymentRealisation = new Realisation(
-						niPaymentTransaction,
-						paymentScheduleVO.getDueDate(),
-						Constants.domainValueCache.get(riReceiptRealisationId == null? (bankDvId == null? Constants.DVID_REALISATION_TYPE_CASH : Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) : Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
-						riReceiptRealisationId == null? (niSavingsAccountTransaction == null ? null : niSavingsAccountTransaction.getId()) : riReceiptRealisationId,
-						paymentScheduleVO.getDueAmount());
-				niPaymentRealisation = realisationRepository.save(niPaymentRealisation);
+				if (bankDvId != null || riReceiptRealisationId != null) {
+					niPaymentRealisation = new Realisation(
+							niPaymentTransaction,
+							paymentScheduleVO.getDueDate(),
+							Constants.domainValueCache.get(riReceiptRealisationId == null? (bankDvId == null? Constants.DVID_REALISATION_TYPE_CASH : Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) : Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
+							riReceiptRealisationId == null? niSavingsAccountTransaction.getId() : riReceiptRealisationId,
+							paymentScheduleVO.getDueAmount());
+					niPaymentRealisation = realisationRepository.save(niPaymentRealisation);
+				}
 				is_first = false;
 			}
 		}
