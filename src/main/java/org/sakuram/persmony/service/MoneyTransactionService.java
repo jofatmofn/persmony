@@ -27,7 +27,7 @@ import org.sakuram.persmony.valueobject.ReceiptDuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
-import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
+import org.sakuram.persmony.valueobject.SingleRealisationVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
 @Service
@@ -44,36 +44,61 @@ public class MoneyTransactionService {
 	@Autowired
 	MiscService miscService;
 	
-	public void singleRealisationWithBank(SingleRealisationWithBankVO singleRealisationWithBankVO) {
+	public void realisation(SingleRealisationVO singleRealisationVO) {
 		Investment investment;
 		InvestmentTransaction investmentTransaction, dynamicReceiptIt;
 		SavingsAccountTransaction savingsAccountTransaction;
-		Realisation realisation;
+		Realisation realisation, referencedRealisation;
 		Date dynamicReceiptDueDate;
+		Double totalRealisationAmount;
 		
-		investmentTransaction = investmentTransactionRepository.findById(singleRealisationWithBankVO.getInvestmentTransactionId())
-			.orElseThrow(() -> new AppException("Invalid Investment Transaction Id " + singleRealisationWithBankVO.getInvestmentTransactionId(), null));
+		investmentTransaction = investmentTransactionRepository.findById(singleRealisationVO.getInvestmentTransactionId())
+			.orElseThrow(() -> new AppException("Invalid Investment Transaction Id " + singleRealisationVO.getInvestmentTransactionId(), null));
 		if (investmentTransaction.getStatus().getId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
-			throw new AppException("Transaction " + singleRealisationWithBankVO.getInvestmentTransactionId() + " no longer Pending ", null);
+			throw new AppException("Transaction " + singleRealisationVO.getInvestmentTransactionId() + " no longer Pending ", null);
 		}
-		investmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
-		if (investmentTransaction.getDueAmount() == null) {
-			investmentTransaction.setDueAmount(singleRealisationWithBankVO.getAmount());
-		} else if (!investmentTransaction.getDueAmount().equals(singleRealisationWithBankVO.getAmount())) {
-			investmentTransaction.setSettledAmount(singleRealisationWithBankVO.getAmount());
-		}
-		
-		savingsAccountTransaction = new SavingsAccountTransaction(Constants.domainValueCache.get(singleRealisationWithBankVO.getBankAccountDvId()), singleRealisationWithBankVO.getTransactionDate(), singleRealisationWithBankVO.getAmount());
-		savingsAccountTransaction = savingsAccountTransactionRepository.save(savingsAccountTransaction);
 
-		realisation = new Realisation(investmentTransaction, singleRealisationWithBankVO.getTransactionDate(), Constants.domainValueCache.get(Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT), savingsAccountTransaction.getId(), singleRealisationWithBankVO.getAmount());
+		realisation = new Realisation(investmentTransaction, singleRealisationVO.getTransactionDate(), Constants.domainValueCache.get(singleRealisationVO.getRealisationTypeDvId()), null, singleRealisationVO.getAmount());
 		realisation = realisationRepository.save(realisation);
+		if (singleRealisationVO.getRealisationTypeDvId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
+			if (singleRealisationVO.getSavingsAccountTransactionId() == null) {
+				savingsAccountTransaction = new SavingsAccountTransaction(Constants.domainValueCache.get(singleRealisationVO.getBankAccountDvId()), singleRealisationVO.getTransactionDate(), singleRealisationVO.getAmount());
+				savingsAccountTransaction = savingsAccountTransactionRepository.save(savingsAccountTransaction);
+			} else {
+				savingsAccountTransaction = savingsAccountTransactionRepository.findById(singleRealisationVO.getSavingsAccountTransactionId())
+						.orElseThrow(() -> new AppException("Invalid Account Transaction Id " + singleRealisationVO.getSavingsAccountTransactionId(), null));
+			}
+			realisation.setDetailsReference(savingsAccountTransaction.getId());
+		} else if (singleRealisationVO.getRealisationTypeDvId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
+			if (singleRealisationVO.getRealisationId() != null) {
+				referencedRealisation = realisationRepository.findById(singleRealisationVO.getRealisationId())
+						.orElseThrow(() -> new AppException("Invalid Realisation Id " + singleRealisationVO.getRealisationId(), null));
+				if (referencedRealisation.getDetailsReference() != null) {
+					throw new AppException("Realisation Id " + singleRealisationVO.getRealisationId() + " is already mapped and cannot be reused.", null);
+				}
+				realisation.setDetailsReference(singleRealisationVO.getRealisationId());
+				referencedRealisation.setDetailsReference(realisation.getId());
+			}
+		}
 		
-		if (singleRealisationWithBankVO.getClosureTypeDvId() != null) {
+		if (singleRealisationVO.isLastRealisation()) {
+			totalRealisationAmount = singleRealisationVO.getAmount();
+			for (Realisation rlsn : investmentTransaction.getRealisationList()) {	// Doesn't include the realisation inserted just now
+				totalRealisationAmount += rlsn.getAmount();
+			}
+			if (investmentTransaction.getDueAmount() == null) {
+				investmentTransaction.setDueAmount(totalRealisationAmount);
+			} else if (!investmentTransaction.getDueAmount().equals(totalRealisationAmount)) {
+				investmentTransaction.setSettledAmount(totalRealisationAmount);
+			}
+			investmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
+		}
+		
+		if (singleRealisationVO.getClosureTypeDvId() != null) {
 			investment = investmentTransaction.getInvestment();
 			investment.setClosed(true);
-			investment.setClosureDate(singleRealisationWithBankVO.getTransactionDate());
-			investment.setClosureType(Constants.domainValueCache.get(singleRealisationWithBankVO.getClosureTypeDvId()));
+			investment.setClosureDate(singleRealisationVO.getTransactionDate());
+			investment.setClosureType(Constants.domainValueCache.get(singleRealisationVO.getClosureTypeDvId()));
 
 			for(InvestmentTransaction childInvestmentTransaction : investment.getInvestmentTransactionList()) {
 				if(childInvestmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING) {
@@ -101,7 +126,7 @@ public class MoneyTransactionService {
 			else {
 				throw new AppException("Unsupported Dynamic Receipt Periodicity " + investmentTransaction.getInvestment().getDynamicReceiptPeriodicity(), null);
 			}
-			System.out.println("singleRealisationWithBank completed.");
+			System.out.println("singleRealisation completed.");
 		}
 	}
 	
@@ -135,11 +160,15 @@ public class MoneyTransactionService {
 		investmentTransaction = investmentTransactionRepository.save(investmentTransaction);
 
 		if (txnSingleRealisationWithBankVO.getTransactionTypeDvId() != Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
-			singleRealisationWithBank(new SingleRealisationWithBankVO(
+			realisation(new SingleRealisationVO(
+					txnSingleRealisationWithBankVO.getTransactionTypeDvId(),
 					investmentTransaction.getId(),
+					null,
+					txnSingleRealisationWithBankVO.getBankAccountDvId(),
+					null,
 					txnSingleRealisationWithBankVO.getAmount(),
 					txnSingleRealisationWithBankVO.getTransactionDate(),
-					txnSingleRealisationWithBankVO.getBankAccountDvId(),
+					true,
 					null));
 		}
 		

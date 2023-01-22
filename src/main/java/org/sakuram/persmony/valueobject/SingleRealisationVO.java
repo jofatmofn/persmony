@@ -8,10 +8,14 @@ import lombok.Setter;
 
 @Getter @Setter
 @AllArgsConstructor
-public class SingleRealisationWithBankVO {
+public class SingleRealisationVO {
+	long realisationTypeDvId;
 	long investmentTransactionId;
+	Long savingsAccountTransactionId;
+	Long bankAccountDvId;
+	Long realisationId;
 	Double amount;
 	Date transactionDate;
-	long bankAccountDvId;
+	boolean isLastRealisation;
 	Long closureTypeDvId;
 }

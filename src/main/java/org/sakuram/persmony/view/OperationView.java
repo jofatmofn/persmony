@@ -17,13 +17,14 @@ import org.sakuram.persmony.valueobject.InvestVO;
 import org.sakuram.persmony.valueobject.ReceiptDuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
-import org.sakuram.persmony.valueobject.SingleRealisationWithBankVO;
+import org.sakuram.persmony.valueobject.SingleRealisationVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -44,6 +45,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -70,7 +72,7 @@ public class OperationView extends Div {
 			private static final long serialVersionUID = 1L;
 
 			{
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Existing Transaction, Single Realisation With Bank"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Realisation"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Accrual OR *New Transaction + Single Realisation With Bank*"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(4, "Invest"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(5, "Renewal"));
@@ -96,7 +98,7 @@ public class OperationView extends Div {
 			try {
 	            switch(event.getValue().getKey()) {
 	            case 1:
-	            	handleSingleRealisationWithBank(formLayout);
+	            	handleRealisation(formLayout);
 	            	break;
 	            case 3:
 	            	handleTxnSingleRealisationWithBank(formLayout);
@@ -122,34 +124,55 @@ public class OperationView extends Div {
 		add(selectSpan);
 		add(formLayout);
 	}
-	
-	private void handleSingleRealisationWithBank(FormLayout formLayout) {
-		TextField investmentTransactionIdTextField;
-		NumberField amountNumberField;
-		DatePicker transactionDatePicker;
-		Select<IdValueVO> bankAccountDvSelect, closureTypeDvSelect;
-		Button saveButton;
+
+	private void handleRealisation(FormLayout parentFormLayout) {
+		Select<IdValueVO> realisationTypeDvSelect;
 		List<IdValueVO> idValueVOList;
+		FormLayout formLayout;
 		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		// UI Elements
-		investmentTransactionIdTextField = new TextField();
-		formLayout.addFormItem(investmentTransactionIdTextField, "Investment Transaction Id");
-		
-		amountNumberField = new NumberField();
-		formLayout.addFormItem(amountNumberField, "Actual Amount Paid/Received");
-		
-		transactionDatePicker = new DatePicker();
-		formLayout.addFormItem(transactionDatePicker, "Actual Date Paid/Received");
-		
-		bankAccountDvSelect = new Select<IdValueVO>();
-		formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT);
-		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
+		realisationTypeDvSelect = new Select<IdValueVO>();
+		parentFormLayout.addFormItem(realisationTypeDvSelect, "Realisation Type");
+		parentFormLayout.add(formLayout);
+		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_REALISATION_TYPE);
+		realisationTypeDvSelect.setItemLabelGenerator(idValueVO -> {
 			return idValueVO.getValue();
 		});
-		bankAccountDvSelect.setItems(idValueVOList);
-		bankAccountDvSelect.setPlaceholder("Select Bank Account");
-
+		realisationTypeDvSelect.setItems(idValueVOList);
+		realisationTypeDvSelect.setPlaceholder("Select Realisation Type");
+		realisationTypeDvSelect.addValueChangeListener(event -> {
+			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+			handleRealisation2(formLayout, realisationTypeDvSelect.getValue());
+		});
+	}
+	
+	private void handleRealisation2(FormLayout formLayout, IdValueVO selectedRealisationIdValueVO) {
+		IntegerField investmentTransactionIdIntegerField, realisationIdIntegerField, savingsAccountTransactionIntegerField;	// Should be converted to LongField
+		NumberField amountNumberField;
+		DatePicker transactionDatePicker;
+		Select<IdValueVO> closureTypeDvSelect;
+		Button saveButton;
+		List<IdValueVO> idValueVOList;
+		Checkbox lastRealisationCheckbox;
+		Select<IdValueVO> bankAccountDvSelect;
+		List<IdValueVO> idValueVOList2;
+		HorizontalLayout hLayout;
+		
+		// UI Elements
+		investmentTransactionIdIntegerField = new IntegerField();
+		formLayout.addFormItem(investmentTransactionIdIntegerField, "Investment Transaction Id");
+		
+		amountNumberField = new NumberField();
+		formLayout.addFormItem(amountNumberField, "Realised Amount");
+		
+		transactionDatePicker = new DatePicker();
+		formLayout.addFormItem(transactionDatePicker, "Realised Date");
+		
+		lastRealisationCheckbox = new Checkbox();
+		formLayout.addFormItem(lastRealisationCheckbox, "Last Realisation");
+		
 		closureTypeDvSelect = new Select<IdValueVO>();
 		formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
 		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_CLOSURE_TYPE);
@@ -159,44 +182,87 @@ public class OperationView extends Div {
 		closureTypeDvSelect.setItems(idValueVOList);
 		closureTypeDvSelect.setPlaceholder("Select Account Closure Type");
 		
+		bankAccountDvSelect = new Select<IdValueVO>();
+		realisationIdIntegerField = new IntegerField();
+		savingsAccountTransactionIntegerField = new IntegerField();
+		if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
+			hLayout = new HorizontalLayout();
+			formLayout.addFormItem(hLayout, "Account Transaction");
+			savingsAccountTransactionIntegerField.setLabel("Old: Existing Id");
+			hLayout.add(savingsAccountTransactionIntegerField);
+			
+			hLayout.add(bankAccountDvSelect);
+			bankAccountDvSelect.setLabel("New: Account");
+			idValueVOList2 = miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT);
+			bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
+				if (idValueVO == null) {	// Required if EmptySelectionAllowed
+					return "None";			// EmptySelectionCaption
+				} else {
+					return idValueVO.getValue();
+				}
+			});
+			bankAccountDvSelect.setItems(idValueVOList2);
+			bankAccountDvSelect.setPlaceholder("Select Account");
+			bankAccountDvSelect.setEmptySelectionAllowed(true);
+		} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
+			formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
+		}
+		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		saveButton.setDisableOnClick(true);
 		// On click of Save
 		saveButton.addClickListener(event -> {
-			SingleRealisationWithBankVO singleRealisationWithBankVO;
+			SingleRealisationVO singleRealisationVO;
 			Notification notification;
 
 			try {
 				// Validation
-				if (investmentTransactionIdTextField.getValue() == null || investmentTransactionIdTextField.getValue().equals("")) {
-					showError("Investment Transaction Id cannot be Empty");
+				if (investmentTransactionIdIntegerField.getValue() == null || investmentTransactionIdIntegerField.getValue() <= 0) {
+					showError("Invalid Investment Transaction Id");
 					return;
 				}
-				if (amountNumberField.getValue() == null) {
-					showError("Amount cannot be Empty");
+				if (amountNumberField.getValue() == null || amountNumberField.getValue() <= 0) {
+					showError("Invalid Amount");
 					return;
 				}
 				if (transactionDatePicker.getValue() == null) {
 					showError("Date cannot be Empty");
 					return;
 				}
-				if (bankAccountDvSelect.getValue() == null) {
-					showError("Account cannot be Empty");
-					return;
+				if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
+					if (savingsAccountTransactionIntegerField.getValue() == null && bankAccountDvSelect.getValue() == null ||
+							savingsAccountTransactionIntegerField.getValue() != null && bankAccountDvSelect.getValue() != null) {
+						showError("One of Account Transaction Id Or Account is to be provided");
+						return;
+					}
+					if (savingsAccountTransactionIntegerField.getValue() != null && savingsAccountTransactionIntegerField.getValue() <= 0) {
+						showError("Invalid Account Transaction Id");
+						return;
+					}
+				}
+				if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
+					if (realisationIdIntegerField.getValue() != null && realisationIdIntegerField.getValue() <= 0) {
+						showError("Invalid Realisation Id");
+						return;
+					}
 				}
 				
 				// Back-end Call
-				singleRealisationWithBankVO = new SingleRealisationWithBankVO(
-						Long.parseLong(investmentTransactionIdTextField.getValue()),
+				singleRealisationVO = new SingleRealisationVO(
+						Long.valueOf(selectedRealisationIdValueVO.getId()),
+						investmentTransactionIdIntegerField.getValue(),
+						savingsAccountTransactionIntegerField.getValue() == null ? null : Long.valueOf(savingsAccountTransactionIntegerField.getValue()),
+						bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId(),
+						realisationIdIntegerField.getValue() == null ? null : Long.valueOf(realisationIdIntegerField.getValue()),
 						(double)amountNumberField.getValue().doubleValue(),
 						Date.valueOf(transactionDatePicker.getValue()),
-						bankAccountDvSelect.getValue().getId(),
+						lastRealisationCheckbox.getValue() == null || !lastRealisationCheckbox.getValue() ? false : true,
 						closureTypeDvSelect.getValue() == null? null : closureTypeDvSelect.getValue().getId());
 				try {
-					moneyTransactionService.singleRealisationWithBank(singleRealisationWithBankVO);
-					notification = Notification.show("Investment Transaction Saved Successfully.");
+					moneyTransactionService.realisation(singleRealisationVO);
+					notification = Notification.show("Realistion Saved Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
 					showError(UtilFuncs.messageFromException(e));
