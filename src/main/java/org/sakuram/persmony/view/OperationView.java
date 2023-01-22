@@ -127,21 +127,14 @@ public class OperationView extends Div {
 
 	private void handleRealisation(FormLayout parentFormLayout) {
 		Select<IdValueVO> realisationTypeDvSelect;
-		List<IdValueVO> idValueVOList;
 		FormLayout formLayout;
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		// UI Elements
-		realisationTypeDvSelect = new Select<IdValueVO>();
+		realisationTypeDvSelect = newDvSelect("Realisation Type", Constants.CATEGORY_REALISATION_TYPE, false);
 		parentFormLayout.addFormItem(realisationTypeDvSelect, "Realisation Type");
 		parentFormLayout.add(formLayout);
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_REALISATION_TYPE);
-		realisationTypeDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		realisationTypeDvSelect.setItems(idValueVOList);
-		realisationTypeDvSelect.setPlaceholder("Select Realisation Type");
 		realisationTypeDvSelect.addValueChangeListener(event -> {
 			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
 			handleRealisation2(formLayout, realisationTypeDvSelect.getValue());
@@ -152,12 +145,9 @@ public class OperationView extends Div {
 		IntegerField investmentTransactionIdIntegerField, realisationIdIntegerField, savingsAccountTransactionIntegerField;	// Should be converted to LongField
 		NumberField amountNumberField;
 		DatePicker transactionDatePicker;
-		Select<IdValueVO> closureTypeDvSelect;
+		Select<IdValueVO> closureTypeDvSelect, bankAccountDvSelect;
 		Button saveButton;
-		List<IdValueVO> idValueVOList;
 		Checkbox lastRealisationCheckbox;
-		Select<IdValueVO> bankAccountDvSelect;
-		List<IdValueVO> idValueVOList2;
 		HorizontalLayout hLayout;
 		
 		// UI Elements
@@ -173,16 +163,10 @@ public class OperationView extends Div {
 		lastRealisationCheckbox = new Checkbox();
 		formLayout.addFormItem(lastRealisationCheckbox, "Last Realisation");
 		
-		closureTypeDvSelect = new Select<IdValueVO>();
+		closureTypeDvSelect = newDvSelect("Account Closure Type", Constants.CATEGORY_CLOSURE_TYPE, false);
 		formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_CLOSURE_TYPE);
-		closureTypeDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		closureTypeDvSelect.setItems(idValueVOList);
-		closureTypeDvSelect.setPlaceholder("Select Account Closure Type");
 		
-		bankAccountDvSelect = new Select<IdValueVO>();
+		bankAccountDvSelect = newDvSelect("Account", Constants.CATEGORY_ACCOUNT, true);
 		realisationIdIntegerField = new IntegerField();
 		savingsAccountTransactionIntegerField = new IntegerField();
 		if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
@@ -193,17 +177,6 @@ public class OperationView extends Div {
 			
 			hLayout.add(bankAccountDvSelect);
 			bankAccountDvSelect.setLabel("New: Account");
-			idValueVOList2 = miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT);
-			bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
-				if (idValueVO == null) {	// Required if EmptySelectionAllowed
-					return "None";			// EmptySelectionCaption
-				} else {
-					return idValueVO.getValue();
-				}
-			});
-			bankAccountDvSelect.setItems(idValueVOList2);
-			bankAccountDvSelect.setPlaceholder("Select Account");
-			bankAccountDvSelect.setEmptySelectionAllowed(true);
 		} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
 			formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
 		}
@@ -279,20 +252,12 @@ public class OperationView extends Div {
 		DatePicker transactionDatePicker;
 		Select<IdValueVO> bankAccountDvSelect, transactionTypeDvSelect;
 		Button saveButton;
-		List<IdValueVO> idValueVOList;
-		
 		// UI Elements
 		investmentIdTextField = new TextField();
 		formLayout.addFormItem(investmentIdTextField, "Investment Id");
 		
-		transactionTypeDvSelect = new Select<IdValueVO>();
+		transactionTypeDvSelect = newDvSelect("Transaction Type", Constants.CATEGORY_TRANSACTION_TYPE, false);
 		formLayout.addFormItem(transactionTypeDvSelect, "Transaction Type");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_TRANSACTION_TYPE);
-		transactionTypeDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		transactionTypeDvSelect.setItems(idValueVOList);
-		transactionTypeDvSelect.setPlaceholder("Select Transaction Type");
 		
 		amountNumberField = new NumberField();
 		formLayout.addFormItem(amountNumberField, "Amount Paid/Received");
@@ -300,14 +265,8 @@ public class OperationView extends Div {
 		transactionDatePicker = new DatePicker();
 		formLayout.addFormItem(transactionDatePicker, "Date Paid/Received");
 		
-		bankAccountDvSelect = new Select<IdValueVO>();
+		bankAccountDvSelect = newDvSelect("Bank Account", Constants.CATEGORY_ACCOUNT, false);
 		formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT);
-		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		bankAccountDvSelect.setItems(idValueVOList);
-		bankAccountDvSelect.setPlaceholder("Select Bank Account");
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -362,12 +321,11 @@ public class OperationView extends Div {
 	}
 	
 	private void handleInvest(FormLayout formLayout) {
-		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchDvSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
+		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
 		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField;
 		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup, dynamicReceiptPeriodicityRadioButtonGroup;
 		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField;
 		DatePicker productEndDatePicker;
-		List<IdValueVO> idValueVOList;
 		HorizontalLayout hLayout;		
 		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
 		List<ScheduleVO> paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList;
@@ -375,48 +333,27 @@ public class OperationView extends Div {
 		// UI Elements
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Investor");
-		investorDvSelect = new Select<IdValueVO>();
-		investorDvSelect.setLabel("Investor");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_INVESTOR);
-		investorDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		investorDvSelect.setItems(idValueVOList);
-		investorDvSelect.setPlaceholder("Select Investor");
+		investorDvSelect = newDvSelect("Investor", Constants.CATEGORY_INVESTOR, false);
 		investorIdWithProviderTextField = new TextField("Id with Provider");
 		hLayout.add(investorDvSelect, investorIdWithProviderTextField);
 
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Provider");
-		productProviderDvSelect = new Select<IdValueVO>();
-		productProviderDvSelect.setLabel("Provider");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_PARTY);
-		productProviderDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		productProviderDvSelect.setItems(idValueVOList);
-		productProviderDvSelect.setPlaceholder("Select Product Provider");
-		providerBranchDvSelect = new Select<IdValueVO>();
+		productProviderDvSelect = newDvSelect("Provider", Constants.CATEGORY_PARTY, false);
+		providerBranchSelect = new Select<IdValueVO>();
 		productProviderDvSelect.addValueChangeListener(event -> {
-			providerBranchDvSelect.setItemLabelGenerator(idValueVO -> {
+			providerBranchSelect.setItemLabelGenerator(idValueVO -> {
 				return idValueVO.getValue();
 			});
-			providerBranchDvSelect.setItems(miscService.fetchBranchesOfParty(productProviderDvSelect.getValue().getId()));
+			providerBranchSelect.setItems(miscService.fetchBranchesOfParty(productProviderDvSelect.getValue().getId()));
 		});
-		providerBranchDvSelect.setLabel("Branch");
-		providerBranchDvSelect.setPlaceholder("Select Provider Branch");
-		hLayout.add(productProviderDvSelect, providerBranchDvSelect);
+		providerBranchSelect.setLabel("Branch");
+		providerBranchSelect.setPlaceholder("Select Provider Branch");
+		hLayout.add(productProviderDvSelect, providerBranchSelect);
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Product");
-		productTypeDvSelect = new Select<IdValueVO>();
-		productTypeDvSelect.setLabel("Product Type");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_PRODUCT_TYPE);
-		productTypeDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		productTypeDvSelect.setItems(idValueVOList);
-		productTypeDvSelect.setPlaceholder("Select Product Type");
+		productTypeDvSelect = newDvSelect("Product Type", Constants.CATEGORY_PRODUCT_TYPE, false);
 		productNameTextField = new TextField("Product Name");
 		productIdOfProviderTextField = new TextField("Id of Provider");
 		hLayout.add(productTypeDvSelect, productNameTextField, productIdOfProviderTextField);
@@ -424,23 +361,11 @@ public class OperationView extends Div {
 		investmentIdWithProviderTextField = new TextField();
 		formLayout.addFormItem(investmentIdWithProviderTextField, "Investment Id with Provider");
 
-		dematAccountDvSelect = new Select<IdValueVO>();
+		dematAccountDvSelect = newDvSelect("Demat Account", Constants.CATEGORY_DEMAT_ACCOUNT, true);
 		formLayout.addFormItem(dematAccountDvSelect, "Demat Account");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT);
-		dematAccountDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		dematAccountDvSelect.setItems(idValueVOList);
-		dematAccountDvSelect.setPlaceholder("Select Demat Account");
 		
-		taxabilityDvSelect = new Select<IdValueVO>();
+		taxabilityDvSelect = newDvSelect("Taxability", Constants.CATEGORY_TAXABILITY, true);
 		formLayout.addFormItem(taxabilityDvSelect, "Taxability");
-		idValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_TAXABILITY);
-		taxabilityDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		taxabilityDvSelect.setItems(idValueVOList);
-		taxabilityDvSelect.setPlaceholder("Select Taxability");
 		
 		accrualApplicabilityRadioButtonGroup = new RadioButtonGroup<>();
 		formLayout.addFormItem(accrualApplicabilityRadioButtonGroup, "Accrual Applicability");
@@ -448,13 +373,8 @@ public class OperationView extends Div {
 		accrualApplicabilityRadioButtonGroup.setItems("Not Known", "Not Applicable", "Applicable");
 		accrualApplicabilityRadioButtonGroup.setValue("Not Known");
 		
-		bankAccountDvSelect = new Select<IdValueVO>();
-		bankAccountDvSelect.setItemLabelGenerator(idValueVO -> {
-			return idValueVO.getValue();
-		});
-		bankAccountDvSelect.setItems(miscService.fetchDvsOfCategory(Constants.CATEGORY_ACCOUNT));
+		bankAccountDvSelect = newDvSelect("Account", Constants.CATEGORY_ACCOUNT, true);
 		formLayout.addFormItem(bankAccountDvSelect, "Realisation from Account");
-		bankAccountDvSelect.setPlaceholder("Select Account");
 
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Price");
@@ -531,7 +451,7 @@ public class OperationView extends Div {
 				investVO = new InvestVO(
 						investorDvSelect.getValue().getId(),
 						productProviderDvSelect.getValue().getId(),
-						providerBranchDvSelect.getValue() == null ? null : providerBranchDvSelect.getValue().getId(),
+						providerBranchSelect.getValue() == null ? null : providerBranchSelect.getValue().getId(),
 						productIdOfProviderTextField.getValue().equals("") ? null : productIdOfProviderTextField.getValue(),
 						investorIdWithProviderTextField.getValue().equals("") ? null : investorIdWithProviderTextField.getValue(),
 						productNameTextField.getValue().equals("") ? null : productNameTextField.getValue(),
@@ -897,4 +817,25 @@ public class OperationView extends Div {
                 .setFilter("event.key === 'Escape' || event.key === 'Esc'");
     }
 
+    private Select<IdValueVO> newDvSelect(String label, String dvCategory, boolean isEmptySelectionAllowed) {
+		List<IdValueVO> idValueVOList;
+		Select<IdValueVO> dvSelect;
+
+		dvSelect = new Select<IdValueVO>();
+		idValueVOList = miscService.fetchDvsOfCategory(dvCategory);
+		dvSelect.setItemLabelGenerator(idValueVO -> {
+			if (isEmptySelectionAllowed && idValueVO == null) {	// Required if EmptySelectionAllowed
+				return "Not Known/Applicable";
+			}
+			return idValueVO.getValue();
+		});
+		dvSelect.setItems(idValueVOList);
+		dvSelect.setLabel(label);
+		dvSelect.setPlaceholder("Select " + label);
+		dvSelect.setEmptySelectionAllowed(isEmptySelectionAllowed);
+		if (isEmptySelectionAllowed) {
+			dvSelect.setEmptySelectionCaption("Not Known/Applicable");
+		}
+		return dvSelect;
+    }
 }
