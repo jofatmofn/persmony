@@ -198,5 +198,8 @@ public class MiscService {
     	}
     	return idValueVOList;
     }
-    
+
+    public static double zeroIfNull(Double inValue) {
+    	return inValue == null ? 0 : inValue;
+    }
 }
