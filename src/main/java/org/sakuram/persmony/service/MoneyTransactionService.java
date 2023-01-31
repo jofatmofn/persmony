@@ -353,11 +353,11 @@ public class MoneyTransactionService {
     					realisation.getId(),
     					investmentTransaction.getId(),
     					realisation.getRealisationDate(),
-    					realisation.getRealisationType().getValue(),
+    					realisation.getRealisationType() == null ? "Not available" : realisation.getRealisationType().getValue(),
     					realisation.getDetailsReference(),
     					realisation.getAmount()
     					));
-    			if (realisation.getRealisationType().getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
+    			if (realisation.getRealisationType() != null && realisation.getRealisationType().getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
         			// TODO: Handle possible Duplicates
     				savingsAccountTransaction = savingsAccountTransactionRepository.findById(realisation.getDetailsReference())
     						.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + realisation.getDetailsReference(), null));
