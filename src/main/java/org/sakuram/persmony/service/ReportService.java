@@ -30,6 +30,14 @@ public class ReportService {
 	final Integer CRITERION_IS_CLOSED = 2;
 	final Integer CRITERION_TRANSACTION_TYPE = 3;
 	final Integer CRITERION_TRANSACTION_STATUS = 4;
+
+	// TODO: Avoid following class level variables
+	final String col0Values[] = {"Within Period"};
+	final String col1Values[] = {"Within Period", "Outside Period", "Not Realised"};
+	List<Long> col2Values;
+	final String col3Values[] = {"Payment", "Receipt", "Receipt-Principal", "Receipt-Interest", "Receipt-TDS", "Accrual", "Accrual-Interest", "Accrual-TDS"};
+	int col0Ind, col1Ind, col2Ind;
+	Object dataArray[][];
 	
 	public List<Object[]> investmentsWithPendingTransactions() {
 		Map<Integer, List<String>> criteriaMap;
@@ -86,45 +94,36 @@ public class ReportService {
 	
 	public List<Object[]> periodSummary(PeriodSummaryCriteriaVO periodSummaryCriteriaVO) {
 		List<Object[]> recordList;
-		List<Long> investorList;
-		Object headerArray[], dataArray[][];
-		int investorInd, dataRowInd;
+		int dataRowInd;
 		double investmentTransactionAmount, notRealisedPayment, notRealisedReceipt, notRealisedAccrual;
-		final int DATA_COLUMNS_COUNT = 8;
-
-		investorList = Constants.categoryDvIdCache.get(Constants.CATEGORY_INVESTOR);
-		headerArray = new Object[2 + investorList.size() * DATA_COLUMNS_COUNT];
-		dataArray = new Object[3][2 + investorList.size() * DATA_COLUMNS_COUNT];
 		
-		headerArray[0] = "Due";
-		headerArray[1] = "Realisation";
-		for (int ind = 0; ind < investorList.size(); ind++) {
-			headerArray[ind * DATA_COLUMNS_COUNT + 2] = (ind + 1) + ". Payment";
-			headerArray[ind * DATA_COLUMNS_COUNT + 3] = (ind + 1) + ". Receipt";
-			headerArray[ind * DATA_COLUMNS_COUNT + 4] = (ind + 1) + ". Receipt-Principal";
-			headerArray[ind * DATA_COLUMNS_COUNT + 5] = (ind + 1) + ". Receipt-Interest";
-			headerArray[ind * DATA_COLUMNS_COUNT + 6] = (ind + 1) + ". Receipt-TDS";
-			headerArray[ind * DATA_COLUMNS_COUNT + 7] = (ind + 1) + ". Accrual";
-			headerArray[ind * DATA_COLUMNS_COUNT + 8] = (ind + 1) + ". Accrual-Interest";
-			headerArray[ind * DATA_COLUMNS_COUNT + 9] = (ind + 1) + ". Accrual-TDS";
-		}
-		dataArray[0][0] = "Within Period";
-		dataArray[0][1] = "Within Period";
-		dataArray[1][0] = "Within Period";
-		dataArray[1][1] = "Outside Period";
-		dataArray[2][0] = "Within Period";
-		dataArray[2][1] = "Not Realised";
-		for (int ind = 2; ind < 2 + investorList.size() * DATA_COLUMNS_COUNT; ind++) {
-			dataArray[0][ind] = 0D;
-			dataArray[1][ind] = 0D;
-			dataArray[2][ind] = 0D;
+		final Object headerArray[] = {"Due", "Realisation", "Investor", "Detail", "Amount"};
+		
+		col2Values = Constants.categoryDvIdCache.get(Constants.CATEGORY_INVESTOR);
+		dataArray = new Object[col0Values.length * col1Values.length * col2Values.size() *  col3Values.length][5];
+		
+		dataRowInd = -1;
+		for (String col0 : col0Values) {
+			for (String col1 : col1Values) {
+				for (long col2 : col2Values) {
+					for (String col3 : col3Values) {
+						dataRowInd++;
+						dataArray[dataRowInd][0] = col0;
+						dataArray[dataRowInd][1] = col1;
+						dataArray[dataRowInd][2] = col2;
+						dataArray[dataRowInd][3] = col3;
+						dataArray[dataRowInd][4] = 0D;
+					}
+				}
+			}
 		}
 		
+		col0Ind = 0;
 		for (InvestmentTransaction investmentTransaction : investmentTransactionRepository.findByDueDateBetween(periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate())) {
 			if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_CANCELLED) {
 				continue;
 			}
-			investorInd = investorList.indexOf(investmentTransaction.getInvestment().getInvestor().getId());
+			col2Ind = col2Values.indexOf(investmentTransaction.getInvestment().getInvestor().getId());
 			if (investmentTransaction.getSettledAmount() == null && investmentTransaction.getDueAmount() == null && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
 				investmentTransactionAmount = MiscService.zeroIfNull(investmentTransaction.getInterestAmount()) -
 						MiscService.zeroIfNull(investmentTransaction.getTdsAmount());
@@ -152,58 +151,69 @@ public class ReportService {
 			for (Realisation realisation : investmentTransaction.getRealisationList()) {
 				if (realisation.getRealisationDate().before(periodSummaryCriteriaVO.getFromDate()) ||
 						realisation.getRealisationDate().after(periodSummaryCriteriaVO.getToDate())) {
-					dataRowInd = 1;
+					col1Ind = 1;
 				} else {
-					dataRowInd = 0;
+					col1Ind = 0;
 				}
 				if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_PAYMENT) {
-					dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 2] = (double)dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 2] + realisation.getAmount();
+					accumulateAmount(0, realisation.getAmount());
 					notRealisedPayment -= realisation.getAmount();
 				} else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
-					dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 3] = (double)dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 3] + realisation.getAmount();
+					accumulateAmount(1, realisation.getAmount());
 					notRealisedReceipt -= realisation.getAmount();
 					if (investmentTransaction.getReturnedPrincipalAmount() != null) {
-						dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 4] = (double)dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 4] + realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getReturnedPrincipalAmount();
+						accumulateAmount(2, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getReturnedPrincipalAmount());
 					}
 					if (investmentTransaction.getInterestAmount() != null) {
-						dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 5] = (double)dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 5] + realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getInterestAmount();
+						accumulateAmount(3, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getInterestAmount());
 					}
 					if (investmentTransaction.getTdsAmount() != null) {
-						dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 6] = (double)dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 6] + realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getTdsAmount();
+						accumulateAmount(4, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getTdsAmount());
 					}
 				} else { /* Constants.DVID_TRANSACTION_TYPE_ACCRUAL */
-					dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 7] = (double)dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 7] + realisation.getAmount();
+					accumulateAmount(5, realisation.getAmount());
 					notRealisedAccrual -= realisation.getAmount();
 					if (investmentTransaction.getInterestAmount() != null) {
-						dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 8] = (double)dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 8] + realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getInterestAmount();
+						accumulateAmount(6, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getInterestAmount());
 					}
 					if (investmentTransaction.getTdsAmount() != null) {
-						dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 9] = (double)dataArray[dataRowInd][investorInd * DATA_COLUMNS_COUNT + 9] + realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getTdsAmount();
+						accumulateAmount(7, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getTdsAmount());
 					}
 				}
 			}
-			dataArray[2][investorInd * DATA_COLUMNS_COUNT + 2] = (double)dataArray[2][investorInd * DATA_COLUMNS_COUNT + 2] + notRealisedPayment;
-			dataArray[2][investorInd * DATA_COLUMNS_COUNT + 3] = (double)dataArray[2][investorInd * DATA_COLUMNS_COUNT + 3] + notRealisedReceipt;
-			dataArray[2][investorInd * DATA_COLUMNS_COUNT + 7] = (double)dataArray[2][investorInd * DATA_COLUMNS_COUNT + 7] + notRealisedAccrual;
+			col1Ind = 2;
+			accumulateAmount(0, notRealisedPayment);
+			accumulateAmount(1, notRealisedReceipt);
+			accumulateAmount(5, notRealisedAccrual);
 			if (investmentTransaction.getReturnedPrincipalAmount() != null) {
-				dataArray[2][investorInd * DATA_COLUMNS_COUNT + 4] = (double)dataArray[2][investorInd * DATA_COLUMNS_COUNT + 4] + notRealisedReceipt / investmentTransactionAmount * investmentTransaction.getReturnedPrincipalAmount();
+				accumulateAmount(2, notRealisedReceipt / investmentTransactionAmount * investmentTransaction.getReturnedPrincipalAmount());
 			}
 			if (investmentTransaction.getInterestAmount() != null) {
-				dataArray[2][investorInd * DATA_COLUMNS_COUNT + 5] = (double)dataArray[2][investorInd * DATA_COLUMNS_COUNT + 5] + notRealisedReceipt / investmentTransactionAmount * investmentTransaction.getInterestAmount();
-				dataArray[2][investorInd * DATA_COLUMNS_COUNT + 8] = (double)dataArray[2][investorInd * DATA_COLUMNS_COUNT + 8] + notRealisedAccrual / investmentTransactionAmount * investmentTransaction.getInterestAmount();
+				accumulateAmount(3, notRealisedReceipt / investmentTransactionAmount * investmentTransaction.getInterestAmount());
+				accumulateAmount(6, notRealisedAccrual / investmentTransactionAmount * investmentTransaction.getInterestAmount());
 			}
 			if (investmentTransaction.getTdsAmount() != null) {
-				dataArray[2][investorInd * DATA_COLUMNS_COUNT + 6] = (double)dataArray[2][investorInd * DATA_COLUMNS_COUNT + 6] + notRealisedReceipt / investmentTransactionAmount * investmentTransaction.getTdsAmount();
-				dataArray[2][investorInd * DATA_COLUMNS_COUNT + 9] = (double)dataArray[2][investorInd * DATA_COLUMNS_COUNT + 9] + notRealisedAccrual / investmentTransactionAmount * investmentTransaction.getTdsAmount();
+				accumulateAmount(4, notRealisedReceipt / investmentTransactionAmount * investmentTransaction.getTdsAmount());
+				accumulateAmount(7, notRealisedAccrual / investmentTransactionAmount * investmentTransaction.getTdsAmount());
 			}
 		}
 		
-		recordList = new ArrayList<Object[]>(5);
+		recordList = new ArrayList<Object[]>(dataArray.length);
 		recordList.add(new Object[]{"Between", periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate()});
 		recordList.add(headerArray);
-		recordList.add(dataArray[0]);
-		recordList.add(dataArray[1]);
-		recordList.add(dataArray[2]);
+		for (Object[] dataRow : dataArray) {
+			recordList.add(dataRow);
+		}
 		return recordList;
+	 
+	}
+	
+	private void accumulateAmount(int ind3, double amount) {
+		int ind;
+		ind = col0Ind * col1Values.length * col2Values.size() * col3Values.length +
+				col1Ind * col2Values.size() * col3Values.length +
+				col2Ind * col3Values.length +
+				ind3;
+		dataArray[ind][4] = (double)dataArray[ind][4] + amount;
 	}
 }
