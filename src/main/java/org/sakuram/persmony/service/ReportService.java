@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
@@ -96,6 +97,7 @@ public class ReportService {
 		List<Object[]> recordList;
 		int dataRowInd;
 		double investmentTransactionAmount, notRealisedPayment, notRealisedReceipt, notRealisedAccrual;
+		Map<Long, Double> lastCompletedReceiptsMap;
 		
 		final Object headerArray[] = {"Due", "Realisation", "Investor", "Detail", "Amount"};
 		
@@ -117,7 +119,11 @@ public class ReportService {
 				}
 			}
 		}
-		
+
+		lastCompletedReceiptsMap = investmentTransactionRepository.findLastCompletedReceipts().stream().collect(
+				Collectors.toMap(
+						it -> (long)(it.getInvestment().getId()),
+						it -> (double)(it.getSettledAmount() == null ? it.getDueAmount() : it.getSettledAmount())));
 		col0Ind = 0;
 		for (InvestmentTransaction investmentTransaction : investmentTransactionRepository.findByDueDateBetween(periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate())) {
 			if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_CANCELLED) {
@@ -131,12 +137,22 @@ public class ReportService {
 				investmentTransactionAmount = investmentTransaction.getSettledAmount();
 			} else if (investmentTransaction.getDueAmount() != null) {
 				investmentTransactionAmount = investmentTransaction.getDueAmount();
-			} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING) {
+			// Else Approximations
+			} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING  && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
+					(investmentTransaction.getReturnedPrincipalAmount() != null || investmentTransaction.getInterestAmount() != null || investmentTransaction.getTdsAmount() != null)) {
 				investmentTransactionAmount = MiscService.zeroIfNull(investmentTransaction.getReturnedPrincipalAmount()) +
 						MiscService.zeroIfNull(investmentTransaction.getInterestAmount()) -
-						MiscService.zeroIfNull(investmentTransaction.getTdsAmount()); // Just Approximation
+						MiscService.zeroIfNull(investmentTransaction.getTdsAmount());
+				if (investmentTransactionAmount == 0) {
+					System.out.println("Skipped Investment Transaction " + investmentTransaction.getId());
+					continue;
+				}
+			} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING  && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
+					lastCompletedReceiptsMap.containsKey(investmentTransaction.getInvestment().getId())) {
+				investmentTransactionAmount = lastCompletedReceiptsMap.get(investmentTransaction.getInvestment().getId());
 			} else {
-				throw new AppException("Invalid Data in Investment Transaction " + investmentTransaction.getId(), null);
+				System.out.println("Skipped Investment Transaction " + investmentTransaction.getId());
+				continue;
 			}
 			notRealisedPayment = 0;
 			notRealisedReceipt = 0;

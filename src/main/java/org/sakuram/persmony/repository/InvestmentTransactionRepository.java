@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
+import org.sakuram.persmony.util.Constants;
 
 public interface InvestmentTransactionRepository extends JpaRepository<InvestmentTransaction, Long> {
 	public List<InvestmentTransaction> findByInvestmentOrderByDueDateDesc(Investment investment);
@@ -24,4 +25,17 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 			+ "	AND transaction_type_fk = 73 "
 			+ "ORDER BY due_date")
 	public List<Object[]> findPendingTransactions();
+	
+	@Query(nativeQuery = true, value =
+			"SELECT ITO.*"
+			+ " FROM investment_transaction ITO"
+			+ "	WHERE transaction_type_fk = " + Constants.DVID_TRANSACTION_TYPE_RECEIPT
+			+ "	AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_COMPLETED
+			+ "	AND due_date = (SELECT max(due_date)"
+			+ "	FROM investment_transaction ITI"
+			+ "	WHERE ITI.investment_fk = ITO.investment_fk"
+			+ "	AND transaction_type_fk = " + Constants.DVID_TRANSACTION_TYPE_RECEIPT
+			+ "	AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_COMPLETED
+			+ ")")
+	public List<InvestmentTransaction> findLastCompletedReceipts();
 }
