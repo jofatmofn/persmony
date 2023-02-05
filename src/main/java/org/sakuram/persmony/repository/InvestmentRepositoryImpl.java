@@ -30,32 +30,41 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 	@SuppressWarnings("unchecked")
 	public List<Object[]> searchInvestments(List<SearchCriterionVO> searchCriterionVOList) {
     	Query query;
-    	StringBuffer stringBuffer;
+    	StringBuffer mainQueryStringBuffer, subQueryStringBuffer, stringBuffer;
 		String queryString;
 		boolean isFirstTime;
 		FieldSpecVO fieldSpecVO;
 		String valuesArr[];
 		
-		stringBuffer = new StringBuffer();
-		stringBuffer.append("SELECT iDV.value AS investor, ppDV.value AS productProvider, daDV.value AS dematAccount, fDV.value AS facilitator, I.investor_id_with_provider, I.product_id_of_provider, I.investment_id_with_provider, I.product_name, ptDV.value AS productType, I.worth, I.clean_price, I.accrued_interest, I.charges, I.rate_of_interest, tDV.value AS taxability, I.previous_investment_fk, nirDV.value AS newInvestmentReason, I.product_end_date, I.is_closed, ctDV.value AS closureType, I.closure_date, I.is_accrual_applicable, I.dynamic_receipt_periodicity, pbDV.value AS providerBranch, I.id ");
-		stringBuffer.append("FROM investment I ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value iDV ON I.investor_fk = iDV.id ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value ppDV ON I.product_provider_fk = ppDV.id ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value daDV ON I.demat_account_fk = daDV.id ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value fDV ON I.facilitator_fk = fDV.id ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value ptDV ON I.product_type_fk = ptDV.id ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value tDV ON I.taxability_fk = tDV.id ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value nirDV ON I.new_investment_reason_fk = nirDV.id ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value ctDV ON I.closure_type_fk = ctDV.id ");
-		stringBuffer.append("LEFT OUTER JOIN domain_value pbDV ON I.provider_branch_fk = pbDV.id ");
 		isFirstTime = true;
+		mainQueryStringBuffer = new StringBuffer();
+		subQueryStringBuffer = new StringBuffer();
+		
+		mainQueryStringBuffer.append("SELECT iDV.value AS investor, ppDV.value AS productProvider, daDV.value AS dematAccount, fDV.value AS facilitator, I.investor_id_with_provider, I.product_id_of_provider, I.investment_id_with_provider, I.product_name, ptDV.value AS productType, I.worth, I.clean_price, I.accrued_interest, I.charges, I.rate_of_interest, tDV.value AS taxability, I.previous_investment_fk, nirDV.value AS newInvestmentReason, I.product_end_date, I.is_closed, ctDV.value AS closureType, I.closure_date, I.is_accrual_applicable, I.dynamic_receipt_periodicity, pbDV.value AS providerBranch, I.id ");
+		mainQueryStringBuffer.append("FROM investment I ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value iDV ON I.investor_fk = iDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ppDV ON I.product_provider_fk = ppDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value daDV ON I.demat_account_fk = daDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value fDV ON I.facilitator_fk = fDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ptDV ON I.product_type_fk = ptDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tDV ON I.taxability_fk = tDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value nirDV ON I.new_investment_reason_fk = nirDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ctDV ON I.closure_type_fk = ctDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value pbDV ON I.provider_branch_fk = pbDV.id ");
+		
 		for (SearchCriterionVO searchCriterionVO : searchCriterionVOList) {
 			if(searchCriterionVO.getFieldName() == null || searchCriterionVO.getValuesCSV() == null ||
 					searchCriterionVO.getFieldName().equals("") || searchCriterionVO.getValuesCSV().equals("")) {
 				continue;
 			}
-			stringBuffer.append(isFirstTime ? "WHERE " : "AND ");
-			isFirstTime = false;
+			if(searchCriterionVO.getFieldName().startsWith("IT.")) {
+				stringBuffer = subQueryStringBuffer;
+				stringBuffer.append("AND ");
+			} else {
+				stringBuffer = mainQueryStringBuffer;
+				stringBuffer.append(isFirstTime ? "WHERE " : "AND ");
+				isFirstTime = false;
+			}
 			searchCriterionVO.setValuesCSV(searchCriterionVO.getValuesCSV().replaceAll("[^A-Za-z0-9\\-., ]", "").trim().toLowerCase());
 			fieldSpecVO = Constants.SEARCH_FIELD_SPEC_MAP.get(searchCriterionVO.getFieldName());
 			if (fieldSpecVO.getDataType() == FieldSpecVO.DataType.BOOLEAN) {
@@ -185,13 +194,29 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 				case Constants.CATEGORY_BRANCH:
 					stringBuffer.append("pbDV");
 					break;
+				case Constants.CATEGORY_TRANSACTION_TYPE:
+					stringBuffer.append("ttDV");
+					break;
+				case Constants.CATEGORY_TRANSACTION_STATUS:
+					stringBuffer.append("tsDV");
+					break;
 				}
 				stringBuffer.append(".value) = '");
 				stringBuffer.append(searchCriterionVO.getValuesCSV());
 				stringBuffer.append("' ");
 			}
 		}
-		queryString = stringBuffer.toString();
+		if (subQueryStringBuffer.length() > 0) {
+			mainQueryStringBuffer.append(isFirstTime ? "WHERE " : "AND ");
+			mainQueryStringBuffer.append("EXISTS(SELECT 1 FROM investment_transaction IT ");
+			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ttDV ON IT.transaction_type_fk = ttDV.id ");
+			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tsDV ON IT.status_fk = tsDV.id ");
+			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tDV ON IT.taxability_fk = tDV.id ");
+			mainQueryStringBuffer.append("WHERE IT.investment_fk = I.id ");
+			mainQueryStringBuffer.append(subQueryStringBuffer);
+			mainQueryStringBuffer.append(")");
+		}
+		queryString = mainQueryStringBuffer.toString();
     	LogManager.getLogger().debug(queryString);
     	query = entityManager.createNativeQuery(queryString);
     	return query.getResultList();

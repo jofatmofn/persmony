@@ -90,6 +90,17 @@ public class Constants {
 			put("accrued_interest", new FieldSpecVO("Accrued Interest", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("charges", new FieldSpecVO("Charges", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("clean_price", new FieldSpecVO("Clean Price", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			
+			put("IT.transaction_type_fk",new FieldSpecVO("Txn Type", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_TRANSACTION_TYPE));
+			put("IT.due_date", new FieldSpecVO("Txn Due Date", FieldSpecVO.DataType.DATE, true, false, false, null));
+			put("IT.due_amout", new FieldSpecVO("Txn Due Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("IT.status_fk",new FieldSpecVO("Txn Status", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_TRANSACTION_STATUS));
+			put("IT.settled_amount", new FieldSpecVO("Txn Settled Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("IT.returned_principal_amount", new FieldSpecVO("Txn Returned Principal Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("IT.interest_amount", new FieldSpecVO("Txn Interest Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("IT.tds_amount", new FieldSpecVO("Txn TDS Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("IT.taxability_fk",new FieldSpecVO("Txn Taxability", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_TAXABILITY));
+			put("IT.assessment_year", new FieldSpecVO("Txn Assessment Year", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 		}
 	};
 
