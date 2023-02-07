@@ -39,8 +39,10 @@ public class ReportService {
 	final String col3Values[] = {"Payment", "Receipt", "Receipt-Principal", "Receipt-Interest", "Receipt-TDS", "Accrual", "Accrual-Interest", "Accrual-TDS"};
 	int col0Ind, col1Ind, col2Ind;
 	Object dataArray[][];
+	List<Object[]> breakupRecordList;
+	String itId, rId;
 	
-	public List<Object[]> investmentsWithPendingTransactions() {
+	public List<List<Object[]>> investmentsWithPendingTransactions() {
 		Map<Integer, List<String>> criteriaMap;
 		
 		criteriaMap = new HashMap<Integer, List<String>>();
@@ -50,10 +52,13 @@ public class ReportService {
 		return fetchRequiredTransactions(criteriaMap);
 	}
 	
-	private List<Object[]> fetchRequiredTransactions(Map<Integer, List<String>> criteriaMap) {
+	private List<List<Object[]>> fetchRequiredTransactions(Map<Integer, List<String>> criteriaMap) {
+		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
 		
+		reportList = new ArrayList<List<Object[]>>(1);
 		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
 		recordList.add(new Object[]{"Sl. No.", "Investor", "Product Provider", "Product Name", "Account No.", "Is Closed?", "Receipt Date", "Receipt Amount", "Returned Principal", "Receipt Status"});
 		for (Investment investment : investmentRepository.findAllByOrderByIdAsc()) {
 
@@ -81,25 +86,33 @@ public class ReportService {
 				// TODO: Update existing record, than always adding to recordList
 			}
 		}
-		return recordList;
+		return reportList;
 	}
 	
-	public List<Object[]> pendingTransactions() {
+	public List<List<Object[]>> pendingTransactions() {
+		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
 		
+		reportList = new ArrayList<List<Object[]>>(1);
 		recordList = investmentTransactionRepository.findPendingTransactions();
+		reportList.add(recordList);
 		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Returned Principal"});
 		
-		return recordList;
+		return reportList;
 	}
 	
-	public List<Object[]> periodSummary(PeriodSummaryCriteriaVO periodSummaryCriteriaVO) {
+	public List<List<Object[]>> periodSummary(PeriodSummaryCriteriaVO periodSummaryCriteriaVO) {
+		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
 		int dataRowInd;
 		double investmentTransactionAmount, notRealisedPayment, notRealisedReceipt, notRealisedAccrual;
 		Map<Long, Double> lastCompletedReceiptsMap;
 		
 		final Object headerArray[] = {"Due", "Realisation", "Investor", "Detail", "Amount"};
+		
+		breakupRecordList = new ArrayList<Object[]>();
+		breakupRecordList.add(new Object[]{"Between", periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate()});
+		breakupRecordList.add(new Object[]{"IT Id", "R Id", "Due", "Realisation", "Investor", "Detail", "Amount"});
 		
 		col2Values = Constants.categoryDvIdCache.get(Constants.CATEGORY_INVESTOR);
 		dataArray = new Object[col0Values.length * col1Values.length * col2Values.size() *  col3Values.length][5];
@@ -154,6 +167,7 @@ public class ReportService {
 				System.out.println("Skipped Investment Transaction " + investmentTransaction.getId());
 				continue;
 			}
+			itId = String.valueOf(investmentTransaction.getId());
 			notRealisedPayment = 0;
 			notRealisedReceipt = 0;
 			notRealisedAccrual = 0;
@@ -165,6 +179,7 @@ public class ReportService {
 				notRealisedAccrual = investmentTransactionAmount;
 			}
 			for (Realisation realisation : investmentTransaction.getRealisationList()) {
+				rId = String.valueOf(realisation.getId());
 				if (realisation.getRealisationDate().before(periodSummaryCriteriaVO.getFromDate()) ||
 						realisation.getRealisationDate().after(periodSummaryCriteriaVO.getToDate())) {
 					col1Ind = 1;
@@ -197,6 +212,7 @@ public class ReportService {
 					}
 				}
 			}
+			rId = "N/A";
 			col1Ind = 2;
 			accumulateAmount(0, notRealisedPayment);
 			accumulateAmount(1, notRealisedReceipt);
@@ -214,13 +230,16 @@ public class ReportService {
 			}
 		}
 		
+		reportList = new ArrayList<List<Object[]>>(2);
 		recordList = new ArrayList<Object[]>(dataArray.length);
+		reportList.add(recordList);
+		reportList.add(breakupRecordList);
 		recordList.add(new Object[]{"Between", periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate()});
 		recordList.add(headerArray);
 		for (Object[] dataRow : dataArray) {
 			recordList.add(dataRow);
 		}
-		return recordList;
+		return reportList;
 	 
 	}
 	
@@ -231,5 +250,6 @@ public class ReportService {
 				col2Ind * col3Values.length +
 				ind3;
 		dataArray[ind][4] = (double)dataArray[ind][4] + amount;
+		breakupRecordList.add(new Object[]{itId, rId, col0Values[col0Ind], col1Values[col1Ind], col2Values.get(col2Ind), col3Values[ind3], amount});
 	}
 }
