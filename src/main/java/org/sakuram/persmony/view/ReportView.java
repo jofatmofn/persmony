@@ -28,7 +28,7 @@ import com.vaadin.flow.router.Route;
 @Route("report")
 public class ReportView extends VerticalLayout {
 	private static final long serialVersionUID = 7744877036031319646L;
-	private int currentReportInd, runningReportInd;
+	int currentReportInd, nameReportInd;
 	List<List<Object[]>> reportList;
 	
 	public ReportView(ReportService reportService) {
@@ -55,7 +55,6 @@ public class ReportView extends VerticalLayout {
 		periodToDatePicker = new DatePicker("To");
 		reportSelect.addValueChangeListener(event -> {
 			currentReportInd = -1;
-			runningReportInd = -1;
 			HorizontalLayout hLayout;		
 			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
 			try {
@@ -78,18 +77,16 @@ public class ReportView extends VerticalLayout {
         });
 
 		generateButton = new LazyDownloadButton("Generate",
-				() -> {
-					runningReportInd = -1;	// Unlock
-					System.out.println("Generated name. Id: " + currentReportInd);
-					return reportSelect.getValue() + currentReportInd + ".csv";
+				() -> {	// File name generating lambda
+					return reportSelect.getValue() + "_" + nameReportInd + ".csv";
 				},
-				() -> {
-					synchronized(this) {
+				() -> {	// File contents generating lambda
 					StringWriter stringWriter;
 					List<Object[]> recordList;
 					ByteArrayInputStream byteArrayInputStream;
 					try {
 						currentReportInd++;
+						nameReportInd = currentReportInd;	// Because currentReportInd could be modified before the current execution reaches the file name generating lambda
 						// Back-end Call
 						if(currentReportInd == 0) {
 							try {
@@ -121,8 +118,6 @@ public class ReportView extends VerticalLayout {
 							}
 						}
 						
-						while (runningReportInd != -1 && currentReportInd != runningReportInd);	// wait while(locked)
-						runningReportInd = currentReportInd;	// Lock
 						// Generate CSV
 						recordList = reportList.get(currentReportInd);
 						System.out.println("Report: " + currentReportInd + " Size: " + recordList.size());
@@ -139,22 +134,31 @@ public class ReportView extends VerticalLayout {
 			    				e.printStackTrace();
 			    				return new ByteArrayInputStream(new byte[0]);
 			    			}
-							/* if (currentReportInd < reportList.size() - 1) {
-								for (Component component : (Iterable<Component>)(this.getChildren()::iterator)) {	// TODO: Need a better solution like generateButton.click();
+							if (currentReportInd < reportList.size() - 1) {
+								for (Component component : (Iterable<Component>)(this.getChildren()::iterator)) {	// TODO: Need a better (non-looping) solution like generateButton.click();
 									if(component.toString().startsWith("org.vaadin.stefan.LazyDownloadButton")) {
-										((LazyDownloadButton)component).click();	// Synchronised, Locking nothing works. As soon as click is fired, new thread is spawned and current thread is killed
+										Runnable runnable = () -> {	// As soon as click is fired, new thread is spawned and current thread is killed.
+																	// Synchronised, Locking nothing meets the requirement.  Hence this thread with sleep.
+											try {
+												Thread.sleep(1000L);
+											} catch (InterruptedException e) {
+												e.printStackTrace();
+											}
+											((LazyDownloadButton)component).click();
+										};
+										new Thread(runnable).start();
 										break;
 									}
 								}
-							} */
-							System.out.println("Returning BAIS: " + stringWriter.getBuffer().length());
+							} else {
+								currentReportInd = -1;
+							}
 		    				return byteArrayInputStream;
 			    		}
 					} catch (Exception e) {
 						showError("System Error!!! Contact Support.");
 	    				e.printStackTrace();
 						return new ByteArrayInputStream(new byte[0]);
-					}
 					}
 		});
 		generateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
