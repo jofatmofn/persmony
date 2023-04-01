@@ -162,6 +162,7 @@ public class OperationView extends Div {
 		
 		lastRealisationCheckbox = new Checkbox();
 		formLayout.addFormItem(lastRealisationCheckbox, "Last Realisation");
+		lastRealisationCheckbox.setValue(true);
 		
 		closureTypeDvSelect = newDvSelect("Account Closure Type", Constants.CATEGORY_CLOSURE_TYPE, false);
 		formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
