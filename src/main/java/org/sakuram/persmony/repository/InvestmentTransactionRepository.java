@@ -2,6 +2,7 @@ package org.sakuram.persmony.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.sql.Date;
 import java.util.List;
@@ -38,4 +39,17 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 			+ "	AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_COMPLETED
 			+ ")")
 	public List<InvestmentTransaction> findLastCompletedReceipts();
+	
+	@Query(nativeQuery = true, value =
+			"SELECT ITO.*"
+			+ " FROM investment_transaction ITO"
+			+ "	WHERE investment_fk = :iId"
+			+ "	AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_COMPLETED
+			+ "	AND due_date = (SELECT max(due_date)"
+			+ "	FROM investment_transaction ITI"
+			+ "	WHERE ITI.investment_fk = ITO.investment_fk"
+			+ "	AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_COMPLETED
+			+ " AND due_date < :dueDate"
+			+ ")")
+	public InvestmentTransaction findPreviousCompletedTransaction(@Param("iId") long iId, @Param("dueDate") Date dueDate);
 }

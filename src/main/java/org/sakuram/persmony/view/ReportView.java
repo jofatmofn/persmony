@@ -40,7 +40,8 @@ public class ReportView extends VerticalLayout {
 		reportSelect = new Select<String>();
 		reportSelect.setItems("Pending Transactions",
 				"Open Investments",
-				"Period Summary");
+				"Period Summary",
+				"Anticipated Vs. Actual");
 		reportSelect.setLabel("Report");
 		reportSelect.setPlaceholder("Select Report");
 		add(reportSelect);
@@ -64,6 +65,7 @@ public class ReportView extends VerticalLayout {
 	            case "Open Investments":
 	            	break;
 	            case "Period Summary":
+	            case "Anticipated Vs. Actual":
 	        		hLayout = new HorizontalLayout();
 	        		formLayout.addFormItem(hLayout, "Period");
 	        		hLayout.add(periodFromDatePicker, periodToDatePicker);
@@ -103,13 +105,18 @@ public class ReportView extends VerticalLayout {
 					            	reportList = reportService.investmentsWithPendingTransactions();
 					            	break;
 					            case "Period Summary":
+					            case "Anticipated Vs. Actual":
 					            	PeriodSummaryCriteriaVO periodSummaryCriteriaVO;
 					            	if (periodFromDatePicker.getValue() == null || periodToDatePicker.getValue() == null) {
 										showError("Select the period before clicking Generate");
 										return new ByteArrayInputStream(new byte[0]);
 									}
 					            	periodSummaryCriteriaVO = new PeriodSummaryCriteriaVO(Date.valueOf(periodFromDatePicker.getValue()), Date.valueOf(periodToDatePicker.getValue()));
-					            	reportList = reportService.periodSummary(periodSummaryCriteriaVO);
+					            	if (reportSelect.getValue().equals("Period Summary")) {
+					            		reportList = reportService.periodSummary(periodSummaryCriteriaVO);
+					            	} else {
+					            		reportList = reportService.anticipatedVsActual(periodSummaryCriteriaVO);
+					            	}
 					            	break;
 					            }
 							} catch (Exception e) {

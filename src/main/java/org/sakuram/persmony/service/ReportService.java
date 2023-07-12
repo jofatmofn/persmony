@@ -1,5 +1,7 @@
 package org.sakuram.persmony.service;
 
+import java.sql.Date;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -252,4 +254,48 @@ public class ReportService {
 		dataArray[ind][4] = (double)dataArray[ind][4] + amount;
 		breakupRecordList.add(new Object[]{itId, rId, col0Values[col0Ind], col1Values[col1Ind], col2Values.get(col2Ind), col3Values[ind3], amount});
 	}
+	
+	public List<List<Object[]>> anticipatedVsActual(PeriodSummaryCriteriaVO periodSummaryCriteriaVO) {
+		List<List<Object[]>> reportList;
+		List<Object[]> recordList;
+		Object[] dataArray;
+		int dataRowInd;
+		InvestmentTransaction previousCompletedIt;
+		long duration;
+		double anticipatedAmount;
+		
+		final Object headerArray[] = {"Investment", "Txn. Id", "Anticipated", "Actual"};
+		
+		reportList = new ArrayList<List<Object[]>>(1);
+		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
+		
+		recordList.add(headerArray);
+		for (InvestmentTransaction investmentTransaction : investmentTransactionRepository.findByDueDateBetween(periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate())) {
+			if (investmentTransaction.getTransactionType().getId() != Constants.DVID_TRANSACTION_TYPE_RECEIPT || investmentTransaction.getStatus().getId() != Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
+				continue;
+			}
+			
+			previousCompletedIt = investmentTransactionRepository.findPreviousCompletedTransaction(investmentTransaction.getInvestment().getId(), investmentTransaction.getDueDate());
+			
+			if (previousCompletedIt == null) {
+				throw new AppException("No candidate previous IT!", null);
+			}
+			duration = Duration.between(previousCompletedIt.getDueDate().toLocalDate().atStartOfDay(), investmentTransaction.getDueDate().toLocalDate().atStartOfDay()).toDays();
+			if (investmentTransaction.getInvestment().getWorth() != null && investmentTransaction.getInvestment().getRateOfInterest() != null) {
+				anticipatedAmount = investmentTransaction.getInvestment().getWorth() * duration / 365 * investmentTransaction.getInvestment().getRateOfInterest() / 100;
+				
+				dataArray = new Object[4];
+				recordList.add(dataArray);
+				dataArray[0] = investmentTransaction.getInvestment().getId();
+				dataArray[1] = investmentTransaction.getId();
+				dataArray[2] = anticipatedAmount;
+				dataArray[3] = (investmentTransaction.getSettledAmount() == null ? investmentTransaction.getDueAmount() : investmentTransaction.getSettledAmount()) -
+						MiscService.zeroIfNull(investmentTransaction.getReturnedPrincipalAmount());
+			}
+		}
+		
+		return reportList;
+	}
+	
 }
