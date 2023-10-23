@@ -52,9 +52,6 @@ public class InvestmentTransaction {
 	@JoinColumn(name="status_fk", nullable=false)
 	private DomainValue status;
 	
-	@Column(name="settled_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double settledAmount; /* Only when not equal to dueAmount */
-	
 	@Column(name="returned_principal_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double returnedPrincipalAmount;
 	
@@ -71,25 +68,16 @@ public class InvestmentTransaction {
 	@Column(name="assessment_year", nullable=true, precision=4, scale=0)
 	private BigDecimal assessmentYear;	/* Why not Short? */
 
-	/*
-	 * (1) In a receipt transaction, returned_principal_amount + interest_amount - tds_amount need not match due_amount or settled_amount. 
-	 * Other accrual transactions may contribute to the due_amount.
-	 * (2) When creating a transaction, if tds_amount is known, then due_amount is post tds, else it's before tds.
-	 * When the transaction is realised, tds_amount is to be updated, but not the due_amount.
-	 * (3) When due_amount <> realised amount, settled_amount is to be updated.
-	 */
-
 	@JsonIgnore
 	@OneToMany(mappedBy = "investmentTransaction", cascade = CascadeType.ALL)
 	private List<Realisation> realisationList;
 
-	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Double dueAmount, DomainValue status, Double settledAmount, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxability, BigDecimal assessmentYear, List<Realisation> realisationList) {
+	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Double dueAmount, DomainValue status, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxability, BigDecimal assessmentYear, List<Realisation> realisationList) {
 		this.investment = investment;
 		this.transactionType = transactionType;
 		this.dueDate = dueDate;
 		this.dueAmount = dueAmount;
 		this.status = status;
-		this.settledAmount = settledAmount;
 		this.returnedPrincipalAmount = returnedPrincipalAmount;
 		this.interestAmount = interestAmount;
 		this.tdsAmount = tdsAmount;

@@ -14,6 +14,7 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestVO;
+import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
 import org.sakuram.persmony.valueobject.ReceiptDuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
@@ -73,10 +74,12 @@ public class OperationView extends Div {
 
 			{
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Realisation"));
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Accrual OR *New Transaction + Single Realisation With Bank*"));
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(4, "Invest"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "Accrual"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Invest"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(4, "Existing Investment, Receipt Dues"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(5, "Renewal"));
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(6, "Existing Investment, Receipt Dues"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(6, "New Receipt + Single Realisation With Bank"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(7, "New Payment + Single Realisation With Bank"));
 			}
 		};
 		selectSpan = new Span();
@@ -100,17 +103,23 @@ public class OperationView extends Div {
 	            case 1:
 	            	handleRealisation(formLayout);
 	            	break;
+	            case 2:
+	            	handleTxnSingleRealisationWithBank(formLayout, Constants.DVID_TRANSACTION_TYPE_ACCRUAL);
+	            	break;
 	            case 3:
-	            	handleTxnSingleRealisationWithBank(formLayout);
+	            	handleInvest(formLayout);
 	            	break;
 	            case 4:
-	            	handleInvest(formLayout);
+	            	handleReceiptDues(formLayout);
 	            	break;
 	            case 5:
 	            	handleRenewal(formLayout);
 	            	break;
 	            case 6:
-	            	handleReceiptDues(formLayout);
+	            	handleTxnSingleRealisationWithBank(formLayout, Constants.DVID_TRANSACTION_TYPE_RECEIPT);
+	            	break;
+	            case 7:
+	            	handleTxnSingleRealisationWithBank(formLayout, Constants.DVID_TRANSACTION_TYPE_PAYMENT);
 	            	break;
 	            }
 			} catch (Exception e) {
@@ -125,37 +134,85 @@ public class OperationView extends Div {
 		add(formLayout);
 	}
 
+	@SuppressWarnings("unused")
 	private void handleRealisation(FormLayout parentFormLayout) {
+		IntegerField investmentTransactionIdIntegerField;
 		Select<IdValueVO> realisationTypeDvSelect;
 		FormLayout formLayout;
+		InvestmentTransactionVO investmentTransactionVO;
+		Button proceedButton;
+		
+		investmentTransactionVO = new InvestmentTransactionVO();
+		
+		// UI Elements
+		investmentTransactionIdIntegerField = new IntegerField();
+		parentFormLayout.addFormItem(investmentTransactionIdIntegerField, "Investment Transaction Id");
+		realisationTypeDvSelect = newDvSelect("Realisation Type", Constants.CATEGORY_REALISATION_TYPE, false);
+		parentFormLayout.addFormItem(realisationTypeDvSelect, "Realisation Type");
+		proceedButton = new Button("Proceed");
+		parentFormLayout.add(proceedButton);
+		proceedButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		proceedButton.setDisableOnClick(true);
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
-		// UI Elements
-		realisationTypeDvSelect = newDvSelect("Realisation Type", Constants.CATEGORY_REALISATION_TYPE, false);
-		parentFormLayout.addFormItem(realisationTypeDvSelect, "Realisation Type");
 		parentFormLayout.add(formLayout);
+		
+		investmentTransactionIdIntegerField.addValueChangeListener(event -> {
+			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+		});
+		
 		realisationTypeDvSelect.addValueChangeListener(event -> {
 			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
-			handleRealisation2(formLayout, realisationTypeDvSelect.getValue());
+		});
+		
+		proceedButton.addClickListener(event -> {
+			try {
+				if (investmentTransactionIdIntegerField.getValue() == null) {
+					investmentTransactionVO.setInvestmentTransactionId(0);
+					showError("Provide Investment Transaction Id");
+					return;
+				} else if (realisationTypeDvSelect == null || realisationTypeDvSelect.getValue() == null) {
+					showError("Select Realisation Type");
+					return;
+				} else {
+					try {
+						InvestmentTransactionVO investmentTransactionVOL;
+						investmentTransactionVOL = miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue());
+						investmentTransactionVOL.copyTo(investmentTransactionVO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
+						// TODO: Display the values from investmentTransactionVO
+						if (investmentTransactionVO.getStatusDvId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
+							showError("This transaction is currently not pending for realisation");
+							return;
+						}
+						if (investmentTransactionVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+							showError("Realisation of an Accrual transaction cannot be done with this feature");
+							return;
+						}
+						handleRealisation2(formLayout, realisationTypeDvSelect.getValue(), investmentTransactionVO);
+					} catch (Exception e) {
+						showError(UtilFuncs.messageFromException(e));
+						return;
+					}
+				}
+			} finally {
+				proceedButton.setEnabled(true);
+			}
 		});
 	}
 	
-	private void handleRealisation2(FormLayout formLayout, IdValueVO selectedRealisationIdValueVO) {
-		IntegerField investmentTransactionIdIntegerField, realisationIdIntegerField, savingsAccountTransactionIntegerField;	// Should be converted to LongField
-		NumberField amountNumberField;
+	private void handleRealisation2(FormLayout formLayout, IdValueVO selectedRealisationIdValueVO, InvestmentTransactionVO investmentTransactionVO) {
+		IntegerField realisationIdIntegerField, savingsAccountTransactionIntegerField;	// Should be converted to LongField
 		DatePicker transactionDatePicker;
 		Select<IdValueVO> closureTypeDvSelect, bankAccountDvSelect;
 		Button saveButton;
 		Checkbox lastRealisationCheckbox;
 		HorizontalLayout hLayout;
+		AmountComponent amountComponent;
 		
 		// UI Elements
-		investmentTransactionIdIntegerField = new IntegerField();
-		formLayout.addFormItem(investmentTransactionIdIntegerField, "Investment Transaction Id");
-		
-		amountNumberField = new NumberField();
-		formLayout.addFormItem(amountNumberField, "Realised Amount");
+		amountComponent = new AmountComponent(investmentTransactionVO.getTransactionTypeDvId());
+		formLayout.addFormItem(amountComponent.getLayout(), "Realised Amount");
 		
 		transactionDatePicker = new DatePicker();
 		formLayout.addFormItem(transactionDatePicker, "Realised Date");
@@ -193,11 +250,7 @@ public class OperationView extends Div {
 
 			try {
 				// Validation
-				if (investmentTransactionIdIntegerField.getValue() == null || investmentTransactionIdIntegerField.getValue() <= 0) {
-					showError("Invalid Investment Transaction Id");
-					return;
-				}
-				if (amountNumberField.getValue() == null || amountNumberField.getValue() <= 0) {
+				if (!amountComponent.isInputValid()) {
 					showError("Invalid Amount");
 					return;
 				}
@@ -226,11 +279,14 @@ public class OperationView extends Div {
 				// Back-end Call
 				singleRealisationVO = new SingleRealisationVO(
 						Long.valueOf(selectedRealisationIdValueVO.getId()),
-						investmentTransactionIdIntegerField.getValue(),
+						investmentTransactionVO.getInvestmentTransactionId(),
 						savingsAccountTransactionIntegerField.getValue() == null ? null : Long.valueOf(savingsAccountTransactionIntegerField.getValue()),
 						bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId(),
 						realisationIdIntegerField.getValue() == null ? null : Long.valueOf(realisationIdIntegerField.getValue()),
-						(double)amountNumberField.getValue().doubleValue(),
+						amountComponent.getNetAmount(),
+						amountComponent.getReturnedPrincipalAmount(),
+						amountComponent.getInterestAmount(),
+						amountComponent.getTdsAmount(),
 						Date.valueOf(transactionDatePicker.getValue()),
 						lastRealisationCheckbox.getValue() == null || !lastRealisationCheckbox.getValue() ? false : true,
 						closureTypeDvSelect.getValue() == null? null : closureTypeDvSelect.getValue().getId());
@@ -247,27 +303,31 @@ public class OperationView extends Div {
 		});
 	}
 	
-	private void handleTxnSingleRealisationWithBank(FormLayout formLayout) {
+	private void handleTxnSingleRealisationWithBank(FormLayout formLayout, long transactionTypeDvId) {
 		TextField investmentIdTextField;
-		NumberField amountNumberField;
+		AmountComponent amountComponent;
 		DatePicker transactionDatePicker;
-		Select<IdValueVO> bankAccountDvSelect, transactionTypeDvSelect;
+		Select<IdValueVO> bankAccountDvSelect;
 		Button saveButton;
+		String label;
+		
+		label = (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_PAYMENT) ? "Paid" : ((transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_RECEIPT) ? "Received" : "Accrued");
 		// UI Elements
 		investmentIdTextField = new TextField();
 		formLayout.addFormItem(investmentIdTextField, "Investment Id");
 		
-		transactionTypeDvSelect = newDvSelect("Transaction Type", Constants.CATEGORY_TRANSACTION_TYPE, false);
-		formLayout.addFormItem(transactionTypeDvSelect, "Transaction Type");
-		
-		amountNumberField = new NumberField();
-		formLayout.addFormItem(amountNumberField, "Amount Paid/Received");
+		amountComponent = new AmountComponent(transactionTypeDvId);
+		formLayout.addFormItem(amountComponent.getLayout(), "Amount " + label);
 		
 		transactionDatePicker = new DatePicker();
-		formLayout.addFormItem(transactionDatePicker, "Date Paid/Received");
+		formLayout.addFormItem(transactionDatePicker, "Date " + label);
 		
-		bankAccountDvSelect = newDvSelect("Bank Account", Constants.CATEGORY_ACCOUNT, false);
-		formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
+		if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+			bankAccountDvSelect = null;
+		} else {
+			bankAccountDvSelect = newDvSelect("Bank Account", Constants.CATEGORY_ACCOUNT, false);
+			formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
+		}
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -284,19 +344,15 @@ public class OperationView extends Div {
 					showError("Investment Transaction Id cannot be Empty");
 					return;
 				}
-				if (transactionTypeDvSelect.getValue() == null) {
-					showError("Transaction Type cannot be Empty");
-					return;
-				}
-				if (amountNumberField.getValue() == null) {
-					showError("Amount cannot be Empty");
+				if (!amountComponent.isInputValid()) {
+					showError("Invalid Amount");
 					return;
 				}
 				if (transactionDatePicker.getValue() == null) {
 					showError("Date cannot be Empty");
 					return;
 				}
-				if (transactionTypeDvSelect.getValue().getId() != Constants.DVID_TRANSACTION_TYPE_ACCRUAL && bankAccountDvSelect.getValue() == null) {
+				if (transactionTypeDvId != Constants.DVID_TRANSACTION_TYPE_ACCRUAL && bankAccountDvSelect.getValue() == null) {
 					showError("Account cannot be Empty");
 					return;
 				}
@@ -304,10 +360,13 @@ public class OperationView extends Div {
 				// Back-end Call
 				txnSingleRealisationWithBankVO = new TxnSingleRealisationWithBankVO(
 						Long.parseLong(investmentIdTextField.getValue()),
-						transactionTypeDvSelect.getValue().getId(),
-						(double)amountNumberField.getValue().doubleValue(),
+						transactionTypeDvId,
+						amountComponent.getNetAmount(),
+						amountComponent.getReturnedPrincipalAmount(),
+						amountComponent.getInterestAmount(),
+						amountComponent.getTdsAmount(),
 						Date.valueOf(transactionDatePicker.getValue()),
-						bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId());
+						(transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL || bankAccountDvSelect.getValue() == null) ? null : bankAccountDvSelect.getValue().getId());
 				try {
 					moneyTransactionService.txnSingleRealisationWithBank(txnSingleRealisationWithBankVO);
 					notification = Notification.show("Transaction and Realisation Saved Successfully.");
@@ -397,17 +456,17 @@ public class OperationView extends Div {
 		paymentScheduleVOList = new ArrayList<ScheduleVO>();
 		paymentScheduleButton = new Button("Payment (0)");
 		paymentScheduleButton.addClickListener(event -> {
-			acceptSchedule("Payment", paymentScheduleButton, paymentScheduleVOList);
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_PAYMENT, "Payment", paymentScheduleButton, paymentScheduleVOList);
 		});
 		receiptScheduleVOList = new ArrayList<ScheduleVO>();
 		receiptScheduleButton = new Button("Receipt (0)");
 		receiptScheduleButton.addClickListener(event -> {
-			acceptSchedule("Receipt", receiptScheduleButton, receiptScheduleVOList);
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_RECEIPT, "Receipt", receiptScheduleButton, receiptScheduleVOList);
 		});
 		accrualScheduleVOList = new ArrayList<ScheduleVO>();
 		accrualScheduleButton = new Button("Accrual (0)");
 		accrualScheduleButton.addClickListener(event -> {
-			acceptSchedule("Accrual", accrualScheduleButton, accrualScheduleVOList);
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_ACCRUAL, "Accrual", accrualScheduleButton, accrualScheduleVOList);
 		});
 		hLayout.add(paymentScheduleButton, receiptScheduleButton, accrualScheduleButton);
 		
@@ -530,17 +589,17 @@ public class OperationView extends Div {
 		paymentScheduleVOList = new ArrayList<ScheduleVO>();
 		paymentScheduleButton = new Button("Payment (0)");
 		paymentScheduleButton.addClickListener(event -> {
-			acceptSchedule("Payment", paymentScheduleButton, paymentScheduleVOList);
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_PAYMENT, "Payment", paymentScheduleButton, paymentScheduleVOList);
 		});
 		receiptScheduleVOList = new ArrayList<ScheduleVO>();
 		receiptScheduleButton = new Button("Receipt (0)");
 		receiptScheduleButton.addClickListener(event -> {
-			acceptSchedule("Receipt", receiptScheduleButton, receiptScheduleVOList);
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_RECEIPT, "Receipt", receiptScheduleButton, receiptScheduleVOList);
 		});
 		accrualScheduleVOList = new ArrayList<ScheduleVO>();
 		accrualScheduleButton = new Button("Accrual (0)");
 		accrualScheduleButton.addClickListener(event -> {
-			acceptSchedule("Accrual", accrualScheduleButton, accrualScheduleVOList);
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_ACCRUAL, "Accrual", accrualScheduleButton, accrualScheduleVOList);
 		});
 		hLayout.add(paymentScheduleButton, receiptScheduleButton, accrualScheduleButton);
 		
@@ -616,7 +675,7 @@ public class OperationView extends Div {
 		receiptScheduleVOList = new ArrayList<ScheduleVO>();
 		receiptScheduleButton = new Button("Receipt (0)");
 		receiptScheduleButton.addClickListener(event -> {
-			acceptSchedule("Receipt", receiptScheduleButton, receiptScheduleVOList);
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_RECEIPT, "Receipt", receiptScheduleButton, receiptScheduleVOList);
 		});
 		formLayout.addFormItem(receiptScheduleButton,"Schedule");
 		
@@ -668,7 +727,7 @@ public class OperationView extends Div {
 		
 	}
 	
-	private void acceptSchedule(String label, Button scheduleButton, List<ScheduleVO> scheduleVOList) {
+	private void acceptSchedule(long transactionTypeDvId, String label, Button scheduleButton, List<ScheduleVO> scheduleVOList) {
 		Dialog dialog;
 		VerticalLayout verticalLayout;
 		HorizontalLayout hLayout;
@@ -715,6 +774,12 @@ public class OperationView extends Div {
 			try {
 				List<ScheduleVO> fromPatternScheduleVOList;
 				fromPatternScheduleVOList = UtilFuncs.parseScheduleData(scheduleTextField.getValue());
+				if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+					for (ScheduleVO scheduleVO : fromPatternScheduleVOList) {
+						scheduleVO.setInterestAmount(scheduleVO.getDueAmount());
+						scheduleVO.setDueAmount(null);
+					}
+				}
 				if (scheduleVOList.size() == 0) {
 					scheduleGridLDV.addItems(fromPatternScheduleVOList);
 				} else {
@@ -758,7 +823,7 @@ public class OperationView extends Div {
 
 		dueDateColumn = scheduleGrid.addColumn(ScheduleVO::getDueDate).setHeader("Date");
 		dueAmountColumn = scheduleGrid.addColumn(ScheduleVO::getDueAmount).setHeader("Due Amount");
-		returnedPrincipalAmountColumn = scheduleGrid.addColumn(ScheduleVO::getReturnedPrincipalAmount).setHeader("Principal");
+		returnedPrincipalAmountColumn = scheduleGrid.addColumn(ScheduleVO::getReturnedPrincipalAmount).setHeader("Returned Principal");
 		interestAmountColumn = scheduleGrid.addColumn(ScheduleVO::getInterestAmount).setHeader("Interest");
 		tdsAmountColumn = scheduleGrid.addColumn(ScheduleVO::getTdsAmount).setHeader("TDS");
 		scheduleGrid.addComponentColumn(scheduleVO -> {
@@ -780,32 +845,42 @@ public class OperationView extends Div {
 			.withConverter(new LocalDateToDateConverter())
 			.bind(ScheduleVO::getDueDateUtil, ScheduleVO::setDueDateUtil);
 		dueDateColumn.setEditorComponent(dueDatePicker);
-		dueAmountNumberField = new NumberField();
-		addCloseHandler(dueAmountNumberField, scheduleEditor);
-		scheduleBinder.forField(dueAmountNumberField)
-			.bind(ScheduleVO::getDueAmount, ScheduleVO::setDueAmount);
-		dueAmountColumn.setEditorComponent(dueAmountNumberField);
-		returnedPrincipalAmountNumberField = new NumberField();
-		addCloseHandler(returnedPrincipalAmountNumberField, scheduleEditor);
-		scheduleBinder.forField(returnedPrincipalAmountNumberField)
-			.bind(ScheduleVO::getReturnedPrincipalAmount, ScheduleVO::setReturnedPrincipalAmount);
-		returnedPrincipalAmountColumn.setEditorComponent(returnedPrincipalAmountNumberField);
-		interestAmountNumberField = new NumberField();
-		addCloseHandler(interestAmountNumberField, scheduleEditor);
-		scheduleBinder.forField(interestAmountNumberField)
-			.bind(ScheduleVO::getInterestAmount, ScheduleVO::setInterestAmount);
-		interestAmountColumn.setEditorComponent(interestAmountNumberField);
-		tdsAmountNumberField = new NumberField();
-		addCloseHandler(tdsAmountNumberField, scheduleEditor);
-		scheduleBinder.forField(tdsAmountNumberField)
-			.bind(ScheduleVO::getTdsAmount, ScheduleVO::setTdsAmount);
-		tdsAmountColumn.setEditorComponent(tdsAmountNumberField);
+		
+		if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+			returnedPrincipalAmountNumberField = new NumberField();
+			addCloseHandler(returnedPrincipalAmountNumberField, scheduleEditor);
+			scheduleBinder.forField(returnedPrincipalAmountNumberField)
+				.bind(ScheduleVO::getReturnedPrincipalAmount, ScheduleVO::setReturnedPrincipalAmount);
+			returnedPrincipalAmountColumn.setEditorComponent(returnedPrincipalAmountNumberField);
+		}
+		
+		if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_RECEIPT || transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+			interestAmountNumberField = new NumberField();
+			addCloseHandler(interestAmountNumberField, scheduleEditor);
+			scheduleBinder.forField(interestAmountNumberField)
+				.bind(ScheduleVO::getInterestAmount, ScheduleVO::setInterestAmount);
+			interestAmountColumn.setEditorComponent(interestAmountNumberField);
+			
+			tdsAmountNumberField = new NumberField();
+			addCloseHandler(tdsAmountNumberField, scheduleEditor);
+			scheduleBinder.forField(tdsAmountNumberField)
+				.bind(ScheduleVO::getTdsAmount, ScheduleVO::setTdsAmount);
+			tdsAmountColumn.setEditorComponent(tdsAmountNumberField);
+		}
 
+		if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_PAYMENT || transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+			dueAmountNumberField = new NumberField();
+			addCloseHandler(dueAmountNumberField, scheduleEditor);
+			scheduleBinder.forField(dueAmountNumberField)
+				.bind(ScheduleVO::getDueAmount, ScheduleVO::setDueAmount);
+			dueAmountColumn.setEditorComponent(dueAmountNumberField);
+		}
+		
 		scheduleGrid.addItemDoubleClickListener(e -> {
 			scheduleEditor.editItem(e.getItem());
 		    Component editorComponent = e.getColumn().getEditorComponent();
-		    if (editorComponent instanceof Focusable) {
-		        ((Focusable) editorComponent).focus();
+		    if (editorComponent instanceof Focusable<?>) {
+		        ((Focusable<?>) editorComponent).focus();
 		    }
 		});
 		

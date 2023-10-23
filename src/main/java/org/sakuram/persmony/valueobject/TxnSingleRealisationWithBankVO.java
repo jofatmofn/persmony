@@ -11,7 +11,7 @@ import lombok.Setter;
 public class TxnSingleRealisationWithBankVO {
 	long investmentId;
 	long transactionTypeDvId;
-	Double amount;
+	Double netAmount, returnedPrincipalAmount, interestAmount, tdsAmount;
 	Date transactionDate;
 	Long bankAccountDvId;
 }

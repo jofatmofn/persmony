@@ -14,7 +14,7 @@ public class SingleRealisationVO {
 	Long savingsAccountTransactionId;
 	Long bankAccountDvId;
 	Long realisationId;
-	Double amount;
+	Double netAmount, returnedPrincipalAmount, interestAmount, tdsAmount;
 	Date transactionDate;
 	boolean isLastRealisation;
 	Long closureTypeDvId;

@@ -24,7 +24,7 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 			+ "	LEFT OUTER JOIN domain_value bDV ON I.provider_branch_fk = bDV.id "
 			+ "WHERE status_fk = 69 "
 			+ "	AND transaction_type_fk = 73 "
-			+ "ORDER BY due_date")
+			+ "ORDER BY due_date, t_id")
 	public List<Object[]> findPendingTransactions();
 	
 	@Query(nativeQuery = true, value =

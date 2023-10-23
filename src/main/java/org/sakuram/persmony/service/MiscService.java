@@ -5,8 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.LongStream;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.bean.DomainValue;
+import org.sakuram.persmony.bean.InvestmentTransaction;
+import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.repository.DomainValueRepository;
+import org.sakuram.persmony.repository.InvestmentTransactionRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.DomainValueFlags;
@@ -14,6 +18,8 @@ import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
 import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
+import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
+import org.sakuram.persmony.valueobject.RealisationVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +30,9 @@ public class MiscService {
 
 	@Autowired
 	DomainValueRepository domainValueRepository;
+
+	@Autowired
+	InvestmentTransactionRepository investmentTransactionRepository;
 	
     public void loadCache() {
     	List<Long> categoryDvIdList;
@@ -198,8 +207,49 @@ public class MiscService {
     	}
     	return idValueVOList;
     }
-
-    public static double zeroIfNull(Double inValue) {
-    	return inValue == null ? 0 : inValue;
+    
+    public InvestmentTransactionVO fetchInvestmentTransaction(long investmentTransactionId) {
+    	InvestmentTransaction investmentTransaction = investmentTransactionRepository.findById(investmentTransactionId)
+    			.orElseThrow(() -> new AppException("Invalid Investment Transaction Id " + investmentTransactionId, null));
+    	return new InvestmentTransactionVO(investmentTransaction.getId(),
+    			investmentTransaction.getTransactionType().getId(),
+    			investmentTransaction.getTransactionType().getValue(),
+    			investmentTransaction.getDueDate(),
+    			investmentTransaction.getDueAmount(),
+    			investmentTransaction.getStatus().getId(),
+    			investmentTransaction.getStatus().getValue(),
+    			fetchRealisationAmountSummary(investmentTransaction).getAmount(),
+    			investmentTransaction.getReturnedPrincipalAmount(),
+    			investmentTransaction.getInterestAmount(),
+    			investmentTransaction.getTdsAmount(),
+    			investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getId(),
+				investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getValue(),
+    			investmentTransaction.getAssessmentYear().shortValue());
+    }
+    
+    public RealisationVO fetchRealisationAmountSummary(InvestmentTransaction investmentTransaction) {
+    	double returnedPrincipalAmount, interestAmount, tdsAmount, amount;
+    	
+    	returnedPrincipalAmount = 0;
+    	interestAmount = 0;
+    	tdsAmount = 0;
+    	amount = 0;
+		for (Realisation realisation : investmentTransaction.getRealisationList()) {
+			returnedPrincipalAmount += ObjectUtils.defaultIfNull(realisation.getReturnedPrincipalAmount(), 0).doubleValue();
+			interestAmount += ObjectUtils.defaultIfNull(realisation.getInterestAmount(), 0).doubleValue();
+			tdsAmount += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0).doubleValue();
+			amount += ObjectUtils.defaultIfNull(realisation.getAmount(), 0).doubleValue();
+		}
+		return new RealisationVO(
+				0,
+				investmentTransaction.getId(),
+				null,
+				null,
+				null,
+				amount,
+				returnedPrincipalAmount,
+				interestAmount,
+				tdsAmount
+				);
     }
 }

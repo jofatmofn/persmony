@@ -170,8 +170,8 @@ public class SearchView extends Div {
 			criterionEditor.editItem(e.getItem());
 			System.out.println("Double Clicked for Edit: " + e.getItem().getFieldName());
 		    Component editorComponent = e.getColumn().getEditorComponent();
-		    if (editorComponent instanceof Focusable) {
-		        ((Focusable) editorComponent).focus();
+		    if (editorComponent instanceof Focusable<?>) {
+		        ((Focusable<?>) editorComponent).focus();
 		    }
 		});
 		
@@ -232,7 +232,7 @@ public class SearchView extends Div {
 				verticalLayout.add(investmentTransactionsGrid);
 				
 				realisationGrid = new Grid<>(RealisationVO.class);
-				realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "detailsReference", "amount");
+				realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "detailsReference", "amount", "returnedPrincipalAmount", "interestAmount", "tdsAmount");
 				for (Column<RealisationVO> column : realisationGrid.getColumns()) {
 					column.setResizable(true);
 				}

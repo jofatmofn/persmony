@@ -1,14 +1,12 @@
 package org.sakuram.persmony.service;
 
-import java.sql.Date;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
+import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.bean.Realisation;
@@ -17,6 +15,7 @@ import org.sakuram.persmony.repository.InvestmentTransactionRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.PeriodSummaryCriteriaVO;
+import org.sakuram.persmony.valueobject.RealisationVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class ReportService {
+	
+	@Autowired
+	MiscService miscService;
 	@Autowired
 	InvestmentRepository investmentRepository;
 	@Autowired
@@ -107,8 +109,10 @@ public class ReportService {
 		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
 		int dataRowInd;
-		double investmentTransactionAmount, notRealisedPayment, notRealisedReceipt, notRealisedAccrual;
+		double investmentTransactionAmount, notRealisedPayment, notRealisedReceipt, notRealisedAccrual, settledAmount;
 		Map<Long, Double> lastCompletedReceiptsMap;
+		List<InvestmentTransaction> lastCompletedReceiptItList;
+		RealisationVO realisationAmountSummary;
 		
 		final Object headerArray[] = {"Due", "Realisation", "Investor", "Detail", "Amount"};
 		
@@ -135,29 +139,29 @@ public class ReportService {
 			}
 		}
 
-		lastCompletedReceiptsMap = investmentTransactionRepository.findLastCompletedReceipts().stream().collect(
-				Collectors.toMap(
-						it -> (long)(it.getInvestment().getId()),
-						it -> (double)(it.getSettledAmount() == null ? it.getDueAmount() : it.getSettledAmount())));
+		lastCompletedReceiptItList = investmentTransactionRepository.findLastCompletedReceipts();
+		lastCompletedReceiptsMap = new HashMap<Long, Double>(lastCompletedReceiptItList.size());
+		for (InvestmentTransaction it : lastCompletedReceiptItList) {
+			realisationAmountSummary = miscService.fetchRealisationAmountSummary(it);
+			lastCompletedReceiptsMap.put(it.getId(), realisationAmountSummary.getAmount() > 0 ? realisationAmountSummary.getAmount() : it.getDueAmount());
+		}
 		col0Ind = 0;
 		for (InvestmentTransaction investmentTransaction : investmentTransactionRepository.findByDueDateBetween(periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate())) {
 			if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_CANCELLED) {
 				continue;
 			}
 			col2Ind = col2Values.indexOf(investmentTransaction.getInvestment().getInvestor().getId());
-			if (investmentTransaction.getSettledAmount() == null && investmentTransaction.getDueAmount() == null && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
-				investmentTransactionAmount = MiscService.zeroIfNull(investmentTransaction.getInterestAmount()) -
-						MiscService.zeroIfNull(investmentTransaction.getTdsAmount());
-			} else if (investmentTransaction.getSettledAmount() != null) {
-				investmentTransactionAmount = investmentTransaction.getSettledAmount();
+			settledAmount = miscService.fetchRealisationAmountSummary(investmentTransaction).getAmount();
+			if (settledAmount != 0) {
+				investmentTransactionAmount = settledAmount;
 			} else if (investmentTransaction.getDueAmount() != null) {
 				investmentTransactionAmount = investmentTransaction.getDueAmount();
 			// Else Approximations
 			} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING  && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
 					(investmentTransaction.getReturnedPrincipalAmount() != null || investmentTransaction.getInterestAmount() != null || investmentTransaction.getTdsAmount() != null)) {
-				investmentTransactionAmount = MiscService.zeroIfNull(investmentTransaction.getReturnedPrincipalAmount()) +
-						MiscService.zeroIfNull(investmentTransaction.getInterestAmount()) -
-						MiscService.zeroIfNull(investmentTransaction.getTdsAmount());
+				investmentTransactionAmount = ObjectUtils.defaultIfNull(investmentTransaction.getReturnedPrincipalAmount(), 0).doubleValue() +
+						ObjectUtils.defaultIfNull(investmentTransaction.getInterestAmount(), 0).doubleValue() -
+						ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0).doubleValue();
 				if (investmentTransactionAmount == 0) {
 					System.out.println("Skipped Investment Transaction " + investmentTransaction.getId());
 					continue;
@@ -259,10 +263,10 @@ public class ReportService {
 		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
 		Object[] dataArray;
-		int dataRowInd;
 		InvestmentTransaction previousCompletedIt;
 		long duration;
 		double anticipatedAmount;
+		RealisationVO realisationAmountSummary;
 		
 		final Object headerArray[] = {"Investment", "Txn. Id", "Anticipated", "Actual"};
 		
@@ -290,8 +294,10 @@ public class ReportService {
 				dataArray[0] = investmentTransaction.getInvestment().getId();
 				dataArray[1] = investmentTransaction.getId();
 				dataArray[2] = anticipatedAmount;
-				dataArray[3] = (investmentTransaction.getSettledAmount() == null ? investmentTransaction.getDueAmount() : investmentTransaction.getSettledAmount()) -
-						MiscService.zeroIfNull(investmentTransaction.getReturnedPrincipalAmount());
+				realisationAmountSummary = miscService.fetchRealisationAmountSummary(investmentTransaction);
+				dataArray[3] = (realisationAmountSummary.getAmount() == 0) ?
+						(ObjectUtils.defaultIfNull(investmentTransaction.getDueAmount(), 0).doubleValue() - ObjectUtils.defaultIfNull(investmentTransaction.getReturnedPrincipalAmount(), 0).doubleValue())
+						: (realisationAmountSummary.getAmount() - realisationAmountSummary.getReturnedPrincipalAmount());
 			}
 		}
 		

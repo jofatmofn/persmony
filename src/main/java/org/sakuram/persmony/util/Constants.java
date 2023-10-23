@@ -96,7 +96,6 @@ public class Constants {
 			put("IT.due_date", new FieldSpecVO("Txn Due Date", FieldSpecVO.DataType.DATE, true, false, false, null));
 			put("IT.due_amount", new FieldSpecVO("Txn Due Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("IT.status_fk",new FieldSpecVO("Txn Status", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_TRANSACTION_STATUS));
-			put("IT.settled_amount", new FieldSpecVO("Txn Settled Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("IT.returned_principal_amount", new FieldSpecVO("Txn Returned Principal Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("IT.interest_amount", new FieldSpecVO("Txn Interest Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("IT.tds_amount", new FieldSpecVO("Txn TDS Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));

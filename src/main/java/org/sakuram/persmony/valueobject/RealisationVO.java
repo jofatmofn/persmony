@@ -15,4 +15,7 @@ public class RealisationVO {
 	String realisationType;
 	Long detailsReference;	/* Could be id of realisation or saving account transaction */
 	Double amount;
+	Double returnedPrincipalAmount;
+	Double interestAmount;
+	Double tdsAmount;
 }
