@@ -17,6 +17,8 @@ public class AmountComponent {
 	@Getter(AccessLevel.NONE)
 	boolean amountsToAddup;
 	HorizontalLayout layout;
+	@Getter(AccessLevel.NONE)
+	long transactionTypeDvId;
 
 	public AmountComponent(long transactionTypeDvId) {
 		NumberField netNumberField, returnedPrincipalNumberField, interestNumberField, tdsNumberField;
@@ -24,7 +26,7 @@ public class AmountComponent {
 
 		layout = new HorizontalLayout();
 		amountsToAddup = false;
-		
+		this.transactionTypeDvId = transactionTypeDvId;
 		if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
 			returnedPrincipalNumberField = new NumberField("Returned Principal");
 			returnedPrincipalNumberField.addValueChangeListener(event -> {
@@ -76,7 +78,7 @@ public class AmountComponent {
 		returnedPrincipalAmountL = ObjectUtils.defaultIfNull(returnedPrincipalAmount, 0).doubleValue();
 		interestAmountL = ObjectUtils.defaultIfNull(interestAmount, 0).doubleValue();
 		tdsAmountL = ObjectUtils.defaultIfNull(tdsAmount, 0).doubleValue();
-		if (netAmountL <= 0 || returnedPrincipalAmountL < 0 || interestAmountL < 0 || tdsAmountL < 0 || amountsToAddup && netAmountL != (returnedPrincipalAmountL + interestAmountL - tdsAmountL)) {
+		if ((netAmountL <= 0 && transactionTypeDvId != Constants.DVID_TRANSACTION_TYPE_RECEIPT) || returnedPrincipalAmountL < 0 || interestAmountL < 0 || tdsAmountL < 0 || amountsToAddup && netAmountL != (returnedPrincipalAmountL + interestAmountL - tdsAmountL)) {
 			return false;
 		}
 		return true;

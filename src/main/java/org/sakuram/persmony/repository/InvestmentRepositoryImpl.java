@@ -65,7 +65,7 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 				stringBuffer.append(isFirstTime ? "WHERE " : "AND ");
 				isFirstTime = false;
 			}
-			searchCriterionVO.setValuesCSV(searchCriterionVO.getValuesCSV().replaceAll("[^A-Za-z0-9\\-., ]", "").trim().toLowerCase());
+			searchCriterionVO.setValuesCSV(searchCriterionVO.getValuesCSV().replaceAll("[^A-Za-z0-9\\-., &]", "").trim().toLowerCase());
 			fieldSpecVO = Constants.SEARCH_FIELD_SPEC_MAP.get(searchCriterionVO.getFieldName());
 			if (fieldSpecVO.getDataType() == FieldSpecVO.DataType.BOOLEAN) {
 				switch(searchCriterionVO.getValuesCSV()) {

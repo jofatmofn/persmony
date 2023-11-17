@@ -72,7 +72,7 @@ public class MoneyTransactionService {
 		realisation = realisationRepository.save(realisation);
 		if (singleRealisationVO.getRealisationTypeDvId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 			if (singleRealisationVO.getSavingsAccountTransactionId() == null) {
-				savingsAccountTransaction = new SavingsAccountTransaction(Constants.domainValueCache.get(singleRealisationVO.getBankAccountDvId()), singleRealisationVO.getTransactionDate(), singleRealisationVO.getNetAmount());
+				savingsAccountTransaction = new SavingsAccountTransaction(Constants.domainValueCache.get(singleRealisationVO.getBankAccountDvId()), singleRealisationVO.getTransactionDate(), Math.abs(singleRealisationVO.getNetAmount()));
 				savingsAccountTransaction = savingsAccountTransactionRepository.save(savingsAccountTransaction);
 			} else {
 				savingsAccountTransaction = savingsAccountTransactionRepository.findById(singleRealisationVO.getSavingsAccountTransactionId())
@@ -393,8 +393,8 @@ public class MoneyTransactionService {
 					investment,
 					Constants.domainValueCache.get(transactionType),
 					scheduleVO.getDueDate(),
-					transactionType == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ?
-							(ObjectUtils.defaultIfNull(scheduleVO.getInterestAmount(), 0).doubleValue() - ObjectUtils.defaultIfNull(scheduleVO.getTdsAmount(), 0).doubleValue()) :
+					(transactionType == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) ?
+							Double.valueOf(ObjectUtils.defaultIfNull(scheduleVO.getInterestAmount(), 0).doubleValue() - ObjectUtils.defaultIfNull(scheduleVO.getTdsAmount(), 0).doubleValue()) :
 							scheduleVO.getDueAmount(),
 					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
 					scheduleVO.getReturnedPrincipalAmount(),
