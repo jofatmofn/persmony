@@ -93,8 +93,11 @@ public class Investment {
 	@JoinColumn(name="new_investment_reason_fk", nullable=true)
 	private DomainValue newInvestmentReason;
 	
-	@Column(name="product_end_date", nullable=true)
-	private Date productEndDate;
+	@Column(name="investment_start_date", nullable=true)
+	private Date investmentStartDate;
+	
+	@Column(name="investment_end_date", nullable=true)
+	private Date investmentEndDate;
 	
 	@Column(name="is_closed", nullable=false)
 	private boolean isClosed;
@@ -121,7 +124,7 @@ public class Investment {
 	@JoinColumn(name="provider_branch_fk", nullable=true)
 	private DomainValue providerBranch;
 	
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date productEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;
@@ -139,7 +142,8 @@ public class Investment {
 		this.taxability = taxability;
 		this.previousInvestment = previousInvestment;
 		this.newInvestmentReason = newInvestmentReason;
-		this.productEndDate = productEndDate;
+		this.investmentStartDate = investmentStartDate;
+		this.investmentEndDate = investmentEndDate;
 		this.isClosed = isClosed;
 		this.closureType = closureType;
 		this.closureDate = closureDate;

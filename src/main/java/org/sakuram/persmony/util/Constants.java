@@ -70,7 +70,8 @@ public class Constants {
 			put("investment_id_with_provider", new FieldSpecVO("Investment Id With Provider", FieldSpecVO.DataType.OTHERS, false, true, false, null));
 			put("investor_id_with_provider", new FieldSpecVO("Investor Id With Provider", FieldSpecVO.DataType.OTHERS, false, true, false, null));
 			put("is_closed", new FieldSpecVO("Is Closed?", FieldSpecVO.DataType.BOOLEAN, false, false, false, null));
-			put("product_end_date", new FieldSpecVO("Product End Date", FieldSpecVO.DataType.DATE, true, false, false, null));
+			put("investment_start_date", new FieldSpecVO("Investment Start Date", FieldSpecVO.DataType.DATE, true, false, false, null));
+			put("investment_end_date", new FieldSpecVO("Investment End Date", FieldSpecVO.DataType.DATE, true, false, false, null));
 			put("product_id_of_provider", new FieldSpecVO("Provider's Product Id", FieldSpecVO.DataType.OTHERS, false, true, false, null));
 			put("product_name", new FieldSpecVO("Product Name", FieldSpecVO.DataType.OTHERS, false, true, false, null));
 			put("rate_of_interest", new FieldSpecVO("Rate of Interest%", FieldSpecVO.DataType.OTHERS, true, false, false, null));

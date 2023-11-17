@@ -70,7 +70,7 @@ public class SearchView extends Div {
 		searchButton = new Button("Search");
 		add(searchButton);
 		investmentsGrid = new Grid<>(InvestmentVO.class);
-		investmentsGrid.setColumns("investmentId", "investor", "productProvider", "providerBranch", "investmentIdWithProvider", "investorIdWithProvider", "productType", "productName", "productIdOfProvider", "rateOfInterest", "dematAccount", "worth", "cleanPrice", "accruedInterest", "charges", "taxability", "isAccrualApplicable", "productEndDate", "dynamicReceiptPeriodicity", "previousInvestment", "newInvestmentReason", "closed", "closureDate", "closureType");
+		investmentsGrid.setColumns("investmentId", "investor", "productProvider", "providerBranch", "investmentIdWithProvider", "investorIdWithProvider", "productType", "productName", "productIdOfProvider", "rateOfInterest", "dematAccount", "worth", "cleanPrice", "accruedInterest", "charges", "taxability", "isAccrualApplicable", "investmentStartDate", "investmentEndDate", "dynamicReceiptPeriodicity", "previousInvestment", "newInvestmentReason", "closed", "closureDate", "closureType");
 		for (Column<InvestmentVO> column : investmentsGrid.getColumns()) {
 			column.setResizable(true);
 		}

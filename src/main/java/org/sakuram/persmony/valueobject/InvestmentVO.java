@@ -27,7 +27,8 @@ public class InvestmentVO {
 	private String taxability;
 	private Long previousInvestment;
 	private String newInvestmentReason;
-	private Date productEndDate;
+	private Date investmentStartDate;
+	private Date investmentEndDate;
 	private boolean isClosed;
 	private String closureType;
 	private Date closureDate;
@@ -53,13 +54,14 @@ public class InvestmentVO {
 		this.taxability = (String) columns[14];
 		this.previousInvestment = (columns[15] == null ? null : ((BigInteger) columns[15]).longValue());
 		this.newInvestmentReason = (String) columns[16];
-		this.productEndDate = (Date) columns[17];
-		this.isClosed = (boolean) columns[18];
-		this.closureType = (String) columns[19];
-		this.closureDate = (Date) columns[20];
-		this.isAccrualApplicable = (Boolean) columns[21];
-		this.dynamicReceiptPeriodicity = (Character) columns[22];	
-		this.providerBranch = (String) columns[23];
-		this.investmentId = ((BigInteger) columns[24]).longValue();
+		this.investmentStartDate = (Date) columns[17];
+		this.investmentEndDate = (Date) columns[18];
+		this.isClosed = (boolean) columns[19];
+		this.closureType = (String) columns[20];
+		this.closureDate = (Date) columns[21];
+		this.isAccrualApplicable = (Boolean) columns[22];
+		this.dynamicReceiptPeriodicity = (Character) columns[23];
+		this.providerBranch = (String) columns[24];
+		this.investmentId = ((BigInteger) columns[25]).longValue();
 	}
 }

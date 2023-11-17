@@ -385,7 +385,7 @@ public class OperationView extends Div {
 		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField;
 		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup, dynamicReceiptPeriodicityRadioButtonGroup;
 		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField;
-		DatePicker productEndDatePicker;
+		DatePicker investmentStartDatePicker, investmentEndDatePicker;
 		HorizontalLayout hLayout;		
 		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
 		List<ScheduleVO> paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList;
@@ -448,8 +448,11 @@ public class OperationView extends Div {
 		rateOfInterestNumberField.setMax(100.00);
 		formLayout.addFormItem(rateOfInterestNumberField, "Rate Of Interest%");
 		
-		productEndDatePicker = new DatePicker();
-		formLayout.addFormItem(productEndDatePicker, "Product End Date");
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Investment Period");
+		investmentStartDatePicker = new DatePicker();
+		investmentEndDatePicker = new DatePicker();
+		hLayout.add(investmentStartDatePicker, investmentEndDatePicker);
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Schedule");
@@ -502,6 +505,10 @@ public class OperationView extends Div {
 					showError("Face Value cannot be Empty");
 					return;
 				}
+				if (investmentStartDatePicker.getValue() != null && investmentEndDatePicker.getValue() != null && investmentStartDatePicker.getValue().compareTo(investmentEndDatePicker.getValue()) > 0) {
+					showError("Investment Period: Invalid range of dates");
+					return;
+				}
 				if (paymentScheduleVOList == null || paymentScheduleVOList.isEmpty()) {
 					showError("Payment Schedule cannot be Empty");
 					return;
@@ -526,7 +533,8 @@ public class OperationView extends Div {
 						accruedInterestNumberField.getValue() == null ? null : (double)accruedInterestNumberField.getValue().doubleValue(),
 						chargesNumberField.getValue() == null ? null : (double)chargesNumberField.getValue().doubleValue(),
 						rateOfInterestNumberField.getValue() == null ? null : (double)rateOfInterestNumberField.getValue().doubleValue(),
-						productEndDatePicker.getValue() == null ? null : Date.valueOf(productEndDatePicker.getValue()),
+						investmentStartDatePicker.getValue() == null ? null : Date.valueOf(investmentStartDatePicker.getValue()),
+						investmentEndDatePicker.getValue() == null ? null : Date.valueOf(investmentEndDatePicker.getValue()),
 						paymentScheduleVOList,
 						receiptScheduleVOList,
 						(dynamicReceiptPeriodicityRadioButtonGroup.getValue().equals("Not Applicable") ? null : 'Y'),
@@ -553,7 +561,7 @@ public class OperationView extends Div {
 	private void handleRenewal(FormLayout formLayout) {
 		TextField oldInvestmentIdTextField, investmentIdWithProviderTextField;
 		NumberField rateOfInterestNumberField, faceValueNumberField;
-		DatePicker productEndDatePicker;
+		DatePicker investmentEndDatePicker;
 		Label label1;
 		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
 		List<ScheduleVO> paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList;
@@ -581,8 +589,8 @@ public class OperationView extends Div {
 		rateOfInterestNumberField.setMax(100.00);
 		formLayout.addFormItem(rateOfInterestNumberField, "Rate Of Interest%");
 		
-		productEndDatePicker = new DatePicker();
-		formLayout.addFormItem(productEndDatePicker, "Product End Date");
+		investmentEndDatePicker = new DatePicker();
+		formLayout.addFormItem(investmentEndDatePicker, "Investment End Date");
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Schedule");
@@ -622,8 +630,8 @@ public class OperationView extends Div {
 					showError("Investment Id with Provider cannot be Empty");
 					return;
 				}
-				if (productEndDatePicker.getValue() == null) {
-					showError("Product End Date cannot be Empty");
+				if (investmentEndDatePicker.getValue() == null) {
+					showError("Investment End Date cannot be Empty");
 					return;
 				}
 				if (faceValueNumberField.getValue() == null) {
@@ -641,7 +649,7 @@ public class OperationView extends Div {
 						investmentIdWithProviderTextField.getValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),
 						rateOfInterestNumberField.getValue() == null ? null : (double)rateOfInterestNumberField.getValue().doubleValue(),
-						Date.valueOf(productEndDatePicker.getValue()),
+						Date.valueOf(investmentEndDatePicker.getValue()),
 						paymentScheduleVOList,
 						receiptScheduleVOList,
 						accrualScheduleVOList);

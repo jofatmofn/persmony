@@ -24,7 +24,8 @@ public class InvestVO {
 	String investmentIdWithProvider;
 	Double faceValue, cleanPrice, accruedInterest, charges;
 	Double rateOfInterest;
-	Date productEndDate;
+	Date investmentStartDate;
+	Date investmentEndDate;
 	List<ScheduleVO> paymentScheduleVOList;
 	List<ScheduleVO> receiptScheduleVOList;
 	Character dynamicReceiptPeriodicity;

@@ -16,7 +16,7 @@ public class RenewalVO {
 	String investmentIdWithProvider;
 	Double faceValue;
 	Double rateOfInterest;
-	Date productEndDate;
+	Date investmentEndDate;
 	List<ScheduleVO> paymentScheduleVOList;
 	List<ScheduleVO> receiptScheduleVOList;
 	List<ScheduleVO> accrualScheduleVOList;
