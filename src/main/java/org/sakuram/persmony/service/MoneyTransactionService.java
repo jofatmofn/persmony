@@ -315,12 +315,16 @@ public class MoneyTransactionService {
 	public void transfer(TransferVO transferVO) {
 		Investment transferredInvestment, balanceInvestment, newInvestment;
 		InvestmentTransaction balanceInvestmentTransaction, newInvestmentTransaction;
-		double transferFaceValue, transferProportion, transferUnits;
+		double transferFaceValue, transferProportion;
+		Double transferUnits;
 		
 		transferredInvestment = investmentRepository.findById(transferVO.getInvestmentId())
 				.orElseThrow(() -> new AppException("Invalid Investment Id " + transferVO.getInvestmentId(), null));
 		if (transferredInvestment.isClosed()) {
 			throw new AppException("Investment " + transferVO.getInvestmentId() + " no longer Open", null);
+		}
+		if (transferredInvestment.getUnits() == null && transferVO.getUnits() != null) {
+			throw new AppException("Transfer cannot be expressed in no. of units for the Investment " + transferVO.getInvestmentId(), null);
 		}
 		transferredInvestment.setClosed(true);
 		transferredInvestment.setClosureDate(transferVO.getInvestmentStartDate());
@@ -336,7 +340,7 @@ public class MoneyTransactionService {
 				transferUnits = transferredInvestment.getUnits();	// Redundant logic, just to handle rounding-off differences
 			} else {
 				transferProportion = transferVO.getFaceValue() / transferredInvestment.getWorth();
-				transferUnits = transferredInvestment.getUnits() * transferProportion;
+				transferUnits = (transferredInvestment.getUnits() == null ? null : transferredInvestment.getUnits() * transferProportion);
 			}
 		} else {
 			transferUnits = transferVO.getUnits();
@@ -360,7 +364,7 @@ public class MoneyTransactionService {
 					transferredInvestment.getInvestmentIdWithProvider(),
 					transferredInvestment.getProductName(),
 					transferredInvestment.getProductType(),
-					transferredInvestment.getUnits() - transferUnits,
+					(transferredInvestment.getUnits() == null ? null : transferredInvestment.getUnits() - transferUnits),
 					transferredInvestment.getWorth() - transferFaceValue,
 					null,
 					null,

@@ -443,7 +443,6 @@ public class OperationView extends Div {
 
 		unitsNumberField = new NumberField();
 		formLayout.addFormItem(unitsNumberField, "No. of Units");
-		unitsNumberField.setValue(1D);
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Price");
@@ -510,7 +509,7 @@ public class OperationView extends Div {
 					showError("Product Type cannot be Empty");
 					return;
 				}
-				if (unitsNumberField.getValue() == null || unitsNumberField.getValue() <= 0) {
+				if (unitsNumberField.getValue() != null && unitsNumberField.getValue() <= 0) {
 					showError("No. of units should be Positive");
 					return;
 				}
@@ -541,7 +540,7 @@ public class OperationView extends Div {
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
 						(bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()),
 						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
-						unitsNumberField.getValue(),
+						unitsNumberField.getValue() == null ? null : (double)unitsNumberField.getValue().doubleValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),
 						cleanPriceNumberField.getValue() == null ? null : (double)cleanPriceNumberField.getValue().doubleValue(),
 						accruedInterestNumberField.getValue() == null ? null : (double)accruedInterestNumberField.getValue().doubleValue(),
@@ -715,11 +714,11 @@ public class OperationView extends Div {
 		dematAccountDvSelect = newDvSelect("Demat Account", Constants.CATEGORY_DEMAT_ACCOUNT, true);
 		formLayout.addFormItem(dematAccountDvSelect, "Demat Account");
 		
-		unitsNumberField = new NumberField();
-		formLayout.addFormItem(unitsNumberField, "No. of Units");
-		
-		faceValueNumberField = new NumberField();
-		formLayout.addFormItem(faceValueNumberField, "Value");
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Quantity");
+		unitsNumberField = new NumberField("No. of Units");
+		faceValueNumberField = new NumberField("Value");
+		hLayout.add(unitsNumberField, faceValueNumberField);
 		
 		investmentStartDatePicker = new DatePicker();
 		formLayout.addFormItem(investmentStartDatePicker, "Start Date");

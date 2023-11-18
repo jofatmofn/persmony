@@ -22,7 +22,7 @@ public class InvestVO {
 	Boolean isAccrualApplicable;
 	Long bankDvId;
 	String investmentIdWithProvider;
-	double units;
+	Double units;
 	Double faceValue, cleanPrice, accruedInterest, charges;
 	Double rateOfInterest;
 	Date investmentStartDate;
