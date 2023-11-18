@@ -19,6 +19,7 @@ import org.sakuram.persmony.valueobject.ReceiptDuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationVO;
+import org.sakuram.persmony.valueobject.TransferVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
 import com.vaadin.flow.component.Component;
@@ -80,6 +81,7 @@ public class OperationView extends Div {
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(5, "Renewal"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(6, "New Receipt + Single Realisation With Bank"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(7, "New Payment + Single Realisation With Bank"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(8, "Transfer"));
 			}
 		};
 		selectSpan = new Span();
@@ -120,6 +122,9 @@ public class OperationView extends Div {
 	            	break;
 	            case 7:
 	            	handleTxnSingleRealisationWithBank(formLayout, Constants.DVID_TRANSACTION_TYPE_PAYMENT);
+	            	break;
+	            case 8:
+	            	handleTransfer(formLayout);
 	            	break;
 	            }
 			} catch (Exception e) {
@@ -384,8 +389,7 @@ public class OperationView extends Div {
 		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
 		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField;
 		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup, dynamicReceiptPeriodicityRadioButtonGroup;
-		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField;
-		IntegerField unitsIntegerField;
+		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField, unitsNumberField;
 		DatePicker investmentStartDatePicker, investmentEndDatePicker;
 		HorizontalLayout hLayout;		
 		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
@@ -437,9 +441,9 @@ public class OperationView extends Div {
 		bankAccountDvSelect = newDvSelect("Account", Constants.CATEGORY_ACCOUNT, true);
 		formLayout.addFormItem(bankAccountDvSelect, "Realisation from Account");
 
-		unitsIntegerField = new IntegerField();
-		formLayout.addFormItem(unitsIntegerField, "No. of Units");
-		unitsIntegerField.setValue(1);
+		unitsNumberField = new NumberField();
+		formLayout.addFormItem(unitsNumberField, "No. of Units");
+		unitsNumberField.setValue(1D);
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Price");
@@ -506,7 +510,7 @@ public class OperationView extends Div {
 					showError("Product Type cannot be Empty");
 					return;
 				}
-				if (unitsIntegerField.getValue() == null || unitsIntegerField.getValue() <= 0) {
+				if (unitsNumberField.getValue() == null || unitsNumberField.getValue() <= 0) {
 					showError("No. of units should be Positive");
 					return;
 				}
@@ -537,7 +541,7 @@ public class OperationView extends Div {
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
 						(bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()),
 						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
-						unitsIntegerField.getValue(),
+						unitsNumberField.getValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),
 						cleanPriceNumberField.getValue() == null ? null : (double)cleanPriceNumberField.getValue().doubleValue(),
 						accruedInterestNumberField.getValue() == null ? null : (double)accruedInterestNumberField.getValue().doubleValue(),
@@ -636,10 +640,6 @@ public class OperationView extends Div {
 					showError("Id of old Investment being renewed cannot be Empty");
 					return;
 				}
-				if (investmentIdWithProviderTextField.getValue() == null || investmentIdWithProviderTextField.getValue().equals("")) {
-					showError("Investment Id with Provider cannot be Empty");
-					return;
-				}
 				if (investmentEndDatePicker.getValue() == null) {
 					showError("Investment End Date cannot be Empty");
 					return;
@@ -672,6 +672,107 @@ public class OperationView extends Div {
 					accrualScheduleVOList.clear();
 					accrualScheduleButton.setText("Accrual (0)");
 					notification = Notification.show("Renewal Done Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				} catch (Exception e) {
+					showError(UtilFuncs.messageFromException(e));
+				}
+			} finally {
+				saveButton.setEnabled(true);
+			}
+		});
+	}
+	
+	private void handleTransfer(FormLayout formLayout) {
+		Select<IdValueVO> investorDvSelect, dematAccountDvSelect;
+		TextField oldInvestmentIdTextField, investmentIdWithProviderTextField, investorIdWithProviderTextField;
+		NumberField faceValueNumberField, unitsNumberField;
+		DatePicker investmentStartDatePicker;
+		Label label1;
+		Button saveButton;
+		HorizontalLayout hLayout;
+		
+		// UI Elements
+		label1 = new Label();
+		formLayout.addFormItem(label1, "");
+		label1.getElement().setProperty("innerHTML", "<b>Details of the old investment being transferred</b>");
+		
+		oldInvestmentIdTextField = new TextField();
+		formLayout.addFormItem(oldInvestmentIdTextField, "Persmony Investment Id");
+		
+		label1 = new Label();
+		formLayout.addFormItem(label1, "");
+		label1.getElement().setProperty("innerHTML", "<b>Details of the transfer</b>");
+		
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Recipient");
+		investorDvSelect = newDvSelect("Investor", Constants.CATEGORY_INVESTOR, false);
+		investorIdWithProviderTextField = new TextField("Id with Provider");
+		hLayout.add(investorDvSelect, investorIdWithProviderTextField);
+		
+		investmentIdWithProviderTextField = new TextField();
+		formLayout.addFormItem(investmentIdWithProviderTextField, "Investment Id with Provider");
+		
+		dematAccountDvSelect = newDvSelect("Demat Account", Constants.CATEGORY_DEMAT_ACCOUNT, true);
+		formLayout.addFormItem(dematAccountDvSelect, "Demat Account");
+		
+		unitsNumberField = new NumberField();
+		formLayout.addFormItem(unitsNumberField, "No. of Units");
+		
+		faceValueNumberField = new NumberField();
+		formLayout.addFormItem(faceValueNumberField, "Value");
+		
+		investmentStartDatePicker = new DatePicker();
+		formLayout.addFormItem(investmentStartDatePicker, "Start Date");
+		
+		saveButton = new Button("Save");
+		formLayout.add(saveButton);
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setDisableOnClick(true);
+		// On click of Save
+		saveButton.addClickListener(event -> {
+			TransferVO transferVO;
+			Notification notification;
+
+			try {
+				// Validation
+				if (oldInvestmentIdTextField.getValue() == null || oldInvestmentIdTextField.getValue().equals("")) {
+					showError("Id of old Investment being renewed cannot be Empty");
+					return;
+				}
+				if (investorDvSelect.getValue() == null) {
+					showError("Investor cannot be Empty");
+					return;
+				}
+				if (unitsNumberField.getValue() == null && faceValueNumberField.getValue() == null ||
+						unitsNumberField.getValue() != null && faceValueNumberField.getValue() != null) {
+					showError("Either No. of units Or Value (not both) should be provided");
+					return;
+				}
+				if (unitsNumberField.getValue() != null && unitsNumberField.getValue() <= 0) {
+					showError("No. of units should be Positive");
+					return;
+				}
+				if (faceValueNumberField.getValue() != null && faceValueNumberField.getValue() <= 0) {
+					showError("Value should be Positive");
+					return;
+				}
+				if (investmentStartDatePicker.getValue() == null) {
+					showError("Start Date cannot be Empty");
+					return;
+				}
+				
+				transferVO = new TransferVO(
+						Long.parseLong(oldInvestmentIdTextField.getValue()),
+						investorDvSelect.getValue().getId(),
+						investorIdWithProviderTextField.getValue().equals("") ? null : investorIdWithProviderTextField.getValue(),
+						dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(),
+						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
+						unitsNumberField.getValue() == null ? null : unitsNumberField.getValue().doubleValue(),
+						faceValueNumberField.getValue() == null ? null : faceValueNumberField.getValue().doubleValue(),
+						investmentStartDatePicker.getValue() == null ? null : Date.valueOf(investmentStartDatePicker.getValue()));
+				try {
+					moneyTransactionService.transfer(transferVO);
+					notification = Notification.show("Investment Transferred Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
 					showError(UtilFuncs.messageFromException(e));

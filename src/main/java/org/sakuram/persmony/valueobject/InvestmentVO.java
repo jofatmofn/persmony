@@ -19,7 +19,7 @@ public class InvestmentVO {
 	private String investmentIdWithProvider;
 	private String productName;
 	private String productType;
-	private int units;
+	private double units;
 	private Double worth;
 	private Double cleanPrice;
 	private Double accruedInterest;
@@ -48,7 +48,7 @@ public class InvestmentVO {
 		this.investmentIdWithProvider = (String) columns[colPos++];
 		this.productName = (String) columns[colPos++];
 		this.productType = (String) columns[colPos++];
-		this.units = (int) columns[colPos++];
+		this.units = ((BigDecimal) columns[colPos++]).doubleValue();
 		this.worth = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
 		this.cleanPrice = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
 		this.accruedInterest = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;

@@ -29,6 +29,7 @@ import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationVO;
+import org.sakuram.persmony.valueobject.TransferVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 
 @Service
@@ -311,6 +312,140 @@ public class MoneyTransactionService {
 		System.out.println("invest completed.");
 	}
 
+	public void transfer(TransferVO transferVO) {
+		Investment transferredInvestment, balanceInvestment, newInvestment;
+		InvestmentTransaction balanceInvestmentTransaction, newInvestmentTransaction;
+		double transferFaceValue, transferProportion, transferUnits;
+		
+		transferredInvestment = investmentRepository.findById(transferVO.getInvestmentId())
+				.orElseThrow(() -> new AppException("Invalid Investment Id " + transferVO.getInvestmentId(), null));
+		if (transferredInvestment.isClosed()) {
+			throw new AppException("Investment " + transferVO.getInvestmentId() + " no longer Open", null);
+		}
+		transferredInvestment.setClosed(true);
+		transferredInvestment.setClosureDate(transferVO.getInvestmentStartDate());
+		transferredInvestment.setClosureType(Constants.domainValueCache.get(Constants.DVID_CLOSURE_TYPE_TRANSFER_OUT));
+		
+		transferProportion = 1;
+		if (transferVO.getUnits() == null && transferVO.getFaceValue() == null ||
+				transferVO.getUnits() != null && transferVO.getFaceValue() != null) {
+			throw new AppException("Either No. of units Or Value (not both) should be provided", null);
+		} else if (transferVO.getFaceValue() != null) {
+			transferFaceValue = transferVO.getFaceValue();
+			if (transferredInvestment.getWorth() == transferVO.getFaceValue()) {
+				transferUnits = transferredInvestment.getUnits();	// Redundant logic, just to handle rounding-off differences
+			} else {
+				transferProportion = transferVO.getFaceValue() / transferredInvestment.getWorth();
+				transferUnits = transferredInvestment.getUnits() * transferProportion;
+			}
+		} else {
+			transferUnits = transferVO.getUnits();
+			if (transferredInvestment.getUnits() == transferVO.getUnits()) {
+				transferFaceValue = transferredInvestment.getWorth();	// Redundant logic, just to handle rounding-off differences
+			} else {
+				transferProportion = transferVO.getUnits() / transferredInvestment.getUnits();
+				transferFaceValue = transferredInvestment.getWorth() * transferProportion;
+			}
+		}
+		
+		balanceInvestment = null;
+		if (transferProportion < 1) {
+			balanceInvestment = new Investment(
+					transferredInvestment.getInvestor(),
+					transferredInvestment.getProductProvider(),
+					transferredInvestment.getDematAccount(),
+					transferredInvestment.getFacilitator(),
+					transferredInvestment.getInvestorIdWithProvider(),
+					transferredInvestment.getProductIdOfProvider(),
+					transferredInvestment.getInvestmentIdWithProvider(),
+					transferredInvestment.getProductName(),
+					transferredInvestment.getProductType(),
+					transferredInvestment.getUnits() - transferUnits,
+					transferredInvestment.getWorth() - transferFaceValue,
+					null,
+					null,
+					null,
+					transferredInvestment.getRateOfInterest(),
+					transferredInvestment.getTaxability(),
+					transferredInvestment,
+					Constants.domainValueCache.get(Constants.DVID_NEW_INVESTMENT_REASON_TRANSFER_BALANCE),
+					transferVO.getInvestmentStartDate(),
+					transferredInvestment.getInvestmentEndDate(),
+					false,
+					null,
+					null,
+					transferredInvestment.getIsAccrualApplicable(),
+					null,
+					transferredInvestment.getDynamicReceiptPeriodicity(),
+					transferredInvestment.getProviderBranch());
+			balanceInvestment = investmentRepository.save(balanceInvestment);
+		}
+		
+		newInvestment = new Investment(
+				Constants.domainValueCache.get(transferVO.getInvestorDvId()),
+				transferredInvestment.getProductProvider(),
+				Constants.domainValueCache.get(transferVO.getDematAccountDvId()),
+				transferredInvestment.getFacilitator(),
+				transferVO.getInvestorIdWithProvider(),
+				transferredInvestment.getProductIdOfProvider(),
+				transferVO.getInvestmentIdWithProvider(),
+				transferredInvestment.getProductName(),
+				transferredInvestment.getProductType(),
+				transferUnits,
+				transferFaceValue,
+				null,
+				null,
+				null,
+				transferredInvestment.getRateOfInterest(),
+				transferredInvestment.getTaxability(),
+				transferredInvestment,
+				Constants.domainValueCache.get(Constants.DVID_NEW_INVESTMENT_REASON_TRANSFER_IN),
+				transferVO.getInvestmentStartDate(),
+				transferredInvestment.getInvestmentEndDate(),
+				false,
+				null,
+				null,
+				transferredInvestment.getIsAccrualApplicable(),
+				null,
+				transferredInvestment.getDynamicReceiptPeriodicity(),
+				transferredInvestment.getProviderBranch());
+		newInvestment = investmentRepository.save(newInvestment);
+		
+		for (InvestmentTransaction transferredInvestmentTransaction : transferredInvestment.getInvestmentTransactionList()) {
+			if (transferredInvestmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING) {
+				transferredInvestmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_CANCELLED));
+				if (transferProportion < 1) {
+					balanceInvestmentTransaction = new InvestmentTransaction(
+							balanceInvestment,
+							transferredInvestmentTransaction.getTransactionType(),
+							transferredInvestmentTransaction.getDueDate(),
+							transferredInvestmentTransaction.getDueAmount() == null ? null : transferredInvestmentTransaction.getDueAmount() * (1 - transferProportion),
+							Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
+							transferredInvestmentTransaction.getReturnedPrincipalAmount() == null ? null : transferredInvestmentTransaction.getReturnedPrincipalAmount() * (1 - transferProportion),
+							transferredInvestmentTransaction.getInterestAmount() == null ? null : transferredInvestmentTransaction.getInterestAmount() * (1 - transferProportion),
+							transferredInvestmentTransaction.getTdsAmount() == null ? null : transferredInvestmentTransaction.getTdsAmount() * (1 - transferProportion),
+							transferredInvestmentTransaction.getTaxability(),
+							transferredInvestmentTransaction.getAssessmentYear(),
+							null);
+					balanceInvestmentTransaction = investmentTransactionRepository.save(balanceInvestmentTransaction);
+				}
+				newInvestmentTransaction = new InvestmentTransaction(
+						newInvestment,
+						transferredInvestmentTransaction.getTransactionType(),
+						transferredInvestmentTransaction.getDueDate(),
+						transferredInvestmentTransaction.getDueAmount() == null ? null : transferredInvestmentTransaction.getDueAmount() * transferProportion,
+						Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
+						transferredInvestmentTransaction.getReturnedPrincipalAmount() == null ? null : transferredInvestmentTransaction.getReturnedPrincipalAmount() * transferProportion,
+						transferredInvestmentTransaction.getInterestAmount() == null ? null : transferredInvestmentTransaction.getInterestAmount() * transferProportion,
+						transferredInvestmentTransaction.getTdsAmount() == null ? null : transferredInvestmentTransaction.getTdsAmount() * transferProportion,
+						transferredInvestmentTransaction.getTaxability(),
+						transferredInvestmentTransaction.getAssessmentYear(),
+						null);
+				newInvestmentTransaction = investmentTransactionRepository.save(newInvestmentTransaction);
+			}
+		}
+	}
+	
 	public void addReceiptDues(ReceiptDuesVO receiptDuesVO) {
 		Investment investment;
 		

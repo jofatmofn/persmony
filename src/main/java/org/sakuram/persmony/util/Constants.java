@@ -24,6 +24,8 @@ public class Constants {
 	public static final String CATEGORY_BRANCH = "Branch";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
+	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
+	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_BALANCE = 189;
 	public static final long DVID_TRANSACTION_STATUS_PENDING = 69;
 	public static final long DVID_TRANSACTION_STATUS_CANCELLED = 70;
 	public static final long DVID_TRANSACTION_STATUS_COMPLETED = 71;
@@ -31,6 +33,7 @@ public class Constants {
 	public static final long DVID_TRANSACTION_TYPE_RECEIPT = 73;
 	public static final long DVID_TRANSACTION_TYPE_ACCRUAL = 74;
 	public static final long DVID_CLOSURE_TYPE_MATURITY = 76;
+	public static final long DVID_CLOSURE_TYPE_TRANSFER_OUT = 185;
 	public static final long DVID_REALISATION_TYPE_SAVINGS_ACCOUNT = 101;
 	public static final long DVID_REALISATION_TYPE_CASH = 102;
 	public static final long DVID_REALISATION_TYPE_ANOTHER_REALISATION = 103;
