@@ -385,6 +385,7 @@ public class OperationView extends Div {
 		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField;
 		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup, dynamicReceiptPeriodicityRadioButtonGroup;
 		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField;
+		IntegerField unitsIntegerField;
 		DatePicker investmentStartDatePicker, investmentEndDatePicker;
 		HorizontalLayout hLayout;		
 		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
@@ -436,6 +437,10 @@ public class OperationView extends Div {
 		bankAccountDvSelect = newDvSelect("Account", Constants.CATEGORY_ACCOUNT, true);
 		formLayout.addFormItem(bankAccountDvSelect, "Realisation from Account");
 
+		unitsIntegerField = new IntegerField();
+		formLayout.addFormItem(unitsIntegerField, "No. of Units");
+		unitsIntegerField.setValue(1);
+		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Price");
 		faceValueNumberField = new NumberField("Face Value");
@@ -501,6 +506,10 @@ public class OperationView extends Div {
 					showError("Product Type cannot be Empty");
 					return;
 				}
+				if (unitsIntegerField.getValue() == null || unitsIntegerField.getValue() <= 0) {
+					showError("No. of units should be Positive");
+					return;
+				}
 				if (faceValueNumberField.getValue() == null) {
 					showError("Face Value cannot be Empty");
 					return;
@@ -528,6 +537,7 @@ public class OperationView extends Div {
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
 						(bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()),
 						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
+						unitsIntegerField.getValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),
 						cleanPriceNumberField.getValue() == null ? null : (double)cleanPriceNumberField.getValue().doubleValue(),
 						accruedInterestNumberField.getValue() == null ? null : (double)accruedInterestNumberField.getValue().doubleValue(),

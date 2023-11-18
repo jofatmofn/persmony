@@ -19,6 +19,7 @@ public class InvestmentVO {
 	private String investmentIdWithProvider;
 	private String productName;
 	private String productType;
+	private int units;
 	private Double worth;
 	private Double cleanPrice;
 	private Double accruedInterest;
@@ -37,31 +38,33 @@ public class InvestmentVO {
 	private String providerBranch;
 	
 	public InvestmentVO(Object[] columns) {
-		this.investor = (String) columns[0];
-		this.productProvider = (String) columns[1];
-		this.dematAccount = (String) columns[2];	
-		this.facilitator = (String) columns[3];
-		this.investorIdWithProvider = (String) columns[4];
-		this.productIdOfProvider = (String) columns[5];
-		this.investmentIdWithProvider = (String) columns[6];
-		this.productName = (String) columns[7];
-		this.productType = (String) columns[8];
-		this.worth = (columns[9] == null ? null : ((BigDecimal) columns[9]).doubleValue());
-		this.cleanPrice = (columns[10] == null ? null : ((BigDecimal) columns[10]).doubleValue());
-		this.accruedInterest = (columns[11] == null ? null : ((BigDecimal) columns[11]).doubleValue());
-		this.charges = (columns[12] == null ? null : ((BigDecimal) columns[12]).doubleValue());
-		this.rateOfInterest = (columns[13] == null ? null : ((BigDecimal) columns[13]).doubleValue());	
-		this.taxability = (String) columns[14];
-		this.previousInvestment = (columns[15] == null ? null : ((BigInteger) columns[15]).longValue());
-		this.newInvestmentReason = (String) columns[16];
-		this.investmentStartDate = (Date) columns[17];
-		this.investmentEndDate = (Date) columns[18];
-		this.isClosed = (boolean) columns[19];
-		this.closureType = (String) columns[20];
-		this.closureDate = (Date) columns[21];
-		this.isAccrualApplicable = (Boolean) columns[22];
-		this.dynamicReceiptPeriodicity = (Character) columns[23];
-		this.providerBranch = (String) columns[24];
-		this.investmentId = ((BigInteger) columns[25]).longValue();
+		int colPos = 0;
+		this.investor = (String) columns[colPos++];
+		this.productProvider = (String) columns[colPos++];
+		this.dematAccount = (String) columns[colPos++];
+		this.facilitator = (String) columns[colPos++];
+		this.investorIdWithProvider = (String) columns[colPos++];
+		this.productIdOfProvider = (String) columns[colPos++];
+		this.investmentIdWithProvider = (String) columns[colPos++];
+		this.productName = (String) columns[colPos++];
+		this.productType = (String) columns[colPos++];
+		this.units = (int) columns[colPos++];
+		this.worth = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
+		this.cleanPrice = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
+		this.accruedInterest = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
+		this.charges = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
+		this.rateOfInterest = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
+		this.taxability = (String) columns[colPos++];
+		this.previousInvestment = (columns[colPos] == null ? null : ((BigInteger) columns[colPos]).longValue()); colPos++;
+		this.newInvestmentReason = (String) columns[colPos++];
+		this.investmentStartDate = (Date) columns[colPos++];
+		this.investmentEndDate = (Date) columns[colPos++];
+		this.isClosed = (boolean) columns[colPos++];
+		this.closureType = (String) columns[colPos++];
+		this.closureDate = (Date) columns[colPos++];
+		this.isAccrualApplicable = (Boolean) columns[colPos++];
+		this.dynamicReceiptPeriodicity = (Character) columns[colPos++];
+		this.providerBranch = (String) columns[colPos++];
+		this.investmentId = ((BigInteger) columns[colPos++]).longValue();
 	}
 }

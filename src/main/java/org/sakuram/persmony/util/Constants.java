@@ -75,6 +75,7 @@ public class Constants {
 			put("product_id_of_provider", new FieldSpecVO("Provider's Product Id", FieldSpecVO.DataType.OTHERS, false, true, false, null));
 			put("product_name", new FieldSpecVO("Product Name", FieldSpecVO.DataType.OTHERS, false, true, false, null));
 			put("rate_of_interest", new FieldSpecVO("Rate of Interest%", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("units", new FieldSpecVO("No. of Units", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("worth", new FieldSpecVO("Worth", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("closure_type_fk", new FieldSpecVO("Closure Type", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_CLOSURE_TYPE));
 			put("demat_account_fk", new FieldSpecVO("Demat Account", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_DEMAT_ACCOUNT));

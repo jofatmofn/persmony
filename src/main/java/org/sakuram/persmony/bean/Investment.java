@@ -66,6 +66,9 @@ public class Investment {
 	@JoinColumn(name="product_type_fk", nullable=true)
 	private DomainValue productType;
 	
+	@Column(name="units", nullable=false, columnDefinition="integer default 1")	// Non-portable way of setting the default
+	private Integer units;
+	
 	@Column(name="worth", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double worth;
 	
@@ -124,7 +127,7 @@ public class Investment {
 	@JoinColumn(name="provider_branch_fk", nullable=true)
 	private DomainValue providerBranch;
 	
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, int units, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;
@@ -134,6 +137,7 @@ public class Investment {
 		this.investmentIdWithProvider = investmentIdWithProvider;
 		this.productName = productName;
 		this.productType = productType;
+		this.units = units;
 		this.worth = worth;
 		this.cleanPrice = cleanPrice;
 		this.accruedInterest = accruedInterest;
