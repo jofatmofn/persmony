@@ -78,7 +78,7 @@ public class AmountComponent {
 		returnedPrincipalAmountL = ObjectUtils.defaultIfNull(returnedPrincipalAmount, 0).doubleValue();
 		interestAmountL = ObjectUtils.defaultIfNull(interestAmount, 0).doubleValue();
 		tdsAmountL = ObjectUtils.defaultIfNull(tdsAmount, 0).doubleValue();
-		if ((netAmountL <= 0 && transactionTypeDvId != Constants.DVID_TRANSACTION_TYPE_RECEIPT) || returnedPrincipalAmountL < 0 || interestAmountL < 0 || tdsAmountL < 0 || amountsToAddup && netAmountL != (returnedPrincipalAmountL + interestAmountL - tdsAmountL)) {
+		if ((netAmountL <= 0 && transactionTypeDvId != Constants.DVID_TRANSACTION_TYPE_RECEIPT) || returnedPrincipalAmountL < 0 || tdsAmountL < 0 || amountsToAddup && netAmountL != (returnedPrincipalAmountL + interestAmountL - tdsAmountL)) {
 			return false;
 		}
 		return true;
