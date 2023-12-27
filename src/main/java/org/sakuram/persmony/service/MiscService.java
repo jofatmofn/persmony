@@ -41,7 +41,7 @@ public class MiscService {
     	Constants.domainValueCache = new HashMap<Long, DomainValue>();
     	Constants.categoryDvIdCache = new HashMap<String, List<Long>>();
     	
-    	for(DomainValue domainValue : domainValueRepository.findAll()) {
+    	for(DomainValue domainValue : domainValueRepository.findAllByOrderByValueAsc()) {
     		Constants.domainValueCache.put(domainValue.getId(), domainValue);
     		if (Constants.categoryDvIdCache.containsKey(domainValue.getCategory())) {
     			categoryDvIdList = Constants.categoryDvIdCache.get(domainValue.getCategory());
