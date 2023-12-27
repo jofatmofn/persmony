@@ -24,7 +24,7 @@ import org.sakuram.persmony.valueobject.InvestVO;
 import org.sakuram.persmony.valueobject.InvestmentDetailsVO;
 import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
-import org.sakuram.persmony.valueobject.ReceiptDuesVO;
+import org.sakuram.persmony.valueobject.DuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
@@ -450,16 +450,18 @@ public class MoneyTransactionService {
 		}
 	}
 	
-	public void addReceiptDues(ReceiptDuesVO receiptDuesVO) {
+	public void addDues(DuesVO duesVO) {
 		Investment investment;
 		
-		investment = investmentRepository.findById(receiptDuesVO.getInvestmentId())
-				.orElseThrow(() -> new AppException("Invalid Investment Id " + receiptDuesVO.getInvestmentId(), null));
+		investment = investmentRepository.findById(duesVO.getInvestmentId())
+				.orElseThrow(() -> new AppException("Invalid Investment Id " + duesVO.getInvestmentId(), null));
 		if (investment.isClosed()) {
-			throw new AppException("Investment " + receiptDuesVO.getInvestmentId() + " no longer Open", null);
+			throw new AppException("Investment " + duesVO.getInvestmentId() + " no longer Open", null);
 		}
 		
-		saveSchedule(receiptDuesVO.getReceiptScheduleVOList(), investment, Constants.DVID_TRANSACTION_TYPE_RECEIPT);
+		saveSchedule(duesVO.getPaymentScheduleVOList(), investment, Constants.DVID_TRANSACTION_TYPE_PAYMENT);
+		saveSchedule(duesVO.getReceiptScheduleVOList(), investment, Constants.DVID_TRANSACTION_TYPE_RECEIPT);
+		saveSchedule(duesVO.getAccrualScheduleVOList(), investment, Constants.DVID_TRANSACTION_TYPE_ACCRUAL);
 	}
 
     public InvestmentDetailsVO fetchInvestmentDetails(long investmentId) {

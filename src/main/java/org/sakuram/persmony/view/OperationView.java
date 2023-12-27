@@ -15,7 +15,7 @@ import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestVO;
 import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
-import org.sakuram.persmony.valueobject.ReceiptDuesVO;
+import org.sakuram.persmony.valueobject.DuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationVO;
@@ -77,7 +77,7 @@ public class OperationView extends Div {
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Realisation"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "Accrual"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Invest"));
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(4, "Existing Investment, Receipt Dues"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(4, "Existing Investment, Additional Dues"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(5, "Renewal"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(6, "New Receipt + Single Realisation With Bank"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(7, "New Payment + Single Realisation With Bank"));
@@ -112,7 +112,7 @@ public class OperationView extends Div {
 	            	handleInvest(formLayout);
 	            	break;
 	            case 4:
-	            	handleReceiptDues(formLayout);
+	            	handleDues(formLayout);
 	            	break;
 	            case 5:
 	            	handleRenewal(formLayout);
@@ -782,20 +782,33 @@ public class OperationView extends Div {
 		});
 	}
 	
-	private void handleReceiptDues(FormLayout formLayout) {
+	private void handleDues(FormLayout formLayout) {
 		TextField investmentIdTextField;
-		Button saveButton, receiptScheduleButton;
-		List<ScheduleVO> receiptScheduleVOList;
+		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
+		List<ScheduleVO> paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList;
+		HorizontalLayout hLayout;
 		
 		investmentIdTextField = new TextField();
 		formLayout.addFormItem(investmentIdTextField, "Persmony Investment Id");
 		
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Schedule");
+		paymentScheduleVOList = new ArrayList<ScheduleVO>();
+		paymentScheduleButton = new Button("Payment (0)");
+		paymentScheduleButton.addClickListener(event -> {
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_PAYMENT, "Payment", paymentScheduleButton, paymentScheduleVOList);
+		});
 		receiptScheduleVOList = new ArrayList<ScheduleVO>();
 		receiptScheduleButton = new Button("Receipt (0)");
 		receiptScheduleButton.addClickListener(event -> {
 			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_RECEIPT, "Receipt", receiptScheduleButton, receiptScheduleVOList);
 		});
-		formLayout.addFormItem(receiptScheduleButton,"Schedule");
+		accrualScheduleVOList = new ArrayList<ScheduleVO>();
+		accrualScheduleButton = new Button("Accrual (0)");
+		accrualScheduleButton.addClickListener(event -> {
+			acceptSchedule(Constants.DVID_TRANSACTION_TYPE_ACCRUAL, "Accrual", accrualScheduleButton, accrualScheduleVOList);
+		});
+		hLayout.add(paymentScheduleButton, receiptScheduleButton, accrualScheduleButton);
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -803,7 +816,7 @@ public class OperationView extends Div {
 		saveButton.setDisableOnClick(true);
 		// On click of Save
 		saveButton.addClickListener(event -> {
-			ReceiptDuesVO receiptDuesVO;
+			DuesVO duesVO;
 			Notification notification;
 			
 			try {
@@ -812,18 +825,22 @@ public class OperationView extends Div {
 					showError("Id of Investment cannot be Empty");
 					return;
 				}
-				if (receiptScheduleVOList.isEmpty()) {
-					showError("Receipt Schedule cannot be Empty");
+				if (paymentScheduleVOList.isEmpty() && receiptScheduleVOList.isEmpty() && accrualScheduleVOList.isEmpty()) {
+					showError("No new dues to Save!");
 					return;
 				}
 				
 				// Back-end Call
-				receiptDuesVO = new ReceiptDuesVO(Long.parseLong(investmentIdTextField.getValue()), receiptScheduleVOList);
+				duesVO = new DuesVO(Long.parseLong(investmentIdTextField.getValue()), paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList);
 				try {
-					moneyTransactionService.addReceiptDues(receiptDuesVO);
+					moneyTransactionService.addDues(duesVO);
+					paymentScheduleVOList.clear();
+					paymentScheduleButton.setText("Payment (0)");
 					receiptScheduleVOList.clear();
 					receiptScheduleButton.setText("Receipt (0)");
-					notification = Notification.show("Receipt Dues Added Successfully.");
+					accrualScheduleVOList.clear();
+					accrualScheduleButton.setText("Accrual (0)");
+					notification = Notification.show("Dues Added Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {
 					showError(UtilFuncs.messageFromException(e));

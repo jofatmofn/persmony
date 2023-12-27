@@ -8,7 +8,9 @@ import lombok.Setter;
 
 @Getter @Setter
 @AllArgsConstructor
-public class ReceiptDuesVO {
+public class DuesVO {
 	long investmentId;
+	List<ScheduleVO> paymentScheduleVOList;
 	List<ScheduleVO> receiptScheduleVOList;
+	List<ScheduleVO> accrualScheduleVOList;
 }
