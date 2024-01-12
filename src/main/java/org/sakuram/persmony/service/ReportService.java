@@ -1,5 +1,6 @@
 package org.sakuram.persmony.service;
 
+import java.math.BigInteger;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,12 +97,27 @@ public class ReportService {
 	public List<List<Object[]>> pendingTransactions() {
 		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
+		Map<Long, Double> lastCompletedReceiptsMap;
+		Long investmentId;
 		
 		reportList = new ArrayList<List<Object[]>>(1);
 		recordList = investmentTransactionRepository.findPendingTransactions();
 		reportList.add(recordList);
-		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Returned Principal"});
+
+		lastCompletedReceiptsMap = fetchLastCompletedReceipts();
+		for (Object[] fields : recordList) {
+			if (fields[7] == null) {
+				investmentId = ((BigInteger) fields[2]).longValue();
+				if (lastCompletedReceiptsMap.containsKey(investmentId)) {
+					fields[7] = lastCompletedReceiptsMap.get(investmentId);
+					fields[8] = "Last Received";
+				}
+			} else {
+				fields[8] = "Due";
+			}
+		}
 		
+		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Based On", "Returned Principal"});
 		return reportList;
 	}
 	
@@ -111,8 +127,6 @@ public class ReportService {
 		int dataRowInd;
 		double investmentTransactionAmount, notRealisedPayment, notRealisedReceipt, notRealisedAccrual, settledAmount;
 		Map<Long, Double> lastCompletedReceiptsMap;
-		List<InvestmentTransaction> lastCompletedReceiptItList;
-		RealisationVO realisationAmountSummary;
 		
 		final Object headerArray[] = {"Due", "Realisation", "Investor", "Detail", "Amount"};
 		
@@ -139,12 +153,7 @@ public class ReportService {
 			}
 		}
 
-		lastCompletedReceiptItList = investmentTransactionRepository.findLastCompletedReceipts();
-		lastCompletedReceiptsMap = new HashMap<Long, Double>(lastCompletedReceiptItList.size());
-		for (InvestmentTransaction it : lastCompletedReceiptItList) {
-			realisationAmountSummary = miscService.fetchRealisationAmountSummary(it);
-			lastCompletedReceiptsMap.put(it.getId(), realisationAmountSummary.getAmount() > 0 ? realisationAmountSummary.getAmount() : it.getDueAmount());
-		}
+		lastCompletedReceiptsMap = fetchLastCompletedReceipts();
 		col0Ind = 0;
 		for (InvestmentTransaction investmentTransaction : investmentTransactionRepository.findByDueDateBetween(periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate())) {
 			if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_CANCELLED) {
@@ -248,7 +257,22 @@ public class ReportService {
 		return reportList;
 	 
 	}
-	
+
+	private Map<Long, Double> fetchLastCompletedReceipts() {
+		Map<Long, Double> lastCompletedReceiptsMap;
+		List<InvestmentTransaction> lastCompletedReceiptItList;
+		RealisationVO realisationAmountSummary;
+		
+		lastCompletedReceiptItList = investmentTransactionRepository.findLastCompletedReceipts();
+		lastCompletedReceiptsMap = new HashMap<Long, Double>(lastCompletedReceiptItList.size());
+		for (InvestmentTransaction it : lastCompletedReceiptItList) {
+			realisationAmountSummary = miscService.fetchRealisationAmountSummary(it);
+			lastCompletedReceiptsMap.put(it.getInvestment().getId(), realisationAmountSummary.getInterestAmount() > 0 ? realisationAmountSummary.getInterestAmount() : it.getDueAmount());
+		}
+		
+		return lastCompletedReceiptsMap;
+	}
+
 	private void accumulateAmount(int ind3, double amount) {
 		int ind;
 		ind = col0Ind * col1Values.length * col2Values.size() * col3Values.length +

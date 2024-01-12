@@ -16,7 +16,7 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 	public List<InvestmentTransaction> findByDueDateBetween(Date fromDate, Date toDate);
 	
 	@Query(nativeQuery = true, value =
-			"SELECT IT.due_date, IT.id t_id, I.id, iDV.value AS investor, CONCAT(pDV.value, ' - ', COALESCE(bDV.value, 'Central')) AS provider, I.product_name, I.investment_id_with_provider, IT.due_amount, IT.returned_principal_amount "
+			"SELECT IT.due_date, IT.id t_id, I.id, iDV.value AS investor, CONCAT(pDV.value, ' - ', COALESCE(bDV.value, 'Central')) AS provider, I.product_name, I.investment_id_with_provider, IT.due_amount, null, IT.returned_principal_amount "
 			+ "FROM investment_transaction IT "
 			+ "	INNER JOIN investment I ON IT.investment_fk = I.id "
 			+ "	LEFT OUTER JOIN domain_value pDV ON I.product_provider_fk = pDV.id "
