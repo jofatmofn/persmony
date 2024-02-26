@@ -54,6 +54,9 @@ public class Realisation {
 	@Column(name="tds_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double tdsAmount; /* Only for Accruals and Receipts */
 	
+	@Column(name="tds_reference", length=31, nullable=true)
+	private String tdsReference;
+	
 	public Realisation(InvestmentTransaction investmentTransaction, Date realisationDate, DomainValue realisationType, Long detailsReference, Double amount, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount) {
 		this.investmentTransaction = investmentTransaction;
 		this.realisationDate = realisationDate;
@@ -63,5 +66,6 @@ public class Realisation {
 		this.returnedPrincipalAmount = returnedPrincipalAmount;
 		this.interestAmount = interestAmount;
 		this.tdsAmount = tdsAmount;
+		this.tdsReference = null;
 	}
 }

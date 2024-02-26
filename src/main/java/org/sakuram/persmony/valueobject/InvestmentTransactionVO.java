@@ -22,6 +22,7 @@ public class InvestmentTransactionVO {
 	Double returnedPrincipalAmount;
 	Double interestAmount;
 	Double tdsAmount;
+	String accrualTdsReference;
 	Long taxabilityDvId;
 	String taxability;
 	short assessmentYear;
@@ -38,6 +39,7 @@ public class InvestmentTransactionVO {
 		investmentTransactionVO.returnedPrincipalAmount = this.returnedPrincipalAmount;
 		investmentTransactionVO.interestAmount = this.interestAmount;
 		investmentTransactionVO.tdsAmount = this.tdsAmount;
+		investmentTransactionVO.accrualTdsReference = this.accrualTdsReference;
 		investmentTransactionVO.taxabilityDvId = this.taxabilityDvId;
 		investmentTransactionVO.taxability = this.taxability;
 		investmentTransactionVO.assessmentYear = this.assessmentYear;

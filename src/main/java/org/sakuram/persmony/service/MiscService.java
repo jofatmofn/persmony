@@ -222,6 +222,7 @@ public class MiscService {
     			investmentTransaction.getReturnedPrincipalAmount(),
     			investmentTransaction.getInterestAmount(),
     			investmentTransaction.getTdsAmount(),
+    			investmentTransaction.getAccrualTdsReference(),
     			investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getId(),
 				investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getValue(),
     			investmentTransaction.getAssessmentYear().shortValue());
@@ -249,7 +250,8 @@ public class MiscService {
 				amount,
 				returnedPrincipalAmount,
 				interestAmount,
-				tdsAmount
+				tdsAmount,
+				null
 				);
     }
 }

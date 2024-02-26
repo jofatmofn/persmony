@@ -224,7 +224,7 @@ public class SearchView extends Div {
 				dialog.add(verticalLayout);
 				
 				investmentTransactionsGrid = new Grid<>(InvestmentTransactionVO.class);
-				investmentTransactionsGrid.setColumns("investmentTransactionId", "transactionType", "dueDate", "assessmentYear", "dueAmount", "status", "settledAmount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "taxability");
+				investmentTransactionsGrid.setColumns("investmentTransactionId", "transactionType", "dueDate", "assessmentYear", "dueAmount", "status", "settledAmount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "accrualTdsReference", "taxability");
 				for (Column<InvestmentTransactionVO> column : investmentTransactionsGrid.getColumns()) {
 					column.setResizable(true);
 				}
@@ -232,7 +232,7 @@ public class SearchView extends Div {
 				verticalLayout.add(investmentTransactionsGrid);
 				
 				realisationGrid = new Grid<>(RealisationVO.class);
-				realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "detailsReference", "amount", "returnedPrincipalAmount", "interestAmount", "tdsAmount");
+				realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "detailsReference", "amount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "tdsReference");
 				for (Column<RealisationVO> column : realisationGrid.getColumns()) {
 					column.setResizable(true);
 				}

@@ -495,6 +495,7 @@ public class MoneyTransactionService {
     				investmentTransaction.getReturnedPrincipalAmount(),
     				investmentTransaction.getInterestAmount(),
     				investmentTransaction.getTdsAmount(),
+    				investmentTransaction.getAccrualTdsReference(),
         			investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getId(),
     				investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getValue(),
     				investmentTransaction.getAssessmentYear().shortValue()
@@ -510,7 +511,8 @@ public class MoneyTransactionService {
     					realisation.getAmount(),
     					realisation.getReturnedPrincipalAmount(),
     					realisation.getInterestAmount(),
-    					realisation.getTdsAmount()
+    					realisation.getTdsAmount(),
+    					realisation.getTdsReference()
     					));
     			if (realisation.getRealisationType() != null && realisation.getRealisationType().getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
         			// TODO: Handle possible Duplicates

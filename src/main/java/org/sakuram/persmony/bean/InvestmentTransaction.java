@@ -26,7 +26,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name="investment_transaction")
-public class InvestmentTransaction {
+public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One record per transaction instance
+										Dues, and Realisations of Accruals <-- One record per accrual instance */
 
 	@Id
 	@SequenceGenerator(name="investment_transaction_seq_generator",sequenceName="investment_transaction_seq", allocationSize=1)
@@ -60,6 +61,9 @@ public class InvestmentTransaction {
 	
 	@Column(name="tds_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double tdsAmount; /* Only for Accruals and Receipts */
+	
+	@Column(name="accrual_tds_reference", length=31, nullable=true)
+	private String accrualTdsReference;
 	
 	@ManyToOne
 	@JoinColumn(name="taxability_fk", nullable=true)

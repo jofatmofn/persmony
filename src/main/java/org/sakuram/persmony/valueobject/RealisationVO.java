@@ -18,4 +18,5 @@ public class RealisationVO {
 	Double returnedPrincipalAmount;
 	Double interestAmount;
 	Double tdsAmount;
+	String tdsReference;
 }
