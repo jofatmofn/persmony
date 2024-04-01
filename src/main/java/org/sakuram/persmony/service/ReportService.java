@@ -166,7 +166,8 @@ public class ReportService {
 			} else if (investmentTransaction.getDueAmount() != null) {
 				investmentTransactionAmount = investmentTransaction.getDueAmount();
 			// Else Approximations
-			} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING  && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
+			} else if ((investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING  &&
+					investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT || investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) &&
 					(investmentTransaction.getReturnedPrincipalAmount() != null || investmentTransaction.getInterestAmount() != null || investmentTransaction.getTdsAmount() != null)) {
 				investmentTransactionAmount = ObjectUtils.defaultIfNull(investmentTransaction.getReturnedPrincipalAmount(), 0).doubleValue() +
 						ObjectUtils.defaultIfNull(investmentTransaction.getInterestAmount(), 0).doubleValue() -
@@ -207,23 +208,14 @@ public class ReportService {
 				} else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
 					accumulateAmount(1, realisation.getAmount());
 					notRealisedReceipt -= realisation.getAmount();
-					if (investmentTransaction.getReturnedPrincipalAmount() != null) {
-						accumulateAmount(2, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getReturnedPrincipalAmount());
+					if (realisation.getReturnedPrincipalAmount() != null) {
+						accumulateAmount(2, realisation.getReturnedPrincipalAmount());
 					}
-					if (investmentTransaction.getInterestAmount() != null) {
-						accumulateAmount(3, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getInterestAmount());
+					if (realisation.getInterestAmount() != null) {
+						accumulateAmount(3, realisation.getInterestAmount());
 					}
-					if (investmentTransaction.getTdsAmount() != null) {
-						accumulateAmount(4, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getTdsAmount());
-					}
-				} else { /* Constants.DVID_TRANSACTION_TYPE_ACCRUAL */
-					accumulateAmount(5, realisation.getAmount());
-					notRealisedAccrual -= realisation.getAmount();
-					if (investmentTransaction.getInterestAmount() != null) {
-						accumulateAmount(6, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getInterestAmount());
-					}
-					if (investmentTransaction.getTdsAmount() != null) {
-						accumulateAmount(7, realisation.getAmount() / investmentTransactionAmount * investmentTransaction.getTdsAmount());
+					if (realisation.getTdsAmount() != null) {
+						accumulateAmount(4, realisation.getTdsAmount());
 					}
 				}
 			}
@@ -237,11 +229,9 @@ public class ReportService {
 			}
 			if (investmentTransaction.getInterestAmount() != null) {
 				accumulateAmount(3, notRealisedReceipt / investmentTransactionAmount * investmentTransaction.getInterestAmount());
-				accumulateAmount(6, notRealisedAccrual / investmentTransactionAmount * investmentTransaction.getInterestAmount());
 			}
 			if (investmentTransaction.getTdsAmount() != null) {
 				accumulateAmount(4, notRealisedReceipt / investmentTransactionAmount * investmentTransaction.getTdsAmount());
-				accumulateAmount(7, notRealisedAccrual / investmentTransactionAmount * investmentTransaction.getTdsAmount());
 			}
 		}
 		

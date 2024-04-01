@@ -211,7 +211,7 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 			mainQueryStringBuffer.append("EXISTS(SELECT 1 FROM investment_transaction IT ");
 			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ttDV ON IT.transaction_type_fk = ttDV.id ");
 			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tsDV ON IT.status_fk = tsDV.id ");
-			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tDV ON IT.taxability_fk = tDV.id ");
+			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tDV ON IT.tax_group_fk = tDV.id ");
 			mainQueryStringBuffer.append("WHERE IT.investment_fk = I.id ");
 			mainQueryStringBuffer.append(subQueryStringBuffer);
 			mainQueryStringBuffer.append(")");

@@ -173,6 +173,7 @@ public class OperationView extends Div {
 		
 		proceedButton.addClickListener(event -> {
 			try {
+				formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
 				if (investmentTransactionIdIntegerField.getValue() == null) {
 					investmentTransactionVO.setInvestmentTransactionId(0);
 					showError("Provide Investment Transaction Id");
@@ -209,7 +210,7 @@ public class OperationView extends Div {
 	private void handleRealisation2(FormLayout formLayout, IdValueVO selectedRealisationIdValueVO, InvestmentTransactionVO investmentTransactionVO) {
 		IntegerField realisationIdIntegerField, savingsAccountTransactionIntegerField;	// Should be converted to LongField
 		DatePicker transactionDatePicker;
-		Select<IdValueVO> closureTypeDvSelect, bankAccountDvSelect;
+		Select<IdValueVO> closureTypeDvSelect, bankAccountDvSelect, taxGroupDvSelect;
 		Button saveButton;
 		Checkbox lastRealisationCheckbox;
 		HorizontalLayout hLayout;
@@ -243,6 +244,9 @@ public class OperationView extends Div {
 		} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
 			formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
 		}
+		
+		taxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
+		formLayout.addFormItem(taxGroupDvSelect, "Tax Group");
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -294,7 +298,8 @@ public class OperationView extends Div {
 						amountComponent.getTdsAmount(),
 						Date.valueOf(transactionDatePicker.getValue()),
 						lastRealisationCheckbox.getValue() == null || !lastRealisationCheckbox.getValue() ? false : true,
-						closureTypeDvSelect.getValue() == null? null : closureTypeDvSelect.getValue().getId());
+						closureTypeDvSelect.getValue() == null? null : closureTypeDvSelect.getValue().getId(),
+						taxGroupDvSelect.getValue() == null? null : taxGroupDvSelect.getValue().getId());
 				try {
 					moneyTransactionService.realisation(singleRealisationVO);
 					notification = Notification.show("Realistion Saved Successfully.");
@@ -312,7 +317,7 @@ public class OperationView extends Div {
 		TextField investmentIdTextField;
 		AmountComponent amountComponent;
 		DatePicker transactionDatePicker;
-		Select<IdValueVO> bankAccountDvSelect;
+		Select<IdValueVO> bankAccountDvSelect, taxGroupDvSelect;
 		Button saveButton;
 		String label;
 		
@@ -333,6 +338,9 @@ public class OperationView extends Div {
 			bankAccountDvSelect = newDvSelect("Bank Account", Constants.CATEGORY_ACCOUNT, false);
 			formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
 		}
+		
+		taxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
+		formLayout.addFormItem(taxGroupDvSelect, "Tax Group");
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -371,7 +379,8 @@ public class OperationView extends Div {
 						amountComponent.getInterestAmount(),
 						amountComponent.getTdsAmount(),
 						Date.valueOf(transactionDatePicker.getValue()),
-						(transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL || bankAccountDvSelect.getValue() == null) ? null : bankAccountDvSelect.getValue().getId());
+						(transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL || bankAccountDvSelect.getValue() == null) ? null : bankAccountDvSelect.getValue().getId(),
+						taxGroupDvSelect.getValue() == null? null : taxGroupDvSelect.getValue().getId());
 				try {
 					moneyTransactionService.txnSingleRealisationWithBank(txnSingleRealisationWithBankVO);
 					notification = Notification.show("Transaction and Realisation Saved Successfully.");

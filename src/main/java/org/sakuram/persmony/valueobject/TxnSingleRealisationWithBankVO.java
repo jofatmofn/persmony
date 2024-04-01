@@ -14,4 +14,5 @@ public class TxnSingleRealisationWithBankVO {
 	Double netAmount, returnedPrincipalAmount, interestAmount, tdsAmount;
 	Date transactionDate;
 	Long bankAccountDvId;
+	Long taxGroupDvId;
 }

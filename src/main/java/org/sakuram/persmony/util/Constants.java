@@ -22,6 +22,7 @@ public class Constants {
 	public static final String CATEGORY_ACCOUNT = "Account";
 	public static final String CATEGORY_REALISATION_TYPE = "RlsnTyp";
 	public static final String CATEGORY_BRANCH = "Branch";
+	public static final String CATEGORY_TAX_GROUP = "TaxGrp";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
@@ -104,7 +105,7 @@ public class Constants {
 			put("IT.returned_principal_amount", new FieldSpecVO("Txn Returned Principal Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("IT.interest_amount", new FieldSpecVO("Txn Interest Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("IT.tds_amount", new FieldSpecVO("Txn TDS Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
-			put("IT.taxability_fk",new FieldSpecVO("Txn Taxability", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_TAXABILITY));
+			put("IT.tax_group_fk",new FieldSpecVO("Txn Tax Group", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_TAXABILITY));
 			put("IT.assessment_year", new FieldSpecVO("Txn Assessment Year", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 		}
 	};

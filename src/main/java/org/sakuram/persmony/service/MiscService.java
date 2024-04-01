@@ -223,8 +223,8 @@ public class MiscService {
     			investmentTransaction.getInterestAmount(),
     			investmentTransaction.getTdsAmount(),
     			investmentTransaction.getAccrualTdsReference(),
-    			investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getId(),
-				investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getValue(),
+    			investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getId(),
+				investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getValue(),
     			investmentTransaction.getAssessmentYear().shortValue());
     }
     

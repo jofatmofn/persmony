@@ -93,6 +93,7 @@ public class MoneyTransactionService {
 		}
 		
 		if (singleRealisationVO.isLastRealisation()) {
+			investmentTransaction.setTaxGroup(Constants.domainValueCache.get(singleRealisationVO.getTaxGroupDvId()));
 			investmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
 		}
 		
@@ -119,7 +120,7 @@ public class MoneyTransactionService {
 						null,
 						null,
 						null,
-						investmentTransaction.getTaxability(),
+						investmentTransaction.getTaxGroup(),
 						UtilFuncs.computeAssessmentYear(dynamicReceiptDueDate),
 						null);
 				dynamicReceiptIt = investmentTransactionRepository.save(dynamicReceiptIt);
@@ -154,7 +155,7 @@ public class MoneyTransactionService {
 				null,
 				txnSingleRealisationWithBankVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? txnSingleRealisationWithBankVO.getInterestAmount() : null,
 				txnSingleRealisationWithBankVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? txnSingleRealisationWithBankVO.getTdsAmount() : null,
-				null,
+				Constants.domainValueCache.get(txnSingleRealisationWithBankVO.getTaxGroupDvId()),
 				UtilFuncs.computeAssessmentYear(txnSingleRealisationWithBankVO.getTransactionDate()),
 				null);
 		investmentTransaction = investmentTransactionRepository.save(investmentTransaction);
@@ -173,7 +174,8 @@ public class MoneyTransactionService {
 					txnSingleRealisationWithBankVO.getTdsAmount(),
 					txnSingleRealisationWithBankVO.getTransactionDate(),
 					true,
-					null));
+					null,
+					txnSingleRealisationWithBankVO.getTaxGroupDvId()));
 		}
 		
 		System.out.println("txnSingleRealisationWithBank completed.");
@@ -428,7 +430,7 @@ public class MoneyTransactionService {
 							transferredInvestmentTransaction.getReturnedPrincipalAmount() == null ? null : transferredInvestmentTransaction.getReturnedPrincipalAmount() * (1 - transferProportion),
 							transferredInvestmentTransaction.getInterestAmount() == null ? null : transferredInvestmentTransaction.getInterestAmount() * (1 - transferProportion),
 							transferredInvestmentTransaction.getTdsAmount() == null ? null : transferredInvestmentTransaction.getTdsAmount() * (1 - transferProportion),
-							transferredInvestmentTransaction.getTaxability(),
+							transferredInvestmentTransaction.getTaxGroup(),
 							transferredInvestmentTransaction.getAssessmentYear(),
 							null);
 					balanceInvestmentTransaction = investmentTransactionRepository.save(balanceInvestmentTransaction);
@@ -442,7 +444,7 @@ public class MoneyTransactionService {
 						transferredInvestmentTransaction.getReturnedPrincipalAmount() == null ? null : transferredInvestmentTransaction.getReturnedPrincipalAmount() * transferProportion,
 						transferredInvestmentTransaction.getInterestAmount() == null ? null : transferredInvestmentTransaction.getInterestAmount() * transferProportion,
 						transferredInvestmentTransaction.getTdsAmount() == null ? null : transferredInvestmentTransaction.getTdsAmount() * transferProportion,
-						transferredInvestmentTransaction.getTaxability(),
+						transferredInvestmentTransaction.getTaxGroup(),
 						transferredInvestmentTransaction.getAssessmentYear(),
 						null);
 				newInvestmentTransaction = investmentTransactionRepository.save(newInvestmentTransaction);
@@ -496,8 +498,8 @@ public class MoneyTransactionService {
     				investmentTransaction.getInterestAmount(),
     				investmentTransaction.getTdsAmount(),
     				investmentTransaction.getAccrualTdsReference(),
-        			investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getId(),
-    				investmentTransaction.getTaxability() == null ? null : investmentTransaction.getTaxability().getValue(),
+        			investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getId(),
+    				investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getValue(),
     				investmentTransaction.getAssessmentYear().shortValue()
     				));
     		for (Realisation realisation : investmentTransaction.getRealisationList()) {

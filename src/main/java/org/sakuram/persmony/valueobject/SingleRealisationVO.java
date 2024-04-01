@@ -18,4 +18,5 @@ public class SingleRealisationVO {
 	Date transactionDate;
 	boolean isLastRealisation;
 	Long closureTypeDvId;
+	Long taxGroupDvId;
 }

@@ -224,7 +224,7 @@ public class SearchView extends Div {
 				dialog.add(verticalLayout);
 				
 				investmentTransactionsGrid = new Grid<>(InvestmentTransactionVO.class);
-				investmentTransactionsGrid.setColumns("investmentTransactionId", "transactionType", "dueDate", "assessmentYear", "dueAmount", "status", "settledAmount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "accrualTdsReference", "taxability");
+				investmentTransactionsGrid.setColumns("investmentTransactionId", "transactionType", "dueDate", "assessmentYear", "dueAmount", "status", "settledAmount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "accrualTdsReference", "taxGroup");
 				for (Column<InvestmentTransactionVO> column : investmentTransactionsGrid.getColumns()) {
 					column.setResizable(true);
 				}

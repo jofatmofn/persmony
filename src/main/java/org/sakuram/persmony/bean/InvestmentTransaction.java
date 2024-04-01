@@ -66,8 +66,8 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	private String accrualTdsReference;
 	
 	@ManyToOne
-	@JoinColumn(name="taxability_fk", nullable=true)
-	private DomainValue taxability;	/* Only for Receipts; Overrides Investment */
+	@JoinColumn(name="tax_group_fk", nullable=true)
+	private DomainValue taxGroup;	/* Only for Receipts; Overrides Investment */
 	
 	@Column(name="assessment_year", nullable=true, precision=4, scale=0)
 	private BigDecimal assessmentYear;	/* Why not Short? */
@@ -76,7 +76,7 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	@OneToMany(mappedBy = "investmentTransaction", cascade = CascadeType.ALL)
 	private List<Realisation> realisationList;
 
-	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Double dueAmount, DomainValue status, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxability, BigDecimal assessmentYear, List<Realisation> realisationList) {
+	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Double dueAmount, DomainValue status, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxGroup, BigDecimal assessmentYear, List<Realisation> realisationList) {
 		this.investment = investment;
 		this.transactionType = transactionType;
 		this.dueDate = dueDate;
@@ -85,7 +85,7 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 		this.returnedPrincipalAmount = returnedPrincipalAmount;
 		this.interestAmount = interestAmount;
 		this.tdsAmount = tdsAmount;
-		this.taxability = taxability;
+		this.taxGroup = taxGroup;
 		this.assessmentYear = assessmentYear;
 		this.realisationList = realisationList;
 	}

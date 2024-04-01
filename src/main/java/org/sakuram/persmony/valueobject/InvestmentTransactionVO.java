@@ -24,7 +24,7 @@ public class InvestmentTransactionVO {
 	Double tdsAmount;
 	String accrualTdsReference;
 	Long taxabilityDvId;
-	String taxability;
+	String taxGroup;
 	short assessmentYear;
 	
 	public void copyTo(InvestmentTransactionVO investmentTransactionVO) {	// TODO: Do this in LOMBOK way
@@ -41,7 +41,7 @@ public class InvestmentTransactionVO {
 		investmentTransactionVO.tdsAmount = this.tdsAmount;
 		investmentTransactionVO.accrualTdsReference = this.accrualTdsReference;
 		investmentTransactionVO.taxabilityDvId = this.taxabilityDvId;
-		investmentTransactionVO.taxability = this.taxability;
+		investmentTransactionVO.taxGroup = this.taxGroup;
 		investmentTransactionVO.assessmentYear = this.assessmentYear;
 	}
 }
