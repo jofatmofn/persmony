@@ -95,13 +95,27 @@ public class ReportService {
 	}
 	
 	public List<List<Object[]>> pendingTransactions() {
-		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
+		
+		recordList = investmentTransactionRepository.findPendingTransactions();
+		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Based On", "Returned Principal"});
+		return listTransactions(recordList);
+	}
+	
+	public List<List<Object[]>> receiptTransactions(PeriodSummaryCriteriaVO periodSummaryCriteriaVO) {
+		List<Object[]> recordList;
+		
+		recordList = investmentTransactionRepository.findReceiptTransactionsWithinPeriod(periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate());
+		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Based On", "Returned Principal", "Realised Date", "Realised Amount", "Realised Principal"});
+		return listTransactions(recordList);
+	}
+	
+	public List<List<Object[]>> listTransactions(List<Object[]> recordList) {
+		List<List<Object[]>> reportList;
 		Map<Long, Double> lastCompletedReceiptsMap;
 		Long investmentId;
 		
 		reportList = new ArrayList<List<Object[]>>(1);
-		recordList = investmentTransactionRepository.findPendingTransactions();
 		reportList.add(recordList);
 
 		lastCompletedReceiptsMap = fetchLastCompletedReceipts();
@@ -117,7 +131,6 @@ public class ReportService {
 			}
 		}
 		
-		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Based On", "Returned Principal"});
 		return reportList;
 	}
 	

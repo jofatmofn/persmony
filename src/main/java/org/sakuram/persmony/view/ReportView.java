@@ -38,7 +38,8 @@ public class ReportView extends VerticalLayout {
 		DatePicker periodFromDatePicker, periodToDatePicker;
 		
 		reportSelect = new Select<String>();
-		reportSelect.setItems("Pending Transactions",
+		reportSelect.setItems("All Pending Transactions",
+				"Receipt Transactions",
 				"Open Investments",
 				"Period Summary",
 				"Anticipated Vs. Actual");
@@ -60,10 +61,7 @@ public class ReportView extends VerticalLayout {
 			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
 			try {
 	            switch(event.getValue()) {
-	            case "Pending Transactions":
-	            	break;
-	            case "Open Investments":
-	            	break;
+	            case "Receipt Transactions":
 	            case "Period Summary":
 	            case "Anticipated Vs. Actual":
 	        		hLayout = new HorizontalLayout();
@@ -98,12 +96,13 @@ public class ReportView extends VerticalLayout {
 								}
 								System.out.println(reportSelect.getValue());
 					            switch(reportSelect.getValue()) {
-					            case "Pending Transactions":
+					            case "All Pending Transactions":
 					            	reportList = reportService.pendingTransactions();
 					            	break;
 					            case "Open Investments":
 					            	reportList = reportService.investmentsWithPendingTransactions();
 					            	break;
+					            case "Receipt Transactions":
 					            case "Period Summary":
 					            case "Anticipated Vs. Actual":
 					            	PeriodSummaryCriteriaVO periodSummaryCriteriaVO;
@@ -112,10 +111,16 @@ public class ReportView extends VerticalLayout {
 										return new ByteArrayInputStream(new byte[0]);
 									}
 					            	periodSummaryCriteriaVO = new PeriodSummaryCriteriaVO(Date.valueOf(periodFromDatePicker.getValue()), Date.valueOf(periodToDatePicker.getValue()));
-					            	if (reportSelect.getValue().equals("Period Summary")) {
+						            switch(reportSelect.getValue()) {
+						            case "Receipt Transactions":
+						            	reportList = reportService.receiptTransactions(periodSummaryCriteriaVO);
+						            	break;
+						            case "Period Summary":
 					            		reportList = reportService.periodSummary(periodSummaryCriteriaVO);
-					            	} else {
+					            		break;
+						            case "Anticipated Vs. Actual":
 					            		reportList = reportService.anticipatedVsActual(periodSummaryCriteriaVO);
+					            		break;
 					            	}
 					            	break;
 					            }

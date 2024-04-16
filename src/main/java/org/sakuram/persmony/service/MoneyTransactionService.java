@@ -150,7 +150,7 @@ public class MoneyTransactionService {
 				investment,
 				Constants.domainValueCache.get(txnSingleRealisationWithBankVO.getTransactionTypeDvId()),
 				txnSingleRealisationWithBankVO.getTransactionDate(),
-				txnSingleRealisationWithBankVO.getNetAmount(),
+				txnSingleRealisationWithBankVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? null : txnSingleRealisationWithBankVO.getNetAmount(),
 				txnSingleRealisationWithBankVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED) : Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
 				null,
 				txnSingleRealisationWithBankVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? txnSingleRealisationWithBankVO.getInterestAmount() : null,
