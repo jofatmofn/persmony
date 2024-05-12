@@ -225,7 +225,10 @@ public class MiscService {
     			investmentTransaction.getAccrualTdsReference(),
     			investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getId(),
 				investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getValue(),
-    			investmentTransaction.getAssessmentYear().shortValue());
+    			investmentTransaction.getAssessmentYear().shortValue(),
+    			new IdValueVO(investmentTransaction.getInvestment().getDefaultBankAccount()),
+				new IdValueVO(investmentTransaction.getInvestment().getDefaultTaxGroup())
+				);
     }
     
     public RealisationVO fetchRealisationAmountSummary(InvestmentTransaction investmentTransaction) {

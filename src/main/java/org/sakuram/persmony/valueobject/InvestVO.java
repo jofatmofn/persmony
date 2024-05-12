@@ -31,4 +31,6 @@ public class InvestVO {
 	List<ScheduleVO> receiptScheduleVOList;
 	Character dynamicReceiptPeriodicity;
 	List<ScheduleVO> accrualScheduleVOList;
+	Long defaultBankAccountDvId;
+	Long defaultTaxGroupDvId;
 }

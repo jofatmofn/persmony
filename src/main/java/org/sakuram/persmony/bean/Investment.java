@@ -126,8 +126,16 @@ public class Investment {
 	@ManyToOne
 	@JoinColumn(name="provider_branch_fk", nullable=true)
 	private DomainValue providerBranch;
+
+	@ManyToOne
+	@JoinColumn(name="default_bank_account_fk", nullable=true)
+	private DomainValue defaultBankAccount;
+
+	@ManyToOne
+	@JoinColumn(name="default_tax_group_fk", nullable=true)
+	private DomainValue defaultTaxGroup;
 	
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double units, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch) {
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double units, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch, DomainValue defaultBankAccount, DomainValue defaultTaxGroup) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;
@@ -155,5 +163,7 @@ public class Investment {
 		this.investmentTransactionList = investmentTransactionList;
 		this.dynamicReceiptPeriodicity = dynamicReceiptPeriodicity;
 		this.providerBranch = providerBranch;
+		this.defaultBankAccount = defaultBankAccount;
+		this.defaultTaxGroup = defaultTaxGroup;
 	}
 }

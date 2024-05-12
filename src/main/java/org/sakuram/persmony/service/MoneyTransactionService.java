@@ -261,7 +261,10 @@ public class MoneyTransactionService {
 				renewedInvestment.getIsAccrualApplicable(),
 				null,
 				renewedInvestment.getDynamicReceiptPeriodicity(),
-				renewedInvestment.getProviderBranch());
+				renewedInvestment.getProviderBranch(),
+				renewedInvestment.getDefaultBankAccount(),
+				renewedInvestment.getDefaultTaxGroup()
+				);
 		
 		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
 		
@@ -307,7 +310,10 @@ public class MoneyTransactionService {
 				investVO.getIsAccrualApplicable(),
 				null,
 				investVO.getDynamicReceiptPeriodicity(),
-				Constants.domainValueCache.get(investVO.getProviderBranchDvId()));
+				Constants.domainValueCache.get(investVO.getProviderBranchDvId()),
+				Constants.domainValueCache.get(investVO.getDefaultBankAccountDvId()),
+				Constants.domainValueCache.get(investVO.getDefaultTaxGroupDvId())
+				);
 		
 		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getBankDvId());
 		
@@ -383,7 +389,10 @@ public class MoneyTransactionService {
 					transferredInvestment.getIsAccrualApplicable(),
 					null,
 					transferredInvestment.getDynamicReceiptPeriodicity(),
-					transferredInvestment.getProviderBranch());
+					transferredInvestment.getProviderBranch(),
+					transferredInvestment.getDefaultBankAccount(),
+					transferredInvestment.getDefaultTaxGroup()
+					);
 			balanceInvestment = investmentRepository.save(balanceInvestment);
 		}
 		
@@ -414,7 +423,10 @@ public class MoneyTransactionService {
 				transferredInvestment.getIsAccrualApplicable(),
 				null,
 				transferredInvestment.getDynamicReceiptPeriodicity(),
-				transferredInvestment.getProviderBranch());
+				transferredInvestment.getProviderBranch(),
+				transferredInvestment.getDefaultBankAccount(),
+				transferredInvestment.getDefaultTaxGroup()
+				);
 		newInvestment = investmentRepository.save(newInvestment);
 		
 		for (InvestmentTransaction transferredInvestmentTransaction : transferredInvestment.getInvestmentTransactionList()) {
@@ -500,7 +512,9 @@ public class MoneyTransactionService {
     				investmentTransaction.getAccrualTdsReference(),
         			investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getId(),
     				investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getValue(),
-    				investmentTransaction.getAssessmentYear().shortValue()
+    				investmentTransaction.getAssessmentYear().shortValue(),
+    				null,
+    				null
     				));
     		for (Realisation realisation : investmentTransaction.getRealisationList()) {
     			// TODO: Handle possible Duplicates

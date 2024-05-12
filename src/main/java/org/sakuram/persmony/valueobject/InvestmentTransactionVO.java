@@ -26,6 +26,8 @@ public class InvestmentTransactionVO {
 	Long taxabilityDvId;
 	String taxGroup;
 	short assessmentYear;
+	IdValueVO defaultBankAccountIdValueVO;
+	IdValueVO defaultTaxGroupIdValueVO;
 	
 	public void copyTo(InvestmentTransactionVO investmentTransactionVO) {	// TODO: Do this in LOMBOK way
 		investmentTransactionVO.investmentTransactionId = this.investmentTransactionId;
@@ -43,5 +45,7 @@ public class InvestmentTransactionVO {
 		investmentTransactionVO.taxabilityDvId = this.taxabilityDvId;
 		investmentTransactionVO.taxGroup = this.taxGroup;
 		investmentTransactionVO.assessmentYear = this.assessmentYear;
+		investmentTransactionVO.defaultBankAccountIdValueVO = this.defaultBankAccountIdValueVO;
+		investmentTransactionVO.defaultTaxGroupIdValueVO = this.defaultTaxGroupIdValueVO;
 	}
 }

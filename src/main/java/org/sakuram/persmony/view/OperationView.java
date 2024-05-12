@@ -221,6 +221,7 @@ public class OperationView extends Div {
 		formLayout.addFormItem(amountComponent.getLayout(), "Realised Amount");
 		
 		transactionDatePicker = new DatePicker();
+		transactionDatePicker.setValue(investmentTransactionVO.getDueDate().toLocalDate());
 		formLayout.addFormItem(transactionDatePicker, "Realised Date");
 		
 		lastRealisationCheckbox = new Checkbox();
@@ -241,11 +242,13 @@ public class OperationView extends Div {
 			
 			hLayout.add(bankAccountDvSelect);
 			bankAccountDvSelect.setLabel("New: Account");
+			bankAccountDvSelect.setValue(investmentTransactionVO.getDefaultBankAccountIdValueVO());
 		} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
 			formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
 		}
 		
 		taxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
+		taxGroupDvSelect.setValue(investmentTransactionVO.getDefaultTaxGroupIdValueVO());
 		formLayout.addFormItem(taxGroupDvSelect, "Tax Group");
 		
 		saveButton = new Button("Save");
@@ -395,7 +398,7 @@ public class OperationView extends Div {
 	}
 	
 	private void handleInvest(FormLayout formLayout) {
-		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect;
+		Select<IdValueVO> investorDvSelect, productProviderDvSelect, providerBranchSelect, productTypeDvSelect, dematAccountDvSelect, taxabilityDvSelect, bankAccountDvSelect, defaultBankAccountDvSelect, defaultTaxGroupDvSelect;
 		TextField productIdOfProviderTextField, investorIdWithProviderTextField, productNameTextField, investmentIdWithProviderTextField;
 		RadioButtonGroup<String> accrualApplicabilityRadioButtonGroup, dynamicReceiptPeriodicityRadioButtonGroup;
 		NumberField rateOfInterestNumberField, faceValueNumberField, cleanPriceNumberField, accruedInterestNumberField, chargesNumberField, unitsNumberField;
@@ -471,6 +474,12 @@ public class OperationView extends Div {
 		investmentEndDatePicker = new DatePicker();
 		hLayout.add(investmentStartDatePicker, investmentEndDatePicker);
 		
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Returns Default");
+		defaultBankAccountDvSelect = newDvSelect("Bank Account", Constants.CATEGORY_ACCOUNT, true);
+		defaultTaxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
+		hLayout.add(defaultBankAccountDvSelect, defaultTaxGroupDvSelect);
+
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Schedule");
 		paymentScheduleVOList = new ArrayList<ScheduleVO>();
@@ -560,7 +569,10 @@ public class OperationView extends Div {
 						paymentScheduleVOList,
 						receiptScheduleVOList,
 						(dynamicReceiptPeriodicityRadioButtonGroup.getValue().equals("Not Applicable") ? null : 'Y'),
-						accrualScheduleVOList);
+						accrualScheduleVOList,
+						defaultBankAccountDvSelect.getValue() == null ? null : defaultBankAccountDvSelect.getValue().getId(),
+						defaultTaxGroupDvSelect.getValue() == null ? null : defaultTaxGroupDvSelect.getValue().getId()
+						);
 				try {
 					moneyTransactionService.invest(investVO);
 					paymentScheduleVOList.clear();
