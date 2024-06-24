@@ -15,12 +15,16 @@ import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestVO;
 import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
+import org.sakuram.persmony.valueobject.DueRealisationVO;
 import org.sakuram.persmony.valueobject.DuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
+import org.sakuram.persmony.valueobject.RetrieveAccrualsRealisationsRequestVO;
+import org.sakuram.persmony.valueobject.RetrieveAccrualsRealisationsResponseVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationVO;
 import org.sakuram.persmony.valueobject.TransferVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
+import org.sakuram.persmony.valueobject.UpdateTaxDetailRequestVO;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
@@ -33,6 +37,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
@@ -82,6 +87,7 @@ public class OperationView extends Div {
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(6, "New Receipt + Single Realisation With Bank"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(7, "New Payment + Single Realisation With Bank"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(8, "Transfer"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(9, "Update Tax Detail"));
 			}
 		};
 		selectSpan = new Span();
@@ -125,6 +131,9 @@ public class OperationView extends Div {
 	            	break;
 	            case 8:
 	            	handleTransfer(formLayout);
+	            	break;
+	            case 9:
+	            	handleUpdateTaxDetail(formLayout);
 	            	break;
 	            }
 			} catch (Exception e) {
@@ -247,9 +256,13 @@ public class OperationView extends Div {
 			formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
 		}
 		
-		taxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
-		taxGroupDvSelect.setValue(investmentTransactionVO.getDefaultTaxGroupIdValueVO());
-		formLayout.addFormItem(taxGroupDvSelect, "Tax Group");
+		if (investmentTransactionVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+			taxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
+			taxGroupDvSelect.setValue(investmentTransactionVO.getDefaultTaxGroupIdValueVO());
+			formLayout.addFormItem(taxGroupDvSelect, "Tax Group");
+		} else {
+			taxGroupDvSelect = null;
+		}
 		
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
@@ -302,7 +315,7 @@ public class OperationView extends Div {
 						Date.valueOf(transactionDatePicker.getValue()),
 						lastRealisationCheckbox.getValue() == null || !lastRealisationCheckbox.getValue() ? false : true,
 						closureTypeDvSelect.getValue() == null? null : closureTypeDvSelect.getValue().getId(),
-						taxGroupDvSelect.getValue() == null? null : taxGroupDvSelect.getValue().getId());
+						(taxGroupDvSelect == null || taxGroupDvSelect.getValue() == null)? null : taxGroupDvSelect.getValue().getId());
 				try {
 					moneyTransactionService.realisation(singleRealisationVO);
 					notification = Notification.show("Realistion Saved Successfully.");
@@ -863,6 +876,241 @@ public class OperationView extends Div {
 					accrualScheduleButton.setText("Accrual (0)");
 					notification = Notification.show("Dues Added Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				} catch (Exception e) {
+					showError(UtilFuncs.messageFromException(e));
+				}
+			} finally {
+				saveButton.setEnabled(true);
+			}
+		});
+	}
+	
+	private void handleUpdateTaxDetail(FormLayout parentFormLayout) {
+		HorizontalLayout hLayout;
+		IntegerField financialYearStartIntegerField;
+		Select<IdValueVO> investorDvSelect, productProviderDvSelect;
+		FormLayout formLayout;
+		RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisationsResponseVO;
+		Button proceedButton;
+		Checkbox noTaxDetailAvailableCheckbox;	// Tax details not available in any of Form16A, Form26AS, AIS
+		
+		retrieveAccrualsRealisationsResponseVO = new RetrieveAccrualsRealisationsResponseVO();
+		
+		// UI Elements
+		hLayout = new HorizontalLayout();
+		parentFormLayout.addFormItem(hLayout, "Search Criteria");
+
+		financialYearStartIntegerField = new IntegerField();
+		financialYearStartIntegerField.setLabel("FY Start Year");
+		hLayout.add(financialYearStartIntegerField);
+		investorDvSelect = newDvSelect("Investor", Constants.CATEGORY_INVESTOR, true);
+		hLayout.add(investorDvSelect);
+		productProviderDvSelect = newDvSelect("Provider", Constants.CATEGORY_PARTY, true);
+		hLayout.add(productProviderDvSelect);		
+		noTaxDetailAvailableCheckbox = new Checkbox("No tax detail available");
+		hLayout.add(noTaxDetailAvailableCheckbox);
+		noTaxDetailAvailableCheckbox.setValue(false);
+		proceedButton = new Button("Proceed");
+		hLayout.add(proceedButton);
+		proceedButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		proceedButton.setDisableOnClick(true);
+		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		parentFormLayout.add(formLayout);
+		
+		financialYearStartIntegerField.addValueChangeListener(event -> {
+			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+		});
+		
+		investorDvSelect.addValueChangeListener(event -> {
+			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+		});
+		
+		productProviderDvSelect.addValueChangeListener(event -> {
+			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+		});
+		
+		proceedButton.addClickListener(event -> {
+			try {
+				Notification notification;
+				formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+				if (financialYearStartIntegerField.getValue() == null) {
+					showError("Provide the Start year of the FY");
+					return;
+				} else {
+					try {
+						RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisationsResponseVOL;
+						retrieveAccrualsRealisationsResponseVOL = moneyTransactionService.retrieveAccrualsRealisations(
+								new RetrieveAccrualsRealisationsRequestVO(
+									financialYearStartIntegerField.getValue(),
+									investorDvSelect.getValue() == null ? null : investorDvSelect.getValue().getId(),
+									productProviderDvSelect.getValue() == null ? null : productProviderDvSelect.getValue().getId(),
+									noTaxDetailAvailableCheckbox.getValue() == null ? false : noTaxDetailAvailableCheckbox.getValue())
+								);
+						retrieveAccrualsRealisationsResponseVOL.copyTo(retrieveAccrualsRealisationsResponseVO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
+						handleUpdateTaxDetail2(formLayout, retrieveAccrualsRealisationsResponseVO);
+					} catch (Exception e) {
+						showError(UtilFuncs.messageFromException(e));
+						return;
+					}
+					notification = Notification.show("No. of accruals / receipts fetched: " + retrieveAccrualsRealisationsResponseVO.getDueRealisationVOList().size());
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				}
+			} finally {
+				proceedButton.setEnabled(true);
+			}
+		});
+	}
+	
+	private void handleUpdateTaxDetail2(FormLayout formLayout, RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisationsResponseVO) {
+		Grid<DueRealisationVO> accrualsRealisationsGrid;
+		GridListDataView<DueRealisationVO> accrualsRealisationsGridLDV;
+		FormLayout childFormLayout;
+		
+		accrualsRealisationsGrid = new Grid<>(DueRealisationVO.class);
+		accrualsRealisationsGrid.setColumns("investmentId", "investor", "productProvider", "investmentIdWithProvider", "productType", "worth", "investmentTransactionId", "transactionType", "dueDate", "dueAmount", "investmentTransactionInterestAmount", "investmentTransactionTdsAmount", "accrualTdsReference", "investmentTransactionInAis", "investmentTransactionForm26asBookingDate", "realisationId", "realisationDate", "realisationAmount", "realisationInterestAmount", "realisationTdsAmount", "realisationTdsReference", "realisationInAis", "realisationForm26asBookingDate");
+		for (Column<DueRealisationVO> column : accrualsRealisationsGrid.getColumns()) {
+			column.setResizable(true);
+		}
+		formLayout.add(accrualsRealisationsGrid);
+		accrualsRealisationsGridLDV = accrualsRealisationsGrid.setItems(retrieveAccrualsRealisationsResponseVO.getDueRealisationVOList());
+		
+		childFormLayout = new FormLayout();
+		childFormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		formLayout.add(childFormLayout);
+		
+		accrualsRealisationsGrid.addItemClickListener(event -> {
+			DueRealisationVO selectedDueRealisationVO;
+			
+			selectedDueRealisationVO = event.getItem();
+			
+			childFormLayout.remove(childFormLayout.getChildren().collect(Collectors.toList()));
+			
+			handleUpdateTaxDetail3(childFormLayout, selectedDueRealisationVO, accrualsRealisationsGridLDV);
+		});
+
+	}
+	
+	private void handleUpdateTaxDetail3(FormLayout formLayout, DueRealisationVO selectedDueRealisationVO, GridListDataView<DueRealisationVO> accrualsRealisationsGridLDV) {
+		HorizontalLayout hLayout;
+		Label label1;
+		NumberField interestNumberField, tdsNumberField;
+		DatePicker accountedDatePicker, form26asBookingDatePicker;
+		TextField form16aCertificateTextField;
+		Checkbox inAisCheckbox;
+		Button saveButton;
+		long id;
+		
+		id = selectedDueRealisationVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? selectedDueRealisationVO.getInvestmentTransactionId() : selectedDueRealisationVO.getRealisationId();
+		// UI Elements
+		label1 = new Label();
+		formLayout.addFormItem(label1, "Tax Details of");
+		label1.getElement().setProperty("innerHTML", "<b>" + selectedDueRealisationVO.getTransactionType()
+				+ "</b> id <b>"
+				+ id
+				+ "</b>");
+		
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Amount");
+		interestNumberField = new NumberField("Interest");
+		hLayout.add(interestNumberField);
+		tdsNumberField = new NumberField("TDS");
+		hLayout.add(tdsNumberField);
+		accountedDatePicker = new DatePicker("Accounted Date");
+		hLayout.add(accountedDatePicker);
+		
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Tax Detail");
+		form26asBookingDatePicker = new DatePicker("Form 26AS Booking Date");
+		hLayout.add(form26asBookingDatePicker);
+		form16aCertificateTextField = new TextField("Form 16A Certificate");
+		hLayout.add(form16aCertificateTextField);
+		inAisCheckbox = new Checkbox("In AIS");
+		inAisCheckbox.setValue(false);
+		hLayout.add(inAisCheckbox);
+    	if (selectedDueRealisationVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+    		if (selectedDueRealisationVO.getInvestmentTransactionInterestAmount() != null) {
+    			interestNumberField.setValue(selectedDueRealisationVO.getInvestmentTransactionInterestAmount());
+    		}
+    		if (selectedDueRealisationVO.getInvestmentTransactionTdsAmount() != null) {
+    			tdsNumberField.setValue(selectedDueRealisationVO.getInvestmentTransactionTdsAmount());
+    		}
+    		if (selectedDueRealisationVO.getDueDate() != null) {
+        		accountedDatePicker.setValue(selectedDueRealisationVO.getDueDate().toLocalDate());    			
+    		}
+    		if (selectedDueRealisationVO.getInvestmentTransactionForm26asBookingDate() != null) {
+        		form26asBookingDatePicker.setValue(selectedDueRealisationVO.getInvestmentTransactionForm26asBookingDate().toLocalDate());
+    		}
+    		if (selectedDueRealisationVO.getAccrualTdsReference() != null) {
+    			form16aCertificateTextField.setValue(selectedDueRealisationVO.getAccrualTdsReference());
+    		}
+    		if (selectedDueRealisationVO.getInvestmentTransactionInAis() != null) {
+    			inAisCheckbox.setValue(selectedDueRealisationVO.getInvestmentTransactionInAis());
+    		}
+    	} else {
+    		if (selectedDueRealisationVO.getRealisationInterestAmount() != null) {    			
+    			interestNumberField.setValue(selectedDueRealisationVO.getRealisationInterestAmount());
+    		}
+    		if (selectedDueRealisationVO.getRealisationTdsAmount() != null) {
+    			tdsNumberField.setValue(selectedDueRealisationVO.getRealisationTdsAmount());
+    		}
+    		if (selectedDueRealisationVO.getRealisationDate() != null) {
+    			accountedDatePicker.setValue(selectedDueRealisationVO.getRealisationDate().toLocalDate());
+    		}
+    		if (selectedDueRealisationVO.getRealisationForm26asBookingDate() != null) {
+    			form26asBookingDatePicker.setValue(selectedDueRealisationVO.getRealisationForm26asBookingDate().toLocalDate());
+    		}
+    		if (selectedDueRealisationVO.getRealisationTdsReference() != null) {
+    			form16aCertificateTextField.setValue(selectedDueRealisationVO.getRealisationTdsReference());
+    		}
+    		if (selectedDueRealisationVO.getRealisationInAis() != null) {
+    			inAisCheckbox.setValue(selectedDueRealisationVO.getRealisationInAis());
+    		}
+    	}
+		
+		saveButton = new Button("Save");
+		formLayout.add(saveButton);
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setDisableOnClick(true);
+		// On click of Save
+		saveButton.addClickListener(event -> {
+			Notification notification;
+
+			try {
+				UpdateTaxDetailRequestVO updateTaxDetailRequestVO;
+				// Back-end Call
+				try {
+					updateTaxDetailRequestVO = new UpdateTaxDetailRequestVO(
+							id,
+							selectedDueRealisationVO.getTransactionTypeDvId(),
+							accountedDatePicker.getValue() == null ? null : Date.valueOf(accountedDatePicker.getValue()),
+							interestNumberField.getValue() == null ? null : interestNumberField.getValue().doubleValue(),
+							tdsNumberField.getValue() == null ? null : tdsNumberField.getValue().doubleValue(),
+							form16aCertificateTextField.getValue().equals("") ? null : form16aCertificateTextField.getValue(),
+							inAisCheckbox.getValue(),
+							form26asBookingDatePicker.getValue() == null ? null : Date.valueOf(form26asBookingDatePicker.getValue())
+							);
+							
+					moneyTransactionService.updateTaxDetail(updateTaxDetailRequestVO);
+					notification = Notification.show("Realistion Saved Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+			    	if (selectedDueRealisationVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+			    		selectedDueRealisationVO.setDueDate(updateTaxDetailRequestVO.getAccountedDate());
+			    		selectedDueRealisationVO.setInvestmentTransactionInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
+			    		selectedDueRealisationVO.setInvestmentTransactionTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
+			    		selectedDueRealisationVO.setAccrualTdsReference(updateTaxDetailRequestVO.getTdsReference());
+			    		selectedDueRealisationVO.setInvestmentTransactionInAis(updateTaxDetailRequestVO.getInAis());
+			    		selectedDueRealisationVO.setInvestmentTransactionForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
+			    	} else {
+			    		selectedDueRealisationVO.setRealisationDate(updateTaxDetailRequestVO.getAccountedDate());
+			    		selectedDueRealisationVO.setRealisationInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
+			    		selectedDueRealisationVO.setRealisationTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
+			    		selectedDueRealisationVO.setRealisationTdsReference(updateTaxDetailRequestVO.getTdsReference());
+			    		selectedDueRealisationVO.setRealisationInAis(updateTaxDetailRequestVO.getInAis());
+			    		selectedDueRealisationVO.setRealisationForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
+			    	}
+					accrualsRealisationsGridLDV.refreshItem(selectedDueRealisationVO);
 				} catch (Exception e) {
 					showError(UtilFuncs.messageFromException(e));
 				}

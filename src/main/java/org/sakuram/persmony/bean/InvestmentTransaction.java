@@ -46,6 +46,9 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	@Column(name="due_date", nullable=true)
 	private Date dueDate;
 	
+	@Column(name="accounted_transaction_date", nullable=true)
+	private Date accountedTransactionDate;
+	
 	@Column(name="due_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double dueAmount;
 	
@@ -68,6 +71,12 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	@ManyToOne
 	@JoinColumn(name="tax_group_fk", nullable=true)
 	private DomainValue taxGroup;	/* Only for Receipts; Overrides Investment */
+	
+	@Column(name="in_ais", nullable=true)
+	private Boolean inAis;
+	
+	@Column(name="form26as_booking_date", nullable=true)
+	private Date form26asBookingDate;
 	
 	@Column(name="assessment_year", nullable=true, precision=4, scale=0)
 	private BigDecimal assessmentYear;	/* Why not Short? */

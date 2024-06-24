@@ -1,6 +1,7 @@
 package org.sakuram.persmony.service;
 
 import java.sql.Date;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,12 +26,16 @@ import org.sakuram.persmony.valueobject.InvestmentDetailsVO;
 import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
 import org.sakuram.persmony.valueobject.DuesVO;
+import org.sakuram.persmony.valueobject.DueRealisationVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
+import org.sakuram.persmony.valueobject.RetrieveAccrualsRealisationsRequestVO;
+import org.sakuram.persmony.valueobject.RetrieveAccrualsRealisationsResponseVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
 import org.sakuram.persmony.valueobject.SingleRealisationVO;
 import org.sakuram.persmony.valueobject.TransferVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
+import org.sakuram.persmony.valueobject.UpdateTaxDetailRequestVO;
 
 @Service
 @Transactional
@@ -546,6 +551,58 @@ public class MoneyTransactionService {
     	return investmentDetailsVO;
     }
 	
+    public RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisations(RetrieveAccrualsRealisationsRequestVO retrieveAccrualsRealisationsRequestVO) throws ParseException{
+    	RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisationsResponseVO;
+    	List<DueRealisationVO> dueRealisationVOList;
+    	
+    	retrieveAccrualsRealisationsResponseVO = new RetrieveAccrualsRealisationsResponseVO();
+    	dueRealisationVOList = new ArrayList<DueRealisationVO>();
+    	retrieveAccrualsRealisationsResponseVO.setDueRealisationVOList(dueRealisationVOList);
+    	for(Object[] record : realisationRepository.retrieveAccrualsRealisations(
+    			new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(retrieveAccrualsRealisationsRequestVO.getFyStartYear() + "-04-01").getTime()),
+    			new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((retrieveAccrualsRealisationsRequestVO.getFyStartYear() + 1) + "-03-31").getTime()),
+    			retrieveAccrualsRealisationsRequestVO.getInvestorDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getInvestorDvId(),
+    			retrieveAccrualsRealisationsRequestVO.getProductProviderDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getProductProviderDvId(),
+    			retrieveAccrualsRealisationsRequestVO.isNoTaxDetailAvailable())) {
+    		dueRealisationVOList.add(new DueRealisationVO(record));
+    		
+    	}
+    	return retrieveAccrualsRealisationsResponseVO;
+    }
+    
+    public void updateTaxDetail(UpdateTaxDetailRequestVO updateTaxDetailRequestVO) {
+    	if (updateTaxDetailRequestVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+    		InvestmentTransaction investmentTransaction;
+    		investmentTransaction = investmentTransactionRepository.findById(updateTaxDetailRequestVO.getId())
+    				.orElseThrow(() -> new AppException("Invalid Investment Transaction Id " + updateTaxDetailRequestVO.getId(), null));
+    		if (investmentTransaction.getDueDate().equals(updateTaxDetailRequestVO.getAccountedDate())) {
+	    		investmentTransaction.setAccountedTransactionDate(null);
+    		} else {
+	    		investmentTransaction.setAccountedTransactionDate(updateTaxDetailRequestVO.getAccountedDate());
+	    	}
+    		investmentTransaction.setInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
+    		investmentTransaction.setTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
+    		investmentTransaction.setAccrualTdsReference(updateTaxDetailRequestVO.getTdsReference());
+    		investmentTransaction.setInAis(updateTaxDetailRequestVO.getInAis());
+    		investmentTransaction.setForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
+    	} else {
+    		Realisation realisation;
+    		realisation = realisationRepository.findById(updateTaxDetailRequestVO.getId())
+    				.orElseThrow(() -> new AppException("Invalid Realisation Id " + updateTaxDetailRequestVO.getId(), null));
+    		if (realisation.getRealisationDate().equals(updateTaxDetailRequestVO.getAccountedDate())) {
+    			realisation.setAccountedRealisationDate(null);
+    		} else {
+    			realisation.setAccountedRealisationDate(updateTaxDetailRequestVO.getAccountedDate());
+	    	}
+    		realisation.setInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
+    		realisation.setTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
+    		realisation.setTdsReference(updateTaxDetailRequestVO.getTdsReference());
+    		realisation.setInAis(updateTaxDetailRequestVO.getInAis());
+    		realisation.setForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
+    	}
+    	
+    }
+    
 	private void saveSchedule(List<ScheduleVO> scheduleVOList, Investment investment, long transactionType) {
 		InvestmentTransaction invesmentTransaction;
 		for(ScheduleVO scheduleVO : scheduleVOList) {

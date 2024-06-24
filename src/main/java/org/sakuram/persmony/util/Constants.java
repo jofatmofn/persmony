@@ -3,11 +3,15 @@ package org.sakuram.persmony.util;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
 
 public class Constants {
+
+	public static final DateFormat ANSI_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
 	public static final String CATEGORY_INVESTOR = "Invstr";
 	public static final String CATEGORY_PARTY = "Party"; /* Product Provider, Facilitator */

@@ -35,6 +35,9 @@ public class Realisation {
 	@Column(name="realisation_date", nullable=true)
 	private Date realisationDate;
 	
+	@Column(name="accounted_realisation_date", nullable=true)
+	private Date accountedRealisationDate;
+	
 	@ManyToOne
 	@JoinColumn(name="realisation_type_fk", nullable=true)
 	private DomainValue realisationType;
@@ -56,6 +59,12 @@ public class Realisation {
 	
 	@Column(name="tds_reference", length=31, nullable=true)
 	private String tdsReference;
+	
+	@Column(name="in_ais", nullable=true)
+	private Boolean inAis;
+	
+	@Column(name="form26as_booking_date", nullable=true)
+	private Date Form26asBookingDate;
 	
 	public Realisation(InvestmentTransaction investmentTransaction, Date realisationDate, DomainValue realisationType, Long detailsReference, Double amount, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount) {
 		this.investmentTransaction = investmentTransaction;
