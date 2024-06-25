@@ -563,7 +563,8 @@ public class MoneyTransactionService {
     			new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((retrieveAccrualsRealisationsRequestVO.getFyStartYear() + 1) + "-03-31").getTime()),
     			retrieveAccrualsRealisationsRequestVO.getInvestorDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getInvestorDvId(),
     			retrieveAccrualsRealisationsRequestVO.getProductProviderDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getProductProviderDvId(),
-    			retrieveAccrualsRealisationsRequestVO.isNoTaxDetailAvailable())) {
+    			retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInForm26as(),
+				retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInAis())) {
     		dueRealisationVOList.add(new DueRealisationVO(record));
     		
     	}

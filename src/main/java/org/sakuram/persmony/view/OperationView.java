@@ -887,12 +887,13 @@ public class OperationView extends Div {
 	
 	private void handleUpdateTaxDetail(FormLayout parentFormLayout) {
 		HorizontalLayout hLayout;
+		VerticalLayout vLayout;
 		IntegerField financialYearStartIntegerField;
 		Select<IdValueVO> investorDvSelect, productProviderDvSelect;
 		FormLayout formLayout;
 		RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisationsResponseVO;
 		Button proceedButton;
-		Checkbox noTaxDetailAvailableCheckbox;	// Tax details not available in any of Form16A, Form26AS, AIS
+		Checkbox taxDetailNotInForm26asCheckbox, taxDetailNotInAisCheckbox;
 		
 		retrieveAccrualsRealisationsResponseVO = new RetrieveAccrualsRealisationsResponseVO();
 		
@@ -906,10 +907,14 @@ public class OperationView extends Div {
 		investorDvSelect = newDvSelect("Investor", Constants.CATEGORY_INVESTOR, true);
 		hLayout.add(investorDvSelect);
 		productProviderDvSelect = newDvSelect("Provider", Constants.CATEGORY_PARTY, true);
-		hLayout.add(productProviderDvSelect);		
-		noTaxDetailAvailableCheckbox = new Checkbox("No tax detail available");
-		hLayout.add(noTaxDetailAvailableCheckbox);
-		noTaxDetailAvailableCheckbox.setValue(false);
+		hLayout.add(productProviderDvSelect);
+		vLayout = new VerticalLayout();
+		vLayout.setPadding(false);
+		hLayout.add(vLayout);
+		taxDetailNotInForm26asCheckbox = new Checkbox("Not In Form 26AS");
+		vLayout.add(taxDetailNotInForm26asCheckbox);
+		taxDetailNotInAisCheckbox = new Checkbox("Not In AIS");
+		vLayout.add(taxDetailNotInAisCheckbox);
 		proceedButton = new Button("Proceed");
 		hLayout.add(proceedButton);
 		proceedButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -946,7 +951,8 @@ public class OperationView extends Div {
 									financialYearStartIntegerField.getValue(),
 									investorDvSelect.getValue() == null ? null : investorDvSelect.getValue().getId(),
 									productProviderDvSelect.getValue() == null ? null : productProviderDvSelect.getValue().getId(),
-									noTaxDetailAvailableCheckbox.getValue() == null ? false : noTaxDetailAvailableCheckbox.getValue())
+									taxDetailNotInForm26asCheckbox.getValue() == null ? false : taxDetailNotInForm26asCheckbox.getValue(),
+									taxDetailNotInAisCheckbox.getValue() == null ? false : taxDetailNotInAisCheckbox.getValue())
 								);
 						retrieveAccrualsRealisationsResponseVOL.copyTo(retrieveAccrualsRealisationsResponseVO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
 						handleUpdateTaxDetail2(formLayout, retrieveAccrualsRealisationsResponseVO);

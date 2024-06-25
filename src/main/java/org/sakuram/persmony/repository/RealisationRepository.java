@@ -27,10 +27,11 @@ public interface RealisationRepository extends JpaRepository<Realisation, Long> 
 			+ "	AND COALESCE(COALESCE(R.accounted_realisation_date,R.realisation_date), IT.due_date) BETWEEN :#{#fromDate} AND :#{#toDate}"
 			+ " AND CASE WHEN (:#{#investorId} = -1) THEN TRUE ELSE I.investor_fk = :#{#investorId} END"
 			+ " AND CASE WHEN (:#{#productProviderId} = -1) THEN TRUE ELSE I.product_provider_fk = :#{#productProviderId} END"
-			+ " AND (NOT :#{#noTaxDetailAvailable} OR ((IT.transaction_type_fk = 73 AND NOT COALESCE(R.in_ais, false) AND R.form26as_booking_date IS NULL)"
-			+ "		OR (IT.transaction_type_fk = 74 AND NOT COALESCE(IT.in_ais, false) AND IT.form26as_booking_date IS NULL)))"
-			// + " AND (I.product_provider_fk = :#{#productProviderId} OR :#{#productProviderId} IS NULL)"
+			+ " AND (NOT :#{#taxDetailNotInForm26as} OR (IT.transaction_type_fk = 73 AND R.form26as_booking_date IS NULL)"
+			+ "		OR (IT.transaction_type_fk = 74 AND IT.form26as_booking_date IS NULL))"
+			+ " AND (NOT :#{#taxDetailNotInAis} OR (IT.transaction_type_fk = 73 AND NOT COALESCE(R.in_ais, false))"
+			+ "		OR (IT.transaction_type_fk = 74 AND NOT COALESCE(IT.in_ais, false)))"
 			+ " ORDER BY I.product_provider_fk, IT.due_date DESC")
-	public List<Object[]> retrieveAccrualsRealisations(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") Long investorId, @Param("productProviderId") Long productProviderId, @Param("noTaxDetailAvailable") boolean noTaxDetailAvailable);
+	public List<Object[]> retrieveAccrualsRealisations(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") Long investorId, @Param("productProviderId") Long productProviderId, @Param("taxDetailNotInForm26as") boolean taxDetailNotInForm26as, @Param("taxDetailNotInAis") boolean taxDetailNotInAis);
 	
 }
