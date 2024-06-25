@@ -975,7 +975,7 @@ public class OperationView extends Div {
 		FormLayout childFormLayout;
 		
 		accrualsRealisationsGrid = new Grid<>(DueRealisationVO.class);
-		accrualsRealisationsGrid.setColumns("investmentId", "investor", "productProvider", "investmentIdWithProvider", "productType", "worth", "investmentTransactionId", "transactionType", "dueDate", "dueAmount", "investmentTransactionInterestAmount", "investmentTransactionTdsAmount", "accrualTdsReference", "investmentTransactionInAis", "investmentTransactionForm26asBookingDate", "realisationId", "realisationDate", "realisationAmount", "realisationInterestAmount", "realisationTdsAmount", "realisationTdsReference", "realisationInAis", "realisationForm26asBookingDate");
+		accrualsRealisationsGrid.setColumns("investmentId", "investor", "productProvider", "investmentIdWithProvider", "productType", "worth", "investmentTransactionId", "transactionType", "taxGroup", "dueDate", "dueAmount", "investmentTransactionInterestAmount", "investmentTransactionTdsAmount", "accrualTdsReference", "investmentTransactionInAis", "investmentTransactionForm26asBookingDate", "realisationId", "realisationDate", "realisationAmount", "realisationInterestAmount", "realisationTdsAmount", "realisationTdsReference", "realisationInAis", "realisationForm26asBookingDate");
 		for (Column<DueRealisationVO> column : accrualsRealisationsGrid.getColumns()) {
 			column.setResizable(true);
 		}

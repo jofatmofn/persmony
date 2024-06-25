@@ -20,6 +20,7 @@ public class DueRealisationVO {
 	long investmentTransactionId;
 	long transactionTypeDvId;
 	String transactionType;
+	String taxGroup;
 	Date dueDate;
 	Double dueAmount;
 	Double investmentTransactionInterestAmount;
@@ -38,32 +39,34 @@ public class DueRealisationVO {
 	Date realisationForm26asBookingDate;
 	
 	public DueRealisationVO(Object[] record) {
-		investmentId = ((BigInteger) record[0]).longValue();
-		investor = (String) record[1];
-		productProvider = (String) record[2];
-		investmentIdWithProvider = (String) record[3];
-		productType = (String) record[4];
-		worth = record[5] == null ? null : ((BigDecimal) record[5]).doubleValue();
+		int colPos = 0;
+		investmentId = ((BigInteger) record[colPos++]).longValue();
+		investor = (String) record[colPos++];
+		productProvider = (String) record[colPos++];
+		investmentIdWithProvider = (String) record[colPos++];
+		productType = (String) record[colPos++];
+		worth = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
 		
-		investmentTransactionId = ((BigInteger) record[6]).longValue();
-		transactionTypeDvId = ((BigInteger) record[7]).longValue();
-		transactionType = (String) record[8];
-		dueDate = (Date) record[9];
-		dueAmount = record[10] == null ? null : ((BigDecimal) record[10]).doubleValue();
-		investmentTransactionInterestAmount = record[11] == null ? null : ((BigDecimal) record[11]).doubleValue();
-		investmentTransactionTdsAmount = record[12] == null ? null : ((BigDecimal) record[12]).doubleValue();
-		accrualTdsReference = (String) record[13];
-		investmentTransactionInAis = (Boolean) record[14];
-		investmentTransactionForm26asBookingDate = (Date) record[15];
+		investmentTransactionId = ((BigInteger) record[colPos++]).longValue();
+		transactionTypeDvId = ((BigInteger) record[colPos++]).longValue();
+		transactionType = (String) record[colPos++];
+		taxGroup = (String) record[colPos++];
+		dueDate = (Date) record[colPos++];
+		dueAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
+		investmentTransactionInterestAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
+		investmentTransactionTdsAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
+		accrualTdsReference = (String) record[colPos++];
+		investmentTransactionInAis = (Boolean) record[colPos++];
+		investmentTransactionForm26asBookingDate = (Date) record[colPos++];
 		
-		realisationId = record[16] == null ? null : ((BigInteger) record[16]).longValue();;
-		realisationDate = (Date) record[17];
-		realisationAmount = record[18] == null ? null : ((BigDecimal) record[18]).doubleValue();
-		realisationInterestAmount = record[19] == null ? null : ((BigDecimal) record[19]).doubleValue();
-		realisationTdsAmount = record[20] == null ? null : ((BigDecimal) record[20]).doubleValue();
-		realisationTdsReference = (String) record[21];
-		realisationInAis = (Boolean) record[22];
-		realisationForm26asBookingDate = (Date) record[23];
+		realisationId = record[colPos] == null ? null : ((BigInteger) record[colPos]).longValue(); colPos++;
+		realisationDate = (Date) record[colPos++];
+		realisationAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
+		realisationInterestAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
+		realisationTdsAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
+		realisationTdsReference = (String) record[colPos++];
+		realisationInAis = (Boolean) record[colPos++];
+		realisationForm26asBookingDate = (Date) record[colPos++];
 	}
 	
 	@Override
