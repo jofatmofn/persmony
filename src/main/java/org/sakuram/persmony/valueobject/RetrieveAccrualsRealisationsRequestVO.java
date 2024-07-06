@@ -12,4 +12,6 @@ public class RetrieveAccrualsRealisationsRequestVO {
 	Long productProviderDvId;
 	boolean taxDetailNotInForm26as;
 	boolean taxDetailNotInAis;
+	boolean interestAvailable;
+	boolean tdsAvailable;
 }

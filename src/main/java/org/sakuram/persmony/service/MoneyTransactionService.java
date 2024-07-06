@@ -564,7 +564,9 @@ public class MoneyTransactionService {
     			retrieveAccrualsRealisationsRequestVO.getInvestorDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getInvestorDvId(),
     			retrieveAccrualsRealisationsRequestVO.getProductProviderDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getProductProviderDvId(),
     			retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInForm26as(),
-				retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInAis())) {
+				retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInAis(),
+				retrieveAccrualsRealisationsRequestVO.isInterestAvailable(),
+				retrieveAccrualsRealisationsRequestVO.isTdsAvailable())) {
     		dueRealisationVOList.add(new DueRealisationVO(record));
     		
     	}

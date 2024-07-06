@@ -893,7 +893,7 @@ public class OperationView extends Div {
 		FormLayout formLayout;
 		RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisationsResponseVO;
 		Button proceedButton;
-		Checkbox taxDetailNotInForm26asCheckbox, taxDetailNotInAisCheckbox;
+		Checkbox taxDetailNotInForm26asCheckbox, taxDetailNotInAisCheckbox, interestAvailableCheckbox, tdsAvailableCheckbox;
 		
 		retrieveAccrualsRealisationsResponseVO = new RetrieveAccrualsRealisationsResponseVO();
 		
@@ -915,6 +915,13 @@ public class OperationView extends Div {
 		vLayout.add(taxDetailNotInForm26asCheckbox);
 		taxDetailNotInAisCheckbox = new Checkbox("Not In AIS");
 		vLayout.add(taxDetailNotInAisCheckbox);
+		vLayout = new VerticalLayout();
+		vLayout.setPadding(false);
+		hLayout.add(vLayout);
+		interestAvailableCheckbox = new Checkbox("With Interest");
+		vLayout.add(interestAvailableCheckbox);
+		tdsAvailableCheckbox = new Checkbox("With TDS");
+		vLayout.add(tdsAvailableCheckbox);
 		proceedButton = new Button("Proceed");
 		hLayout.add(proceedButton);
 		proceedButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -952,7 +959,9 @@ public class OperationView extends Div {
 									investorDvSelect.getValue() == null ? null : investorDvSelect.getValue().getId(),
 									productProviderDvSelect.getValue() == null ? null : productProviderDvSelect.getValue().getId(),
 									taxDetailNotInForm26asCheckbox.getValue() == null ? false : taxDetailNotInForm26asCheckbox.getValue(),
-									taxDetailNotInAisCheckbox.getValue() == null ? false : taxDetailNotInAisCheckbox.getValue())
+									taxDetailNotInAisCheckbox.getValue() == null ? false : taxDetailNotInAisCheckbox.getValue(),
+									interestAvailableCheckbox.getValue() == null ? false : interestAvailableCheckbox.getValue(),
+									tdsAvailableCheckbox.getValue() == null ? false : tdsAvailableCheckbox.getValue())
 								);
 						retrieveAccrualsRealisationsResponseVOL.copyTo(retrieveAccrualsRealisationsResponseVO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
 						handleUpdateTaxDetail2(formLayout, retrieveAccrualsRealisationsResponseVO);
