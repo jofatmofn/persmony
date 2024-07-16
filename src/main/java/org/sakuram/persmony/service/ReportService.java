@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.ObjectUtils;
+import org.javatuples.Pair;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.bean.Realisation;
@@ -112,19 +113,19 @@ public class ReportService {
 	
 	public List<List<Object[]>> listTransactions(List<Object[]> recordList) {
 		List<List<Object[]>> reportList;
-		Map<Long, Double> lastCompletedReceiptsMap;
+		Map<Long, Pair<String, Double>> lastCompletedReceiptsMap;
 		Long investmentId;
 		
 		reportList = new ArrayList<List<Object[]>>(1);
 		reportList.add(recordList);
 
 		lastCompletedReceiptsMap = fetchLastCompletedReceipts();
-		for (Object[] fields : recordList) {
+		for (Object[] fields : recordList.subList(1, recordList.size())) {
 			if (fields[7] == null) {
 				investmentId = ((BigInteger) fields[2]).longValue();
 				if (lastCompletedReceiptsMap.containsKey(investmentId)) {
-					fields[7] = lastCompletedReceiptsMap.get(investmentId);
-					fields[8] = "Last Received";
+					fields[7] = lastCompletedReceiptsMap.get(investmentId).getValue1();
+					fields[8] = lastCompletedReceiptsMap.get(investmentId).getValue0();
 				}
 			} else {
 				fields[8] = "Due";
@@ -139,7 +140,7 @@ public class ReportService {
 		List<Object[]> recordList;
 		int dataRowInd;
 		double investmentTransactionAmount, notRealisedPayment, notRealisedReceipt, notRealisedAccrual, settledAmount;
-		Map<Long, Double> lastCompletedReceiptsMap;
+		Map<Long, Pair<String, Double>> lastCompletedReceiptsMap;
 		
 		final Object headerArray[] = {"Due", "Realisation", "Investor", "Detail", "Amount"};
 		
@@ -191,7 +192,7 @@ public class ReportService {
 				}
 			} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING  && investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
 					lastCompletedReceiptsMap.containsKey(investmentTransaction.getInvestment().getId())) {
-				investmentTransactionAmount = lastCompletedReceiptsMap.get(investmentTransaction.getInvestment().getId());
+				investmentTransactionAmount = lastCompletedReceiptsMap.get(investmentTransaction.getInvestment().getId()).getValue1();
 			} else {
 				System.out.println("Skipped Investment Transaction " + investmentTransaction.getId());
 				continue;
@@ -261,16 +262,24 @@ public class ReportService {
 	 
 	}
 
-	private Map<Long, Double> fetchLastCompletedReceipts() {
-		Map<Long, Double> lastCompletedReceiptsMap;
+	private Map<Long, Pair<String, Double>> fetchLastCompletedReceipts() {
+		Map<Long, Pair<String, Double>> lastCompletedReceiptsMap;
 		List<InvestmentTransaction> lastCompletedReceiptItList;
 		RealisationVO realisationAmountSummary;
 		
 		lastCompletedReceiptItList = investmentTransactionRepository.findLastCompletedReceipts();
-		lastCompletedReceiptsMap = new HashMap<Long, Double>(lastCompletedReceiptItList.size());
+		lastCompletedReceiptsMap = new HashMap<Long, Pair<String, Double>>(lastCompletedReceiptItList.size());
 		for (InvestmentTransaction it : lastCompletedReceiptItList) {
 			realisationAmountSummary = miscService.fetchRealisationAmountSummary(it);
-			lastCompletedReceiptsMap.put(it.getInvestment().getId(), realisationAmountSummary.getInterestAmount() > 0 ? realisationAmountSummary.getInterestAmount() : it.getDueAmount());
+			lastCompletedReceiptsMap.put(it.getInvestment().getId(),
+					(realisationAmountSummary.getInterestAmount() > 0 ?
+							Pair.with("Last Interest", realisationAmountSummary.getInterestAmount()) :
+							(realisationAmountSummary.getAmount() > 0 ?
+									Pair.with("Last Credit", realisationAmountSummary.getAmount()) :
+									Pair.with("Due", it.getDueAmount())
+							)
+					)
+			);
 		}
 		
 		return lastCompletedReceiptsMap;
