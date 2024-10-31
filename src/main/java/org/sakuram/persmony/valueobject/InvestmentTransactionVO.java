@@ -12,40 +12,30 @@ import lombok.Setter;
 @NoArgsConstructor
 public class InvestmentTransactionVO {
 	long investmentTransactionId;
-	long transactionTypeDvId;
 	String transactionType;
 	Date dueDate;
 	Double dueAmount;
-	long statusDvId;
 	String status;
 	Double settledAmount;
 	Double returnedPrincipalAmount;
 	Double interestAmount;
 	Double tdsAmount;
 	String accrualTdsReference;
-	Long taxabilityDvId;
 	String taxGroup;
 	short assessmentYear;
-	IdValueVO defaultBankAccountIdValueVO;
-	IdValueVO defaultTaxGroupIdValueVO;
 	
 	public void copyTo(InvestmentTransactionVO investmentTransactionVO) {	// TODO: Do this in LOMBOK way
 		investmentTransactionVO.investmentTransactionId = this.investmentTransactionId;
-		investmentTransactionVO.transactionTypeDvId = this.transactionTypeDvId;
 		investmentTransactionVO.transactionType = this.transactionType;
 		investmentTransactionVO.dueDate = this.dueDate;
 		investmentTransactionVO.dueAmount = this.dueAmount;
-		investmentTransactionVO.statusDvId = this.statusDvId;
 		investmentTransactionVO.status = this.status;
 		investmentTransactionVO.settledAmount = this.settledAmount;
 		investmentTransactionVO.returnedPrincipalAmount = this.returnedPrincipalAmount;
 		investmentTransactionVO.interestAmount = this.interestAmount;
 		investmentTransactionVO.tdsAmount = this.tdsAmount;
 		investmentTransactionVO.accrualTdsReference = this.accrualTdsReference;
-		investmentTransactionVO.taxabilityDvId = this.taxabilityDvId;
 		investmentTransactionVO.taxGroup = this.taxGroup;
 		investmentTransactionVO.assessmentYear = this.assessmentYear;
-		investmentTransactionVO.defaultBankAccountIdValueVO = this.defaultBankAccountIdValueVO;
-		investmentTransactionVO.defaultTaxGroupIdValueVO = this.defaultTaxGroupIdValueVO;
 	}
 }

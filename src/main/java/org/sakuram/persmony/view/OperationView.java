@@ -14,7 +14,7 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestVO;
-import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
+import org.sakuram.persmony.valueobject.InvestmentTransaction2VO;
 import org.sakuram.persmony.valueobject.DueRealisationVO;
 import org.sakuram.persmony.valueobject.DuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
@@ -152,39 +152,83 @@ public class OperationView extends Div {
 	private void handleRealisation(FormLayout parentFormLayout) {
 		IntegerField investmentTransactionIdIntegerField;
 		Select<IdValueVO> realisationTypeDvSelect;
-		FormLayout formLayout;
-		InvestmentTransactionVO investmentTransactionVO;
+		HorizontalLayout topPaneHorizontalLayout;
+		FormLayout inFields1FormLayout, inFields2FormLayout, outFields1FormLayout, outFields2FormLayout, outFields3FormLayout;
+		InvestmentTransaction2VO investmentTransaction2VO;
 		Button proceedButton;
 		
-		investmentTransactionVO = new InvestmentTransactionVO();
+		investmentTransaction2VO = new InvestmentTransaction2VO();
+		
+		topPaneHorizontalLayout = new HorizontalLayout();
+		parentFormLayout.add(topPaneHorizontalLayout);
 		
 		// UI Elements
+		inFields1FormLayout = new FormLayout();
+		inFields1FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		topPaneHorizontalLayout.add(inFields1FormLayout);
 		investmentTransactionIdIntegerField = new IntegerField();
-		parentFormLayout.addFormItem(investmentTransactionIdIntegerField, "Investment Transaction Id");
+		inFields1FormLayout.addFormItem(investmentTransactionIdIntegerField, "Investment Transaction Id");
 		realisationTypeDvSelect = newDvSelect("Realisation Type", Constants.CATEGORY_REALISATION_TYPE, false);
-		parentFormLayout.addFormItem(realisationTypeDvSelect, "Realisation Type");
+		inFields1FormLayout.addFormItem(realisationTypeDvSelect, "Realisation Type");
 		proceedButton = new Button("Proceed");
-		parentFormLayout.add(proceedButton);
+		inFields1FormLayout.add(proceedButton);
 		proceedButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		proceedButton.setDisableOnClick(true);
 		
-		formLayout = new FormLayout();
-		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
-		parentFormLayout.add(formLayout);
+		inFields2FormLayout = new FormLayout();
+		inFields2FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		parentFormLayout.add(inFields2FormLayout);
+
+		outFields1FormLayout = new FormLayout();
+		outFields1FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		topPaneHorizontalLayout.add(outFields1FormLayout);
+		
+		outFields2FormLayout = new FormLayout();
+		outFields2FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		topPaneHorizontalLayout.add(outFields2FormLayout);
+		
+		outFields3FormLayout = new FormLayout();
+		outFields3FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		topPaneHorizontalLayout.add(outFields3FormLayout);
 		
 		investmentTransactionIdIntegerField.addValueChangeListener(event -> {
-			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+			Label investmentIdLabel, transactionTypeLabel, dueAmountLabel, statusLabel, investorLabel, productProviderLabel, productTypeLabel;
+			InvestmentTransaction2VO investmentTransaction2VOL;
+			
+			inFields2FormLayout.remove(inFields2FormLayout.getChildren().collect(Collectors.toList()));
+			outFields1FormLayout.remove(outFields1FormLayout.getChildren().collect(Collectors.toList()));
+			outFields2FormLayout.remove(outFields2FormLayout.getChildren().collect(Collectors.toList()));
+			outFields3FormLayout.remove(outFields3FormLayout.getChildren().collect(Collectors.toList()));
+			
+			investmentTransaction2VOL = miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue());
+			
+			investmentIdLabel = new Label(String.valueOf(investmentTransaction2VOL.getInvestmentId()));
+			outFields1FormLayout.addFormItem(investmentIdLabel, "Investment Id");
+			investorLabel = new Label(investmentTransaction2VOL.getInvestor());
+			outFields1FormLayout.addFormItem(investorLabel, "Investor");
+			productProviderLabel = new Label(investmentTransaction2VOL.getProductProvider());
+			outFields1FormLayout.addFormItem(productProviderLabel, "Product Provider");
+			
+			productTypeLabel = new Label(investmentTransaction2VOL.getProductType());
+			outFields2FormLayout.addFormItem(productTypeLabel, "Product Type");
+			transactionTypeLabel = new Label(investmentTransaction2VOL.getTransactionType());
+			outFields2FormLayout.addFormItem(transactionTypeLabel, "Transaction Type");
+			
+			dueAmountLabel = new Label(investmentTransaction2VOL.getDueAmount() == null ? " " : investmentTransaction2VOL.getDueAmount().toString());
+			outFields3FormLayout.addFormItem(dueAmountLabel, "Due Amount");			
+			statusLabel = new Label(investmentTransaction2VOL.getStatus());
+			outFields3FormLayout.addFormItem(statusLabel, "Status");
 		});
 		
 		realisationTypeDvSelect.addValueChangeListener(event -> {
-			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+			inFields2FormLayout.remove(inFields2FormLayout.getChildren().collect(Collectors.toList()));
 		});
 		
 		proceedButton.addClickListener(event -> {
 			try {
-				formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
+				inFields2FormLayout.remove(inFields2FormLayout.getChildren().collect(Collectors.toList()));
 				if (investmentTransactionIdIntegerField.getValue() == null) {
-					investmentTransactionVO.setInvestmentTransactionId(0);
+					investmentTransaction2VO.setInvestmentTransactionId(0);
 					showError("Provide Investment Transaction Id");
 					return;
 				} else if (realisationTypeDvSelect == null || realisationTypeDvSelect.getValue() == null) {
@@ -192,19 +236,19 @@ public class OperationView extends Div {
 					return;
 				} else {
 					try {
-						InvestmentTransactionVO investmentTransactionVOL;
-						investmentTransactionVOL = miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue());
-						investmentTransactionVOL.copyTo(investmentTransactionVO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
+						InvestmentTransaction2VO investmentTransaction2VOL;
+						investmentTransaction2VOL = miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue());
+						investmentTransaction2VOL.copyTo(investmentTransaction2VO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
 						// TODO: Display the values from investmentTransactionVO
-						if (investmentTransactionVO.getStatusDvId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
+						if (investmentTransaction2VO.getStatusDvId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
 							showError("This transaction is currently not pending for realisation");
 							return;
 						}
-						if (investmentTransactionVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+						if (investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
 							showError("Realisation of an Accrual transaction cannot be done with this feature");
 							return;
 						}
-						handleRealisation2(formLayout, realisationTypeDvSelect.getValue(), investmentTransactionVO);
+						handleRealisation2(inFields2FormLayout, realisationTypeDvSelect.getValue(), investmentTransaction2VO);
 					} catch (Exception e) {
 						showError(UtilFuncs.messageFromException(e));
 						return;
@@ -216,7 +260,7 @@ public class OperationView extends Div {
 		});
 	}
 	
-	private void handleRealisation2(FormLayout formLayout, IdValueVO selectedRealisationIdValueVO, InvestmentTransactionVO investmentTransactionVO) {
+	private void handleRealisation2(FormLayout formLayout, IdValueVO selectedRealisationIdValueVO, InvestmentTransaction2VO investmentTransaction2VO) {
 		IntegerField realisationIdIntegerField, savingsAccountTransactionIntegerField;	// Should be converted to LongField
 		DatePicker transactionDatePicker;
 		Select<IdValueVO> closureTypeDvSelect, bankAccountDvSelect, taxGroupDvSelect;
@@ -226,11 +270,11 @@ public class OperationView extends Div {
 		AmountComponent amountComponent;
 		
 		// UI Elements
-		amountComponent = new AmountComponent(investmentTransactionVO.getTransactionTypeDvId());
+		amountComponent = new AmountComponent(investmentTransaction2VO.getTransactionTypeDvId());
 		formLayout.addFormItem(amountComponent.getLayout(), "Realised Amount");
 		
 		transactionDatePicker = new DatePicker();
-		transactionDatePicker.setValue(investmentTransactionVO.getDueDate().toLocalDate());
+		transactionDatePicker.setValue(investmentTransaction2VO.getDueDate().toLocalDate());
 		formLayout.addFormItem(transactionDatePicker, "Realised Date");
 		
 		lastRealisationCheckbox = new Checkbox();
@@ -251,14 +295,14 @@ public class OperationView extends Div {
 			
 			hLayout.add(bankAccountDvSelect);
 			bankAccountDvSelect.setLabel("New: Account");
-			bankAccountDvSelect.setValue(investmentTransactionVO.getDefaultBankAccountIdValueVO());
+			bankAccountDvSelect.setValue(investmentTransaction2VO.getDefaultBankAccountIdValueVO());
 		} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
 			formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
 		}
 		
-		if (investmentTransactionVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+		if (investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
 			taxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
-			taxGroupDvSelect.setValue(investmentTransactionVO.getDefaultTaxGroupIdValueVO());
+			taxGroupDvSelect.setValue(investmentTransaction2VO.getDefaultTaxGroupIdValueVO());
 			formLayout.addFormItem(taxGroupDvSelect, "Tax Group");
 		} else {
 			taxGroupDvSelect = null;
@@ -304,7 +348,7 @@ public class OperationView extends Div {
 				// Back-end Call
 				singleRealisationVO = new SingleRealisationVO(
 						Long.valueOf(selectedRealisationIdValueVO.getId()),
-						investmentTransactionVO.getInvestmentTransactionId(),
+						investmentTransaction2VO.getInvestmentTransactionId(),
 						savingsAccountTransactionIntegerField.getValue() == null ? null : Long.valueOf(savingsAccountTransactionIntegerField.getValue()),
 						bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId(),
 						realisationIdIntegerField.getValue() == null ? null : Long.valueOf(realisationIdIntegerField.getValue()),

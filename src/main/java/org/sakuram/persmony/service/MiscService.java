@@ -18,7 +18,7 @@ import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
 import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
-import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
+import org.sakuram.persmony.valueobject.InvestmentTransaction2VO;
 import org.sakuram.persmony.valueobject.RealisationVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -208,26 +208,23 @@ public class MiscService {
     	return idValueVOList;
     }
     
-    public InvestmentTransactionVO fetchInvestmentTransaction(long investmentTransactionId) {
+    public InvestmentTransaction2VO fetchInvestmentTransaction(long investmentTransactionId) {
     	InvestmentTransaction investmentTransaction = investmentTransactionRepository.findById(investmentTransactionId)
     			.orElseThrow(() -> new AppException("Invalid Investment Transaction Id " + investmentTransactionId, null));
-    	return new InvestmentTransactionVO(investmentTransaction.getId(),
+    	return new InvestmentTransaction2VO(
+    			investmentTransaction.getInvestment().getId(),
+    			investmentTransaction.getId(),
     			investmentTransaction.getTransactionType().getId(),
     			investmentTransaction.getTransactionType().getValue(),
     			investmentTransaction.getDueDate(),
     			investmentTransaction.getDueAmount(),
     			investmentTransaction.getStatus().getId(),
     			investmentTransaction.getStatus().getValue(),
-    			fetchRealisationAmountSummary(investmentTransaction).getAmount(),
-    			investmentTransaction.getReturnedPrincipalAmount(),
-    			investmentTransaction.getInterestAmount(),
-    			investmentTransaction.getTdsAmount(),
-    			investmentTransaction.getAccrualTdsReference(),
-    			investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getId(),
-				investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getValue(),
-    			investmentTransaction.getAssessmentYear().shortValue(),
     			new IdValueVO(investmentTransaction.getInvestment().getDefaultBankAccount()),
-				new IdValueVO(investmentTransaction.getInvestment().getDefaultTaxGroup())
+				new IdValueVO(investmentTransaction.getInvestment().getDefaultTaxGroup()),
+				investmentTransaction.getInvestment().getInvestor().getValue(),
+				investmentTransaction.getInvestment().getProductProvider().getValue(),
+				investmentTransaction.getInvestment().getProductType().getValue()
 				);
     }
     

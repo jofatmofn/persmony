@@ -504,22 +504,17 @@ public class MoneyTransactionService {
     	for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
     		investmentTransactionVOList.add(new InvestmentTransactionVO(
     				investmentTransaction.getId(),
-    				investmentTransaction.getTransactionType().getId(),
     				investmentTransaction.getTransactionType().getValue(),
     				investmentTransaction.getDueDate(),
     				investmentTransaction.getDueAmount(),
-    				investmentTransaction.getStatus().getId(),
     				investmentTransaction.getStatus().getValue(),
     				miscService.fetchRealisationAmountSummary(investmentTransaction).getAmount(),
     				investmentTransaction.getReturnedPrincipalAmount(),
     				investmentTransaction.getInterestAmount(),
     				investmentTransaction.getTdsAmount(),
     				investmentTransaction.getAccrualTdsReference(),
-        			investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getId(),
     				investmentTransaction.getTaxGroup() == null ? null : investmentTransaction.getTaxGroup().getValue(),
-    				investmentTransaction.getAssessmentYear().shortValue(),
-    				null,
-    				null
+    				investmentTransaction.getAssessmentYear().shortValue()
     				));
     		for (Realisation realisation : investmentTransaction.getRealisationList()) {
     			// TODO: Handle possible Duplicates
