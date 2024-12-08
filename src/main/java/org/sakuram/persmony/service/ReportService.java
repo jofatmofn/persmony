@@ -1,6 +1,7 @@
 package org.sakuram.persmony.service;
 
 import java.math.BigInteger;
+import java.text.ParseException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -340,4 +341,101 @@ public class ReportService {
 		return reportList;
 	}
 	
+	public List<List<Object[]>> advanceTaxLiability(int fyStartYear) throws ParseException {
+		List<List<Object[]>> reportList;
+		List<Object[]> recordList;
+		Double[] investorSummary;
+		java.sql.Date fyStartDate, fyEndDate, forInterestStartDate, forInterestEndDate;
+		long fyDays, interestDays, investor;
+		Map<Long, Double[]> investorDvIdToTaxLiabilitysMap;
+		final Object headerArray[] = {"Investor", "By Date", "Income", "Tax Liability", "TDS"};
+		
+		reportList = new ArrayList<List<Object[]>>(1);
+		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
+		
+		recordList.add(headerArray);
+		investorDvIdToTaxLiabilitysMap = new HashMap<Long, Double[]>();
+		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(fyStartYear + "-04-01").getTime());
+		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((fyStartYear + 1) + "-03-31").getTime());
+		fyDays = Duration.between(fyStartDate.toLocalDate().atStartOfDay(), fyEndDate.toLocalDate().atStartOfDay()).toDays() + 1;
+		for (Investment investment : investmentRepository.findByInvestmentEndDateGreaterThanEqualAndInvestmentStartDateLessThanEqual(fyStartDate, fyEndDate)) {
+			// Additional Filters not used in DB, now applied in Java
+			
+			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
+				continue;
+			}
+		
+			if (investment.getDefaultTaxGroup() != null && Constants.TAXFREE_GROUP_LIST.contains(investment.getDefaultTaxGroup().getId())) {
+				continue;
+			}
+			
+			// Income
+			forInterestStartDate = investment.getInvestmentStartDate().before(fyStartDate) ? fyStartDate : investment.getInvestmentStartDate();
+			forInterestEndDate = investment.getInvestmentEndDate().after(fyEndDate) ? fyEndDate : investment.getInvestmentEndDate();
+			interestDays = Duration.between(forInterestStartDate.toLocalDate().atStartOfDay(), forInterestEndDate.toLocalDate().atStartOfDay()).toDays() + 1;
+			
+			if (Constants.INVESTOR_MAP.containsKey(investment.getInvestor().getId())) {
+				investor = Constants.INVESTOR_MAP.get(investment.getInvestor().getId());
+			} else { // Joint investors, take the first one
+				investor = investment.getInvestor().getId();
+			}
+			investorSummary = investorDvIdToTaxLiabilitysMap.get(investor);
+			if (investorSummary == null) {
+				investorSummary = new Double[] {0D, 0D};
+			}
+			// System.out.print(investor + "\t" + investment.getId() + "\t" + investment.getWorth() + "\t" + investment.getRateOfInterest() + "\t" + interestDays + "\t" + fyDays + "\t");
+			investorSummary[0] += ObjectUtils.defaultIfNull(investment.getWorth(), 0).doubleValue() *
+					ObjectUtils.defaultIfNull(investment.getRateOfInterest(), 0).doubleValue() / 100 *
+					interestDays / fyDays;
+			// TDS
+			for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
+				if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
+					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL &&
+							investmentTransaction.getDueDate().compareTo(fyStartDate) >= 0 &&
+							investmentTransaction.getDueDate().compareTo(fyEndDate) <= 0) {
+						investorSummary[1] += ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0D).doubleValue();
+					}
+					else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+						for (Realisation realisation : investmentTransaction.getRealisationList()) {
+							if (realisation.getRealisationDate().compareTo(fyStartDate) >= 0 &&
+								realisation.getRealisationDate().compareTo(fyEndDate) <= 0) {
+								investorSummary[1] += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0D).doubleValue();
+							}
+						}
+					}
+				}
+				// System.out.print(investorSummary[1]);
+			}
+			// System.out.println();
+			investorDvIdToTaxLiabilitysMap.put(investor, investorSummary);
+		}
+		
+		for (Map.Entry<Long, Double[]> investorEntry : investorDvIdToTaxLiabilitysMap.entrySet()) {
+			recordList.add(new Object[] {
+					Constants.domainValueCache.get(investorEntry.getKey()).getValue(),
+					"",
+					String.format("%.0f", investorEntry.getValue()[0]),
+					String.format("%.0f", investorEntry.getValue()[0] * 0.3),
+					String.format("%.0f", investorEntry.getValue()[1])
+			});
+			for (Object[] taxPercentage : Constants.TAX_PERCENTAGE_ARRAY) {
+				recordList.add(new Object[] {
+						"",
+						taxPercentage[0],
+						"",
+						String.format("%.0f", Double.parseDouble(taxPercentage[1].toString()) * investorEntry.getValue()[0] * 0.3)
+				});
+			}			
+		}
+		
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+		recordList.add(new Object[] {"Figures are just indicative."});
+		recordList.add(new Object[] {"Tax Slabs are not taken into consideration. Flat 30% is used to compute the tax. There's no surcharge."});
+		recordList.add(new Object[] {"Some of the income might be post TDS, but not known yet, and hence treated as 0 TDS."});
+		recordList.add(new Object[] {"Incomes and TDS outside PersMony are not included."});
+		return reportList;
+	}
 }

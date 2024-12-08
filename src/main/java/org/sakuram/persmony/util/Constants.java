@@ -1,5 +1,6 @@
 package org.sakuram.persmony.util;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,20 @@ public class Constants {
 	
 	public static final Character DYNAMIC_REALISATION_PERIODICITY_YEAR = 'Y';
 	
+	public static final Object[][] TAX_PERCENTAGE_ARRAY = {
+			{"Jun-15", 0.15},
+			{"Sep-15", 0.3},
+			{"Dec-15", 0.3},
+			{"Mar-15", 0.25},
+	};
+	
+	public static final List<Long> TAXFREE_GROUP_LIST = Arrays.asList(196L, 198L);
+	
+	public static final Map<Long, Long> INVESTOR_MAP = Map.ofEntries(	// For performance, hard-coded. TODO: Should be read from DB
+		    Map.entry(107L, 1L),
+		    Map.entry(175L, 2L)
+	);
+
 	public static final Map<String, FieldSpecVO> SEARCH_FIELD_SPEC_MAP = new HashMap<String, FieldSpecVO>() {
 		private static final long serialVersionUID = 1L;
 

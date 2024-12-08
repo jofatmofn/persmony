@@ -23,6 +23,7 @@ import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Route;
 
 @Route("report")
@@ -36,13 +37,15 @@ public class ReportView extends VerticalLayout {
 		LazyDownloadButton generateButton;
 		FormLayout formLayout;
 		DatePicker periodFromDatePicker, periodToDatePicker;
+		IntegerField financialYearStartIntegerField;
 		
 		reportSelect = new Select<String>();
 		reportSelect.setItems("All Pending Transactions",
 				"Receipt Transactions",
 				"Open Investments",
 				"Period Summary",
-				"Anticipated Vs. Actual");
+				"Anticipated Vs. Actual",
+				"Tax Liability");
 		reportSelect.setLabel("Report");
 		reportSelect.setPlaceholder("Select Report");
 		add(reportSelect);
@@ -55,6 +58,7 @@ public class ReportView extends VerticalLayout {
 		
 		periodFromDatePicker = new DatePicker("From");
 		periodToDatePicker = new DatePicker("To");
+		financialYearStartIntegerField = new IntegerField();
 		reportSelect.addValueChangeListener(event -> {
 			currentReportInd = -1;
 			HorizontalLayout hLayout;		
@@ -67,6 +71,10 @@ public class ReportView extends VerticalLayout {
 	        		hLayout = new HorizontalLayout();
 	        		formLayout.addFormItem(hLayout, "Period");
 	        		hLayout.add(periodFromDatePicker, periodToDatePicker);
+	            	break;
+	            case "Tax Liability":
+	        		financialYearStartIntegerField.setLabel("FY Start Year");
+	        		formLayout.add(financialYearStartIntegerField);
 	            	break;
 	            }
 			} catch (Exception e) {
@@ -92,6 +100,7 @@ public class ReportView extends VerticalLayout {
 							try {
 								if (reportSelect.getValue() == null) {
 									showError("Select a Report before clicking Generate");
+									currentReportInd = -1;
 									return new ByteArrayInputStream(new byte[0]);
 								}
 								System.out.println(reportSelect.getValue());
@@ -108,6 +117,7 @@ public class ReportView extends VerticalLayout {
 					            	PeriodSummaryCriteriaVO periodSummaryCriteriaVO;
 					            	if (periodFromDatePicker.getValue() == null || periodToDatePicker.getValue() == null) {
 										showError("Select the period before clicking Generate");
+										currentReportInd = -1;
 										return new ByteArrayInputStream(new byte[0]);
 									}
 					            	periodSummaryCriteriaVO = new PeriodSummaryCriteriaVO(Date.valueOf(periodFromDatePicker.getValue()), Date.valueOf(periodToDatePicker.getValue()));
@@ -123,9 +133,18 @@ public class ReportView extends VerticalLayout {
 					            		break;
 					            	}
 					            	break;
+					            case "Tax Liability":
+					            	if (financialYearStartIntegerField.getValue() == null) {
+										showError("Provide the FY Start Year before clicking Generate");
+										currentReportInd = -1;
+										return new ByteArrayInputStream(new byte[0]);
+									}
+				            		reportList = reportService.advanceTaxLiability(financialYearStartIntegerField.getValue());
+					            	break;
 					            }
 							} catch (Exception e) {
 								showError(UtilFuncs.messageFromException(e));
+								currentReportInd = -1;
 								return new ByteArrayInputStream(new byte[0]);
 							}
 						}
@@ -144,6 +163,7 @@ public class ReportView extends VerticalLayout {
 			    				byteArrayInputStream = new ByteArrayInputStream(stringWriter.toString().getBytes("utf-8"));
 			    			} catch (UnsupportedEncodingException e) {
 			    				e.printStackTrace();
+								currentReportInd = -1;
 			    				return new ByteArrayInputStream(new byte[0]);
 			    			}
 							if (currentReportInd < reportList.size() - 1) {
@@ -170,6 +190,7 @@ public class ReportView extends VerticalLayout {
 					} catch (Exception e) {
 						showError("System Error!!! Contact Support.");
 	    				e.printStackTrace();
+						currentReportInd = -1;
 						return new ByteArrayInputStream(new byte[0]);
 					}
 		});
