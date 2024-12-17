@@ -30,7 +30,7 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 	@SuppressWarnings("unchecked")
 	public List<Object[]> searchInvestments(List<SearchCriterionVO> searchCriterionVOList) {
     	Query query;
-    	StringBuffer mainQueryStringBuffer, subQueryStringBuffer, stringBuffer;
+    	StringBuffer mainQueryStringBuffer, itSubQueryStringBuffer, rSubQueryStringBuffer, stringBuffer;
 		String queryString;
 		boolean isFirstTime;
 		FieldSpecVO fieldSpecVO;
@@ -38,7 +38,8 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 		
 		isFirstTime = true;
 		mainQueryStringBuffer = new StringBuffer();
-		subQueryStringBuffer = new StringBuffer();
+		itSubQueryStringBuffer = new StringBuffer();
+		rSubQueryStringBuffer = new StringBuffer();
 		
 		mainQueryStringBuffer.append("SELECT iDV.value AS investor, ppDV.value AS productProvider, daDV.value AS dematAccount, fDV.value AS facilitator, I.investor_id_with_provider, I.product_id_of_provider, I.investment_id_with_provider, I.product_name, ptDV.value AS productType, I.units, I.worth, I.clean_price, I.accrued_interest, I.charges, I.rate_of_interest, tDV.value AS taxability, I.previous_investment_fk, nirDV.value AS newInvestmentReason, I.investment_start_date, I.investment_end_date, I.is_closed, ctDV.value AS closureType, I.closure_date, I.is_accrual_applicable, I.dynamic_receipt_periodicity, pbDV.value AS providerBranch, I.id ");
 		mainQueryStringBuffer.append("FROM investment I ");
@@ -58,8 +59,11 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 				continue;
 			}
 			if(searchCriterionVO.getFieldName().startsWith("IT.")) {
-				stringBuffer = subQueryStringBuffer;
+				stringBuffer = itSubQueryStringBuffer;
 				stringBuffer.append("AND ");
+			} else if(searchCriterionVO.getFieldName().startsWith("R.")) {
+					stringBuffer = rSubQueryStringBuffer;
+					stringBuffer.append("AND ");
 			} else {
 				stringBuffer = mainQueryStringBuffer;
 				stringBuffer.append(isFirstTime ? "WHERE " : "AND ");
@@ -166,6 +170,7 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 			} else if (fieldSpecVO.getIsDvSelect() != null && fieldSpecVO.getIsDvSelect()) {
 				stringBuffer.append("LOWER(");
 				switch(fieldSpecVO.getDvCategory()) {
+				// FKs of Investment
 				case Constants.CATEGORY_INVESTOR:
 					stringBuffer.append("iDV");
 					break;
@@ -194,11 +199,19 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 				case Constants.CATEGORY_BRANCH:
 					stringBuffer.append("pbDV");
 					break;
+				// FKs of Investment Transaction
 				case Constants.CATEGORY_TRANSACTION_TYPE:
 					stringBuffer.append("ttDV");
 					break;
 				case Constants.CATEGORY_TRANSACTION_STATUS:
 					stringBuffer.append("tsDV");
+					break;
+				case Constants.CATEGORY_TAX_GROUP:
+					stringBuffer.append("tgDV");
+					break;
+				// FKs of Realisation
+				case Constants.CATEGORY_REALISATION_TYPE:
+					stringBuffer.append("rtDV");
 					break;
 				}
 				stringBuffer.append(".value) = '");
@@ -206,15 +219,26 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 				stringBuffer.append("' ");
 			}
 		}
-		if (subQueryStringBuffer.length() > 0) {
+		if (itSubQueryStringBuffer.length() > 0) {
 			mainQueryStringBuffer.append(isFirstTime ? "WHERE " : "AND ");
+			isFirstTime = false;
 			mainQueryStringBuffer.append("EXISTS(SELECT 1 FROM investment_transaction IT ");
 			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ttDV ON IT.transaction_type_fk = ttDV.id ");
 			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tsDV ON IT.status_fk = tsDV.id ");
-			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tDV ON IT.tax_group_fk = tDV.id ");
+			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tgDV ON IT.tax_group_fk = tgDV.id ");
 			mainQueryStringBuffer.append("WHERE IT.investment_fk = I.id ");
-			mainQueryStringBuffer.append(subQueryStringBuffer);
-			mainQueryStringBuffer.append(")");
+			mainQueryStringBuffer.append(itSubQueryStringBuffer);
+			mainQueryStringBuffer.append(") ");
+		}
+		if (rSubQueryStringBuffer.length() > 0) {
+			mainQueryStringBuffer.append(isFirstTime ? "WHERE " : "AND ");
+			isFirstTime = false;
+			mainQueryStringBuffer.append("EXISTS(SELECT 1 FROM realisation R ");
+			mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value rtDV ON R.realisation_type_fk = rtDV.id ");
+			mainQueryStringBuffer.append("JOIN investment_transaction IT ON R.investment_transaction_fk = IT.id ");
+			mainQueryStringBuffer.append("WHERE IT.investment_fk = I.id ");
+			mainQueryStringBuffer.append(rSubQueryStringBuffer);
+			mainQueryStringBuffer.append(") ");
 		}
 		queryString = mainQueryStringBuffer.toString();
     	LogManager.getLogger().debug(queryString);

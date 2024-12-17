@@ -126,6 +126,15 @@ public class Constants {
 			put("IT.tds_amount", new FieldSpecVO("Txn TDS Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("IT.tax_group_fk",new FieldSpecVO("Txn Tax Group", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_TAXABILITY));
 			put("IT.assessment_year", new FieldSpecVO("Txn Assessment Year", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			
+			put("R.id", new FieldSpecVO("Realisation Id", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("R.amount", new FieldSpecVO("Realisation Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("R.realisation_date", new FieldSpecVO("Realisation Date", FieldSpecVO.DataType.DATE, true, false, false, null));
+			put("R.realisation_type_fk", new FieldSpecVO("Realisation Type", FieldSpecVO.DataType.OTHERS, false, false, true, Constants.CATEGORY_REALISATION_TYPE));
+			put("R.interest_amount", new FieldSpecVO("Realisation Interest Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("R.returned_principal_amount", new FieldSpecVO("Realisation Returned Principal Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("R.tds_amount", new FieldSpecVO("Realisation TDS Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			// label, dataType, isSequencable, isFreeText, isDvSelect, dvCategory
 		}
 	};
 
