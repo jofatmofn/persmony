@@ -20,6 +20,7 @@ public class DomainValueFlags {
 		flagsArr = domainValue.getFlagsCsv().split(Constants.DV_FLAGS_LEVEL1_SEPARATOR);
 		switch(domainValue.getCategory()) {
 		case Constants.CATEGORY_ACCOUNT:
+		case Constants.CATEGORY_DEMAT_ACCOUNT:
 			DvFlagsAccountVO dvFlagsAccountVO;
 			
 			dvFlagsAccountVO = new DvFlagsAccountVO();
@@ -31,9 +32,10 @@ public class DomainValueFlags {
 					if (flagsArr.length > Constants.FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID) {
 						dvFlagsAccountVO.setBranchDvId(Long.parseLong(flagsArr[Constants.FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID]));
 					}
-				} else if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_FUNDS)) {
-					if (flagsArr.length > Constants.FLAG_POSITION_FUNDS_ACCOUNT_PARTY_DVID) {
-						dvFlagsAccountVO.setPartyDvId(Long.parseLong(flagsArr[Constants.FLAG_POSITION_FUNDS_ACCOUNT_PARTY_DVID]));
+				} else if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_FUNDS) ||
+						dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_DEMAT)) {
+					if (flagsArr.length > Constants.FLAG_POSITION_ACCOUNT_PARTY_DVID) {
+						dvFlagsAccountVO.setPartyDvId(Long.parseLong(flagsArr[Constants.FLAG_POSITION_ACCOUNT_PARTY_DVID]));
 					}
 				}
 				if (flagsArr.length > Constants.FLAG_POSITION_ACCOUNT_ID) {

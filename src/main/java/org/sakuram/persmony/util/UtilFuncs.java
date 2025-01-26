@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
+import org.sakuram.persmony.valueobject.SearchCriterionVO;
 
 public class UtilFuncs {
 	
@@ -137,6 +139,42 @@ public class UtilFuncs {
 			return "Unexpected Error: " + (e.getMessage() == null ? e.getClass().getName() : e.getMessage());
 		}
 		
+	}
+
+	public static StringBuffer sqlWhereClauseText(SearchCriterionVO searchCriterionVO) {
+		StringBuffer stringBuffer;
+		String criterionValue;
+		
+		stringBuffer = new StringBuffer(127);
+		criterionValue = searchCriterionVO.getValuesCSV().toLowerCase();
+		
+		stringBuffer.append("LOWER(");
+		stringBuffer.append(searchCriterionVO.getFieldName());
+		stringBuffer.append(") ");
+		if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.EQ.name()) {
+			stringBuffer.append("= ");
+			stringBuffer.append("'");
+			stringBuffer.append(criterionValue);
+			stringBuffer.append("' ");
+		} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.NE.name()) {
+			stringBuffer.append("<> ");
+			stringBuffer.append("'");
+			stringBuffer.append(criterionValue);
+			stringBuffer.append("' ");
+		} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.STARTS.name()) {
+			stringBuffer.append("LIKE '");
+			stringBuffer.append(criterionValue);
+			stringBuffer.append("%' ");
+		} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.ENDS.name()) {
+			stringBuffer.append("LIKE '%");
+			stringBuffer.append(criterionValue);
+			stringBuffer.append("' ");
+		} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.CONTAINS.name()) {
+			stringBuffer.append("LIKE '%");
+			stringBuffer.append(criterionValue);
+			stringBuffer.append("%' ");
+		}
+		return stringBuffer;
 	}
 	
     public static void main(String[] args){

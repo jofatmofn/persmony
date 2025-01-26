@@ -69,6 +69,7 @@ public class MiscService {
     		if (enhanced) {
 	    		switch(category) {
 	    		case Constants.CATEGORY_ACCOUNT:
+	    		case Constants.CATEGORY_DEMAT_ACCOUNT:
 	    			try {
 	    				DvFlagsAccountVO dvFlagsAccountVO;
 		    			DvFlagsBranchVO dvFlagsBranchVO;
@@ -78,6 +79,8 @@ public class MiscService {
 		    			StringBuffer labelSB;
 		    			
 		    			labelSB = new StringBuffer();
+		    			labelSB.append(label);
+		    			labelSB.append("::");
 		    			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(domainValue);
 		    			if (!dvFlagsAccountVO.isOpen())
 		    				continue;
@@ -104,12 +107,13 @@ public class MiscService {
 			    			labelSB.append(partyDv.getValue());
 			    			labelSB.append("::");
 			    			labelSB.append(branchDv.getValue());
-			    			labelSB.append("::");
-			    			labelSB.append(dvFlagsAccountVO.getAccId());
-		    			} else if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_FUNDS)) {
+		    			} else if (dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_FUNDS) ||
+								dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_DEMAT)) {
 			    			partyDv = Constants.domainValueCache.get(dvFlagsAccountVO.getPartyDvId());
 			    			labelSB.append(partyDv.getValue());
 	    				}
+		    			labelSB.append("::");
+		    			labelSB.append(dvFlagsAccountVO.getAccId());
 		    			label = labelSB.toString();
 	    			} catch (Exception e) {
 	    				throw new AppException("Invalid Configuration of Bank Account " + dvId, null);

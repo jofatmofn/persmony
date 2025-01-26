@@ -28,6 +28,7 @@ public class Constants {
 	public static final String CATEGORY_REALISATION_TYPE = "RlsnTyp";
 	public static final String CATEGORY_BRANCH = "Branch";
 	public static final String CATEGORY_TAX_GROUP = "TaxGrp";
+	public static final String CATEGORY_TRANSACTION_CATEGORY = "TxnCat";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
@@ -49,7 +50,7 @@ public class Constants {
 	public static final int FLAG_POSITION_ACCOUNT_ID = 2;
 	public static final int FLAG_POSITION_ACCOUNT_INVESTOR_DVID = 3;
 	public static final int FLAG_POSITION_ACCOUNT_STATUS = 4;
-	public static final int FLAG_POSITION_FUNDS_ACCOUNT_PARTY_DVID = 1;
+	public static final int FLAG_POSITION_ACCOUNT_PARTY_DVID = 1;
 	
 	public static final int FLAG_POSITION_BRANCH_BANK_DVID = 0;
 	public static final int FLAG_POSITION_BRANCH_IFSC = 1;
@@ -58,6 +59,7 @@ public class Constants {
 
 	public static final String ACCOUNT_TYPE_SAVINGS = "SB";
 	public static final String ACCOUNT_TYPE_FUNDS = "Funds";
+	public static final String ACCOUNT_TYPE_DEMAT = "Demat";
 	
 	public static final char ACCOUNT_STATUS_OPEN = 'O';
 	public static final char ACCOUNT_STATUS_CLOSED = 'C';

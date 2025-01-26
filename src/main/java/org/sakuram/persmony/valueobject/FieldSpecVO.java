@@ -1,5 +1,9 @@
 package org.sakuram.persmony.valueobject;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,4 +38,12 @@ public class FieldSpecVO {
 	Boolean isFreeText;
 	Boolean isDvSelect;
 	String dvCategory;
+	
+	public static List<String> getTxtOperatorList() {
+		return Stream.of(TxtOperator.values()).map(Enum::name).collect(Collectors.toList());
+	}
+	
+	public static List<String> getSeqOperatorList() {
+		return Stream.of(SeqOperator.values()).map(Enum::name).collect(Collectors.toList());
+	}
 }
