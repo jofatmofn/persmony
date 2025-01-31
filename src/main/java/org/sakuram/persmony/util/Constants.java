@@ -13,7 +13,8 @@ import org.sakuram.persmony.valueobject.FieldSpecVO;
 public class Constants {
 
 	public static final DateFormat ANSI_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-
+	public static final double EPSILON = 0.0000000009D;
+	
 	public static final String CATEGORY_INVESTOR = "Invstr";
 	public static final String CATEGORY_PARTY = "Party"; /* Product Provider, Facilitator */
 	public static final String CATEGORY_PRODUCT_TYPE = "PrdType";
@@ -29,6 +30,7 @@ public class Constants {
 	public static final String CATEGORY_BRANCH = "Branch";
 	public static final String CATEGORY_TAX_GROUP = "TaxGrp";
 	public static final String CATEGORY_TRANSACTION_CATEGORY = "TxnCat";
+	public static final String CATEGORY_NONE = "None";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
@@ -44,6 +46,7 @@ public class Constants {
 	public static final long DVID_REALISATION_TYPE_SAVINGS_ACCOUNT = 101;
 	public static final long DVID_REALISATION_TYPE_CASH = 102;
 	public static final long DVID_REALISATION_TYPE_ANOTHER_REALISATION = 103;
+	public static final long DVID_TRANSACTION_CATEGORY_OTHERS = 221;
 
 	public static final int FLAG_POSITION_ACCOUNT_TYPE = 0;
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;
@@ -56,6 +59,7 @@ public class Constants {
 	public static final int FLAG_POSITION_BRANCH_IFSC = 1;
 	public static final int FLAG_POSITION_PARTY_ROLES = 0;
 	public static final int FLAG_POSITION_REAL_INVESTORS = 0;
+	public static final int FLAG_POSITION_DV_CATEGORY = 0;
 
 	public static final String ACCOUNT_TYPE_SAVINGS = "SB";
 	public static final String ACCOUNT_TYPE_FUNDS = "Funds";

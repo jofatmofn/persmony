@@ -8,9 +8,7 @@ import lombok.Setter;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SbAcTxnCategoryVO {
-	Long sbAcTxnCategoryId;
-	IdValueVO transactionCategory;
-	IdValueVO endAccountReference;
-	Double amount;
+public class DvFlagsSbAcTxnCategoryVO implements DvFlagsVO {
+	long id;
+	String dvCategory;
 }

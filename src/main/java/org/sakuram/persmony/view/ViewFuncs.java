@@ -22,25 +22,32 @@ public class ViewFuncs {
 	}
 	
     public static Select<IdValueVO> newDvSelect(MiscService miscService, String dvCategory, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
-    	return createSelect(miscService.fetchDvsOfCategory(dvCategory), label, isNoSelectionAllowed, isNullAValue);
+    	Select<IdValueVO> selectDv;
+    	selectDv = new Select<IdValueVO>();
+    	createSelect(selectDv, miscService.fetchDvsOfCategory(dvCategory), label, isNoSelectionAllowed, isNullAValue);
+    	return selectDv;
+    }
+    
+    public static void newDvSelect(Select<IdValueVO> selectDv, MiscService miscService, String dvCategory, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
+    	createSelect(selectDv, miscService.fetchDvsOfCategory(dvCategory), label, isNoSelectionAllowed, isNullAValue);
     }
     
     public static Select<IdValueVO> newSelect(List<String> valueList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
     	List<IdValueVO> idValueVOList;
     	long seqNo;
+    	Select<IdValueVO> selectDv;
     	
     	idValueVOList = new ArrayList<IdValueVO>(valueList.size());
     	seqNo = 0;
     	for (String value : valueList) {
     		idValueVOList.add(new IdValueVO(++seqNo, value));
     	}
-    	return createSelect(idValueVOList, label, isNoSelectionAllowed, isNullAValue);
+    	selectDv = new Select<IdValueVO>();
+    	createSelect(selectDv, idValueVOList, label, isNoSelectionAllowed, isNullAValue);
+    	return selectDv;
     }
     
-    private static Select<IdValueVO> createSelect(List<IdValueVO> idValueVOList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
-		Select<IdValueVO> dvSelect;
-
-		dvSelect = new Select<IdValueVO>();
+    private static void createSelect(Select<IdValueVO> dvSelect, List<IdValueVO> idValueVOList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
 		if (isNullAValue) {
 			idValueVOList.add(0, new IdValueVO(-1L, "Empty"));
 		}
@@ -59,6 +66,5 @@ public class ViewFuncs {
 		if (isNoSelectionAllowed) {
 			dvSelect.setEmptySelectionCaption("No Selection");
 		}
-		return dvSelect;
     }
 }

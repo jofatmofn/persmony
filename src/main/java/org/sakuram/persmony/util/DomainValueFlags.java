@@ -7,6 +7,7 @@ import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
 import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
 import org.sakuram.persmony.valueobject.DvFlagsPartyVO;
+import org.sakuram.persmony.valueobject.DvFlagsSbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.DvFlagsVO;
 
 public class DomainValueFlags {
@@ -77,6 +78,13 @@ public class DomainValueFlags {
 						.toArray());
 			}
 			return dvFlagsInvestorVO;
+		case Constants.CATEGORY_TRANSACTION_CATEGORY:
+			DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
+			dvFlagsSbAcTxnCategoryVO = new DvFlagsSbAcTxnCategoryVO();
+			if (flagsArr.length > Constants.FLAG_POSITION_REAL_INVESTORS) {
+				dvFlagsSbAcTxnCategoryVO.setDvCategory(flagsArr[Constants.FLAG_POSITION_REAL_INVESTORS]);
+			}
+			return dvFlagsSbAcTxnCategoryVO;
 		default:
 			return null;
 		}

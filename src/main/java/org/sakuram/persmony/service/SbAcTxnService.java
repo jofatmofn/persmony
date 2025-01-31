@@ -10,6 +10,8 @@ import org.sakuram.persmony.repository.SavingsAccountTransactionRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.util.DomainValueFlags;
+import org.sakuram.persmony.valueobject.DvFlagsSbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCategoryVO;
@@ -43,23 +45,30 @@ public class SbAcTxnService {
 	public List<SbAcTxnCategoryVO> fetchSbAcTxnCategories(long savingsAccountTransactionId) {
 		SavingsAccountTransaction savingsAccountTransaction;
 		List<SbAcTxnCategoryVO> sbAcTxnCategoryVOList;
+		DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
 		
 		savingsAccountTransaction = savingsAccountTransactionRepository.findById(savingsAccountTransactionId)
 			.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + savingsAccountTransactionId, null));
 		if (savingsAccountTransaction.getTransactionCategory() != null) {
+			dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(savingsAccountTransaction.getTransactionCategory());
 			sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(1);
 			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-					null, 
+					null,
 					new IdValueVO(savingsAccountTransaction.getTransactionCategory().getId(), savingsAccountTransaction.getTransactionCategory().getValue()),
-					savingsAccountTransaction.getEndAccountReference(),
+					(dvFlagsSbAcTxnCategoryVO == null || dvFlagsSbAcTxnCategoryVO.getDvCategory().equals(Constants.CATEGORY_NONE)) ?
+							new IdValueVO(null, savingsAccountTransaction.getEndAccountReference()) :
+							new IdValueVO(Long.parseLong(savingsAccountTransaction.getEndAccountReference()), Constants.domainValueCache.get(Long.parseLong(savingsAccountTransaction.getEndAccountReference())).getValue()),
 					savingsAccountTransaction.getAmount()));
 		} else if (savingsAccountTransaction.getSbAcTxnCategoryList() != null) {
 			sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(savingsAccountTransaction.getSbAcTxnCategoryList().size());
 			for (SbAcTxnCategory sbAcTxnCategory : savingsAccountTransaction.getSbAcTxnCategoryList()) {
+				dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(sbAcTxnCategory.getTransactionCategory());
 				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 						sbAcTxnCategory.getId(), 
 						new IdValueVO(sbAcTxnCategory.getTransactionCategory().getId(), sbAcTxnCategory.getTransactionCategory().getValue()),
-						sbAcTxnCategory.getEndAccountReference(),
+						(dvFlagsSbAcTxnCategoryVO == null || dvFlagsSbAcTxnCategoryVO.getDvCategory().equals(Constants.CATEGORY_NONE)) ?
+								new IdValueVO(null, sbAcTxnCategory.getEndAccountReference()) :
+								new IdValueVO(Long.parseLong(sbAcTxnCategory.getEndAccountReference()), Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()),
 						sbAcTxnCategory.getAmount()));
 			}
 		} else {
@@ -83,7 +92,7 @@ public class SbAcTxnService {
 			savingsAccountTransaction.getSbAcTxnCategoryList().clear();
 		} else if (sbAcTxnCategoryVOFromUiList.size() == 1) {
 			savingsAccountTransaction.setTransactionCategory(Constants.domainValueCache.get(sbAcTxnCategoryVOFromUiList.get(0).getTransactionCategory().getId()));
-			savingsAccountTransaction.setEndAccountReference(sbAcTxnCategoryVOFromUiList.get(0).getEndAccountReference());
+			savingsAccountTransaction.setEndAccountReference(endAccountReferenceUiToDb(sbAcTxnCategoryVOFromUiList.get(0).getEndAccountReference()));
 			savingsAccountTransaction.getSbAcTxnCategoryList().clear();
 		} else {
 			savingsAccountTransaction.setTransactionCategory(null);
@@ -102,7 +111,7 @@ public class SbAcTxnService {
 					SbAcTxnCategory sbAcTxnCategoryInserted = new SbAcTxnCategory(
 							savingsAccountTransaction,
 							transactionCategoryDvUi,
-							sbAcTxnCategoryVO.getEndAccountReference(),
+							endAccountReferenceUiToDb(sbAcTxnCategoryVO.getEndAccountReference()),
 							sbAcTxnCategoryVO.getAmount()
 							);
 					sbAcTxnCategoryRepository.save(sbAcTxnCategoryInserted);
@@ -114,7 +123,7 @@ public class SbAcTxnService {
 									!sbAcTxnCategoryUpdated.getEndAccountReference().equals(sbAcTxnCategoryVO.getEndAccountReference()) ||
 									!sbAcTxnCategoryUpdated.getAmount().equals(sbAcTxnCategoryVO.getAmount())) {
 								sbAcTxnCategoryUpdated.setTransactionCategory(transactionCategoryDvUi);
-								sbAcTxnCategoryUpdated.setEndAccountReference(sbAcTxnCategoryVO.getEndAccountReference());
+								sbAcTxnCategoryUpdated.setEndAccountReference(endAccountReferenceUiToDb(sbAcTxnCategoryVO.getEndAccountReference()));
 								sbAcTxnCategoryUpdated.setAmount(sbAcTxnCategoryVO.getAmount());
 							}
 							isFound = true;
@@ -129,4 +138,15 @@ public class SbAcTxnService {
 		}
 	}
 	
+	private String endAccountReferenceUiToDb(IdValueVO idValueVO) {
+		if (idValueVO == null) {
+			return null;
+		} else if (idValueVO.getId() != null) {
+			return idValueVO.getId().toString();
+		} else if (idValueVO.getValue() != null) {
+			return idValueVO.getValue();
+		} else {
+			throw new AppException("Unexpected End Account Reference - both id and value are NULLs", null);
+		}
+	}
 }

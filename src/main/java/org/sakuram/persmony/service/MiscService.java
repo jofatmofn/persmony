@@ -3,6 +3,7 @@ package org.sakuram.persmony.service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.LongStream;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -17,6 +18,7 @@ import org.sakuram.persmony.util.DomainValueFlags;
 import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
 import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
+import org.sakuram.persmony.valueobject.DvFlagsSbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestmentTransaction2VO;
 import org.sakuram.persmony.valueobject.RealisationVO;
@@ -257,5 +259,26 @@ public class MiscService {
 				tdsAmount,
 				null
 				);
+    }
+    
+    public Map<Long, String> fetchDvCategoriesOfTxnCategories() {
+    	Map<Long, String> txnCatToDvCatMap;
+    	List<Long> categoryDvIdList;
+    	
+    	categoryDvIdList = Constants.categoryDvIdCache.get(Constants.CATEGORY_TRANSACTION_CATEGORY);
+    	txnCatToDvCatMap = new HashMap<Long, String>(categoryDvIdList.size());
+		for (Long dvId : categoryDvIdList) {
+			try {
+    			DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
+    			DomainValue transactionCategoryDv;
+    			transactionCategoryDv = Constants.domainValueCache.get(dvId);
+    			dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(transactionCategoryDv);
+    			txnCatToDvCatMap.put(transactionCategoryDv.getId(), dvFlagsSbAcTxnCategoryVO == null ? null: dvFlagsSbAcTxnCategoryVO.getDvCategory());
+			} catch (Exception e) {
+				throw new AppException("Invalid Configuration of Transaction Category " + dvId, e);
+	    	}
+		} 
+    	
+		return txnCatToDvCatMap;
     }
 }
