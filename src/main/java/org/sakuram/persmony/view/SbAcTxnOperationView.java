@@ -393,9 +393,6 @@ public class SbAcTxnOperationView extends Div {
 			Select<IdValueVO> endAccountReferenceDvSelect;
 			TextField endAccountReferenceTextField;
 
-			if (!event.isFromClient()) { // After double click on the grid, the event is propagated to select's value change
-				return;
-			}
 			if (transactionCategoryDvSelect.getValue() == null) { // TODO: Remove the code repetition
 				endAccountReferenceTextField = new TextField();
 				endAccountReferenceColumn.setEditorComponent(endAccountReferenceTextField);
@@ -403,7 +400,9 @@ public class SbAcTxnOperationView extends Div {
 				sbAcTxnCategoryBinder.forField(endAccountReferenceTextField)
 					.bind(sbAcTxnCategoryVO -> (sbAcTxnCategoryVO != null && sbAcTxnCategoryVO.getEndAccountReference() != null && sbAcTxnCategoryVO.getEndAccountReference().getValue() != null) ? sbAcTxnCategoryVO.getEndAccountReference().getValue() : "", (sbAcTxnCategoryVO, endAccountReference) -> sbAcTxnCategoryVO.setEndAccountReference(new IdValueVO(null, endAccountReference)));
 				endAccountReferenceTextField.setEnabled(false);
-				endAccountReferenceTextField.setValue("");
+				if (event.isFromClient()) { // After double click on the grid, the event is propagated to select's value change
+					endAccountReferenceTextField.setValue(""); // Components must be attached to the UI before updates are properly reflected
+				}
 			} else {
 				dvCategory = txnCatToDvCatMap.get(transactionCategoryDvSelect.getValue().getId());
 				if (dvCategory == null || dvCategory.equals("") || dvCategory.equals(Constants.CATEGORY_NONE)) {
@@ -417,7 +416,9 @@ public class SbAcTxnOperationView extends Div {
 					} else {
 						endAccountReferenceTextField.setEnabled(true);
 					}
-					endAccountReferenceTextField.setValue(""); // Components must be attached to the UI before updates are properly reflected
+					if (event.isFromClient()) { // After double click on the grid, the event is propagated to select's value change
+						endAccountReferenceTextField.setValue("");
+					}
 				} else {
 					endAccountReferenceDvSelect = ViewFuncs.newDvSelect(miscService, dvCategory, null, false, false);
 					endAccountReferenceColumn.setEditorComponent(endAccountReferenceDvSelect);
