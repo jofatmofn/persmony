@@ -1,5 +1,8 @@
 package org.sakuram.persmony.view;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Date;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -7,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.SbAcTxnService;
 import org.sakuram.persmony.util.Constants;
@@ -16,6 +20,9 @@ import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
+
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
@@ -42,8 +49,13 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.FileBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Route("sat")
 public class SbAcTxnOperationView extends Div {
@@ -66,7 +78,7 @@ public class SbAcTxnOperationView extends Div {
 			private static final long serialVersionUID = 1L;
 
 			{
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Load"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Import"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "Categorise"));
 			}
 		};
@@ -88,7 +100,7 @@ public class SbAcTxnOperationView extends Div {
 			try {
 	            switch(event.getValue().getKey()) {
 	            case 1:
-	            	// handleSbAcTxnLoad(formLayout);
+	            	handleSbAcTxnImport(formLayout);
 	            	break;
 	            case 2:
 	            	handleSbAcTxnCategorise(formLayout);
@@ -104,6 +116,92 @@ public class SbAcTxnOperationView extends Div {
 		selectSpan.add(operationSelect);
 		add(selectSpan);
 		add(formLayout);
+	}
+	
+	private void handleSbAcTxnImport(FormLayout formLayout) {
+		Select<IdValueVO> bankAccountDvSelect;
+		FileBuffer fileBuffer;
+		Upload upload;
+		Button importButton;
+		ScopeLocalDummy01 uploadedContents;
+		
+		uploadedContents = new ScopeLocalDummy01();
+		
+		bankAccountDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT, null, false, false);
+		formLayout.addFormItem(bankAccountDvSelect, "Account");
+		
+		fileBuffer = new FileBuffer();
+		upload = new Upload(fileBuffer);
+		formLayout.addFormItem(upload, "Upload CSV");
+		upload.setAcceptedFileTypes("text/csv", ".csv");
+		upload.addFileRejectedListener(event -> {
+			uploadedContents.setMultipartFile(null);
+			ViewFuncs.showError(event.getErrorMessage());
+		});
+		upload.addSucceededListener(event -> {
+			DiskFileItem diskFileItem;
+			InputStream inputStream;
+			OutputStream outputStream;
+			int ret;
+			
+		    try {
+		    	diskFileItem = new org.apache.commons.fileupload.disk.DiskFileItem(
+		    			"file",
+	    				"text/csv",
+	    				true,
+	    				event.getFileName(),
+	    				(int) fileBuffer.getInputStream().available(),
+	    				fileBuffer.getFileData().getFile().getParentFile());
+		    	// stackoverflow 42253005 commonsmultipartfile-size-is-0
+		    	inputStream = fileBuffer.getInputStream();
+		    	outputStream = diskFileItem.getOutputStream(); // stackoverflow 4120635 java-lang-nullpointerexception-while-creating-diskfileitem
+		    	ret = inputStream.read();
+		    	while ( ret != -1 )
+		    	{
+		    		outputStream.write(ret);
+		    	    ret = inputStream.read();
+		    	}
+		    	outputStream.flush();
+		    	uploadedContents.setMultipartFile(new CommonsMultipartFile(diskFileItem));
+		    } catch (IOException e) {
+				ViewFuncs.showError("File upload failed: " + e.getMessage());
+		    }
+		});
+		
+		importButton = new Button("Import CSV");
+		formLayout.add(importButton);
+		importButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		importButton.setDisableOnClick(true);
+
+		// On click of Fetch
+		importButton.addClickListener(event -> {
+			Notification notification;
+
+			try {
+				// Validation
+				if (bankAccountDvSelect.getValue() == null) {
+					ViewFuncs.showError("Select a bank account");
+					return;
+				}
+				if (uploadedContents.getMultipartFile() == null) {
+					ViewFuncs.showError("Upload a valid statement");
+					return;
+				}
+				
+				try {
+					sbAcTxnService.importSavingsAccountTransactions(bankAccountDvSelect.getValue().getId(), uploadedContents.getMultipartFile());
+					notification = Notification.show("Savings Account Transactions Imported.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					uploadedContents.setMultipartFile(null);
+				} catch (Exception e) {
+					ViewFuncs.showError(UtilFuncs.messageFromException(e));
+					return;
+				}
+			} finally {
+				importButton.setEnabled(true);
+			}
+		});
+
 	}
 	
 	private void handleSbAcTxnCategorise(FormLayout formLayout) {
@@ -448,4 +546,9 @@ public class SbAcTxnOperationView extends Div {
                 .setFilter("event.key === 'Escape' || event.key === 'Esc'");
     }
 
+    @Getter @Setter
+    private class ScopeLocalDummy01 {
+    	MultipartFile multipartFile;
+
+    }
 }

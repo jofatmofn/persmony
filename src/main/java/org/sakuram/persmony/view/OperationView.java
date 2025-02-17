@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
+import org.sakuram.persmony.service.SbAcTxnService;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
@@ -65,8 +66,9 @@ public class OperationView extends Div {
 	
 	MoneyTransactionService moneyTransactionService;
 	MiscService miscService;
+	SbAcTxnService sbAcTxnService;
 
-	public OperationView(MoneyTransactionService moneyTransactionService, MiscService miscService) {
+	public OperationView(MoneyTransactionService moneyTransactionService, MiscService miscService, SbAcTxnService sbAcTxnService) {
 		Span selectSpan;
 		FormLayout formLayout;
 		Select<Map.Entry<Integer,String>> operationSelect;
@@ -74,6 +76,7 @@ public class OperationView extends Div {
 		
 		this.moneyTransactionService = moneyTransactionService;
 		this.miscService = miscService;
+		this.sbAcTxnService = sbAcTxnService;
 
 		operationItemsList = new ArrayList<Map.Entry<Integer,String>>() {
 			private static final long serialVersionUID = 1L;
@@ -261,13 +264,13 @@ public class OperationView extends Div {
 	}
 	
 	private void handleRealisation2(FormLayout formLayout, IdValueVO selectedRealisationIdValueVO, InvestmentTransaction2VO investmentTransaction2VO) {
-		IntegerField realisationIdIntegerField, savingsAccountTransactionIntegerField;	// Should be converted to LongField
+		IntegerField realisationIdIntegerField;	// Should be converted to LongField
 		DatePicker transactionDatePicker;
-		Select<IdValueVO> closureTypeDvSelect, bankAccountDvSelect, taxGroupDvSelect;
+		Select<IdValueVO> closureTypeDvSelect, taxGroupDvSelect;
 		Button saveButton;
 		Checkbox lastRealisationCheckbox;
-		HorizontalLayout hLayout;
 		AmountComponent amountComponent;
+		SbAcTxnComponent sbAcTxnComponent;
 		
 		// UI Elements
 		amountComponent = new AmountComponent(investmentTransaction2VO.getTransactionTypeDvId());
@@ -284,18 +287,10 @@ public class OperationView extends Div {
 		closureTypeDvSelect = newDvSelect("Account Closure Type", Constants.CATEGORY_CLOSURE_TYPE, false);
 		formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
 		
-		bankAccountDvSelect = newDvSelect("Account", Constants.CATEGORY_ACCOUNT, true);
 		realisationIdIntegerField = new IntegerField();
-		savingsAccountTransactionIntegerField = new IntegerField();
+		sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId(), () -> Date.valueOf(transactionDatePicker.getValue()));
 		if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
-			hLayout = new HorizontalLayout();
-			formLayout.addFormItem(hLayout, "Account Transaction");
-			savingsAccountTransactionIntegerField.setLabel("Old: Existing Id");
-			hLayout.add(savingsAccountTransactionIntegerField);
-			
-			hLayout.add(bankAccountDvSelect);
-			bankAccountDvSelect.setLabel("New: Account");
-			bankAccountDvSelect.setValue(investmentTransaction2VO.getDefaultBankAccountIdValueVO());
+			formLayout.addFormItem(sbAcTxnComponent.getLayout(), "SB A/c Txn Id");
 		} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
 			formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
 		}
@@ -328,13 +323,8 @@ public class OperationView extends Div {
 					return;
 				}
 				if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
-					if (savingsAccountTransactionIntegerField.getValue() == null && bankAccountDvSelect.getValue() == null ||
-							savingsAccountTransactionIntegerField.getValue() != null && bankAccountDvSelect.getValue() != null) {
-						showError("One of Account Transaction Id Or Account is to be provided");
-						return;
-					}
-					if (savingsAccountTransactionIntegerField.getValue() != null && savingsAccountTransactionIntegerField.getValue() <= 0) {
-						showError("Invalid Account Transaction Id");
+					if (sbAcTxnComponent.getSavingsAccountTransactionId() == null || sbAcTxnComponent.getSavingsAccountTransactionId() <= 0) {
+						showError("Invalid SB A/c Txn Id");
 						return;
 					}
 				}
@@ -349,8 +339,8 @@ public class OperationView extends Div {
 				singleRealisationVO = new SingleRealisationVO(
 						Long.valueOf(selectedRealisationIdValueVO.getId()),
 						investmentTransaction2VO.getInvestmentTransactionId(),
-						savingsAccountTransactionIntegerField.getValue() == null ? null : Long.valueOf(savingsAccountTransactionIntegerField.getValue()),
-						bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId(),
+						sbAcTxnComponent.getSavingsAccountTransactionId(),
+						null,
 						realisationIdIntegerField.getValue() == null ? null : Long.valueOf(realisationIdIntegerField.getValue()),
 						amountComponent.getNetAmount(),
 						amountComponent.getReturnedPrincipalAmount(),

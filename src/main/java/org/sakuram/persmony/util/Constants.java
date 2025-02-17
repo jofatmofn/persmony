@@ -47,6 +47,8 @@ public class Constants {
 	public static final long DVID_REALISATION_TYPE_CASH = 102;
 	public static final long DVID_REALISATION_TYPE_ANOTHER_REALISATION = 103;
 	public static final long DVID_TRANSACTION_CATEGORY_OTHERS = 221;
+	public static final long DVID_BOOKING_CREDIT = 222;
+	public static final long DVID_BOOKING_DEBIT = 223;
 
 	public static final int FLAG_POSITION_ACCOUNT_TYPE = 0;
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;

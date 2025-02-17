@@ -1,6 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.sql.Date;
+import java.text.ParseException;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -15,6 +16,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.sakuram.persmony.util.Constants;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -35,7 +38,7 @@ public class SavingsAccountTransaction {
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name="bank_account_fk", nullable=false)
+	@JoinColumn(name="bank_account_fk", nullable=true) // Ideally speaking this should NOT be NULLable. But this table accommodates entries which does not involve a bank account.
 	private DomainValue bankAccount;
 	
 	@Column(name="transaction_date", nullable=false)
@@ -103,5 +106,26 @@ public class SavingsAccountTransaction {
 		this.bankAccount = bankAccount;
 		this.transactionDate = transactionDate;
 		this.amount = amount;
+	}
+	
+	public SavingsAccountTransaction(Long bankAccountDvId, String transactionDateStr, Double amount, Long bookingDvId, String valueDateStr, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId, Long transactionCategoryDvId, String endAccountReference) throws ParseException {
+		this.bankAccount = (bankAccountDvId == null ? null : Constants.domainValueCache.get(bankAccountDvId));
+		this.transactionDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(transactionDateStr).getTime());
+		this.amount = amount;
+		this.booking = Constants.domainValueCache.get(bookingDvId);
+		this.valueDate = (valueDateStr == null || valueDateStr.equals("") ? null : new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(valueDateStr).getTime()));
+		this.reference = (reference == null || reference.equals("") ? null : reference);
+		this.narration = narration;
+		this.balance = balance;
+		this.transactionId = (transactionId == null || transactionId.equals("") ? null : transactionId);
+		this.utrNumber = (utrNumber == null || utrNumber.equals("") ? null : utrNumber);
+		this.remitterBranch = (remitterBranch == null || remitterBranch.equals("") ? null : remitterBranch);
+		this.transactionCode = (transactionCodeDvId == null ? null : Constants.domainValueCache.get(transactionCodeDvId));
+		this.branchCode = branchCode;
+		this.transactionTime = (transactionTime == null || transactionTime.equals("") ? null : transactionTime);
+		this.costCenter = (costCenterDvId == null ? null : Constants.domainValueCache.get(costCenterDvId));
+		this.voucherType = (voucherTypeDvId == null ? null : Constants.domainValueCache.get(voucherTypeDvId));
+		this.transactionCategory = (transactionCategoryDvId == null ? null : Constants.domainValueCache.get(transactionCategoryDvId));
+		this.endAccountReference = (endAccountReference == null || endAccountReference.equals("") ? null : endAccountReference);
 	}
 }
