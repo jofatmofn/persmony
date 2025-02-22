@@ -78,8 +78,7 @@ public class MoneyTransactionService {
 		realisation = realisationRepository.save(realisation);
 		if (singleRealisationVO.getRealisationTypeDvId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 			if (singleRealisationVO.getSavingsAccountTransactionId() == null) {
-				savingsAccountTransaction = new SavingsAccountTransaction(Constants.domainValueCache.get(singleRealisationVO.getBankAccountDvId()), singleRealisationVO.getTransactionDate(), Math.abs(singleRealisationVO.getNetAmount()));
-				savingsAccountTransaction = savingsAccountTransactionRepository.save(savingsAccountTransaction);
+				throw new AppException("Savings Account Transaction Id cannot be null", null);
 			} else {
 				savingsAccountTransaction = savingsAccountTransactionRepository.findById(singleRealisationVO.getSavingsAccountTransactionId())
 						.orElseThrow(() -> new AppException("Invalid Account Transaction Id " + singleRealisationVO.getSavingsAccountTransactionId(), null));
@@ -170,8 +169,7 @@ public class MoneyTransactionService {
 			realisation(new SingleRealisationVO(
 					Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT,
 					investmentTransaction.getId(),
-					null,
-					txnSingleRealisationWithBankVO.getBankAccountDvId(),
+					txnSingleRealisationWithBankVO.getSavingsAccountTransactionId(),
 					null,
 					txnSingleRealisationWithBankVO.getNetAmount(),
 					txnSingleRealisationWithBankVO.getReturnedPrincipalAmount(),
@@ -320,7 +318,7 @@ public class MoneyTransactionService {
 				Constants.domainValueCache.get(investVO.getDefaultTaxGroupDvId())
 				);
 		
-		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getBankDvId());
+		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getSavingsAccountTransactionId());
 		
 		System.out.println("invest completed.");
 	}
@@ -625,10 +623,9 @@ public class MoneyTransactionService {
 		}
 	}
 	
-	private Realisation openNew(Investment newInvestment, List<ScheduleVO> paymentScheduleVOList, List<ScheduleVO> receiptScheduleVOList, List<ScheduleVO> accrualScheduleVOList, Long riReceiptRealisationId, Long bankDvId) {
+	private Realisation openNew(Investment newInvestment, List<ScheduleVO> paymentScheduleVOList, List<ScheduleVO> receiptScheduleVOList, List<ScheduleVO> accrualScheduleVOList, Long riReceiptRealisationId, Long savingsAccountTransactionId) {
 		InvestmentTransaction niPaymentTransaction;
 		Realisation niPaymentRealisation = null;
-		SavingsAccountTransaction niSavingsAccountTransaction = null;
 		boolean is_first;
 		
 		if (newInvestment.getIsAccrualApplicable() != null && !newInvestment.getIsAccrualApplicable() && !accrualScheduleVOList.isEmpty()) {
@@ -646,7 +643,7 @@ public class MoneyTransactionService {
 					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_PAYMENT),
 					paymentScheduleVO.getDueDate(),
 					paymentScheduleVO.getDueAmount(),
-					Constants.domainValueCache.get(is_first && (bankDvId != null || riReceiptRealisationId != null) ? Constants.DVID_TRANSACTION_STATUS_COMPLETED : Constants.DVID_TRANSACTION_STATUS_PENDING),
+					Constants.domainValueCache.get(is_first && (savingsAccountTransactionId != null || riReceiptRealisationId != null) ? Constants.DVID_TRANSACTION_STATUS_COMPLETED : Constants.DVID_TRANSACTION_STATUS_PENDING),
 					paymentScheduleVO.getReturnedPrincipalAmount(),
 					paymentScheduleVO.getInterestAmount(),
 					paymentScheduleVO.getTdsAmount(),
@@ -656,19 +653,12 @@ public class MoneyTransactionService {
 			niPaymentTransaction = investmentTransactionRepository.save(niPaymentTransaction);
 			
 			if (is_first) {
-				if (bankDvId != null) {
-					niSavingsAccountTransaction = new SavingsAccountTransaction(
-							Constants.domainValueCache.get(bankDvId),
-							paymentScheduleVO.getDueDate(),
-							paymentScheduleVO.getDueAmount());
-					niSavingsAccountTransaction = savingsAccountTransactionRepository.save(niSavingsAccountTransaction);
-				}
-				if (bankDvId != null || riReceiptRealisationId != null) {
+				if (savingsAccountTransactionId != null || riReceiptRealisationId != null) {
 					niPaymentRealisation = new Realisation(
 							niPaymentTransaction,
 							paymentScheduleVO.getDueDate(),
-							Constants.domainValueCache.get(riReceiptRealisationId == null? (bankDvId == null? Constants.DVID_REALISATION_TYPE_CASH : Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) : Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
-							riReceiptRealisationId == null? niSavingsAccountTransaction.getId() : riReceiptRealisationId,
+							Constants.domainValueCache.get(riReceiptRealisationId == null? (savingsAccountTransactionId == null? Constants.DVID_REALISATION_TYPE_CASH : Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) : Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
+							riReceiptRealisationId == null? savingsAccountTransactionId : riReceiptRealisationId,
 							paymentScheduleVO.getDueAmount(),
 							null,
 							null,

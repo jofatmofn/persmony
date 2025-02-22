@@ -28,15 +28,14 @@ import lombok.Setter;
 
 @Getter @Setter(AccessLevel.NONE)
 public class SbAcTxnComponent {
-	Long savingsAccountTransactionId;
 	HorizontalLayout layout;
+	IntegerField sbAcTxnIdIntegerField;	// TODO: Should be LongField
 	
-	public SbAcTxnComponent(SbAcTxnService sbAcTxnService, Long bankAccountDvId, Supplier<Date> transactionDateSupplier) {
-		IntegerField sbAcTxnIdIntegerField;
+	public SbAcTxnComponent(SbAcTxnService sbAcTxnService, Supplier<Long> bankAccountDvIdSupplier, Supplier<Date> transactionDateSupplier) {
 		Button fetchButton;
 		
 		layout = new HorizontalLayout();
-		sbAcTxnIdIntegerField = new IntegerField();
+		sbAcTxnIdIntegerField = new IntegerField("SAT Id");
 		layout.add(sbAcTxnIdIntegerField);
 		fetchButton = new Button("Fetch");
 		layout.add(fetchButton);
@@ -53,15 +52,14 @@ public class SbAcTxnComponent {
 			List<SavingsAccountTransactionVO> recordList = null;
 			
 			try {
-				if (bankAccountDvId == null || transactionDateSupplier.get() == null) {
-					notification = Notification.show("Bank Account and Transaction Date are required to fetch Savings Account Transactions");
-					notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				if (bankAccountDvIdSupplier == null || bankAccountDvIdSupplier.get() == null ||
+						transactionDateSupplier == null || transactionDateSupplier.get() == null) {
 					return;
 				}
 				sbAcTxnCriteriaVO = new SbAcTxnCriteriaVO();
 				sbAcTxnCriteriaVO.setFromDate(transactionDateSupplier.get());
 				sbAcTxnCriteriaVO.setToDate(transactionDateSupplier.get());
-				sbAcTxnCriteriaVO.setBankAccountDvId(bankAccountDvId);
+				sbAcTxnCriteriaVO.setBankAccountDvId(bankAccountDvIdSupplier.get());
 
 				dialog = new Dialog();
 				dialog.setHeaderTitle("SB A/c Transactions");
@@ -83,8 +81,7 @@ public class SbAcTxnComponent {
 				}
 				verticalLayout.add(savingsAccountTransactionsGrid);					
 				savingsAccountTransactionsGrid.addItemDoubleClickListener(dcEvent -> {
-					savingsAccountTransactionId = dcEvent.getItem().getSavingsAccountTransactionId();
-					sbAcTxnIdIntegerField.setValue(savingsAccountTransactionId.intValue()); // TODO: LongField
+					sbAcTxnIdIntegerField.setValue((int) dcEvent.getItem().getSavingsAccountTransactionId()); // TODO: LongField
 		        	dialog.close();
 				});
 				dialog.open();

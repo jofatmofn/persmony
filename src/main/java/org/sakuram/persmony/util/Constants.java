@@ -30,6 +30,9 @@ public class Constants {
 	public static final String CATEGORY_BRANCH = "Branch";
 	public static final String CATEGORY_TAX_GROUP = "TaxGrp";
 	public static final String CATEGORY_TRANSACTION_CATEGORY = "TxnCat";
+	public static final String CATEGORY_TRANSACTION_CODE = "TxnCod";
+	public static final String CATEGORY_COST_CENTER = "CstCntr";
+	public static final String CATEGORY_VOUCHER_TYPE = "VchrTyp";
 	public static final String CATEGORY_NONE = "None";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
@@ -90,6 +93,17 @@ public class Constants {
 	public static final Map<Long, Long> INVESTOR_MAP = Map.ofEntries(	// For performance, hard-coded. TODO: Should be read from DB
 		    Map.entry(107L, 1L),
 		    Map.entry(175L, 2L)
+	);
+
+	public static final Map<String, Long> DESC_TO_ID_MAP = Map.ofEntries(	// TODO: Should be read from DB
+		    Map.entry(CATEGORY_TRANSACTION_CODE + ":CLR", 224L),
+		    Map.entry(CATEGORY_TRANSACTION_CODE + ":CSH", 225L),
+		    Map.entry(CATEGORY_TRANSACTION_CODE + ":TRF", 226L),
+		    Map.entry(CATEGORY_COST_CENTER + ":NSE-EQ - Z", 236L),
+		    Map.entry(CATEGORY_VOUCHER_TYPE + ":Bank Payments", 227L),
+		    Map.entry(CATEGORY_VOUCHER_TYPE + ":Bank Receipts", 228L),
+		    Map.entry(CATEGORY_VOUCHER_TYPE + ":Book Voucher", 229L),
+		    Map.entry(CATEGORY_VOUCHER_TYPE + ":Journal Entry", 230L)
 	);
 
 	public static final Map<String, FieldSpecVO> SEARCH_FIELD_SPEC_MAP = new HashMap<String, FieldSpecVO>() {

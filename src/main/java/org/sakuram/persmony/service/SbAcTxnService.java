@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +43,16 @@ public class SbAcTxnService {
     	Double amount, balance;
     	Long bookingDvId, transactionCodeDvId, costCenterDvId, voucherTypeDvId, transactionCategoryDvId;
     	Integer branchCode;
+    	SimpleDateFormat targetDateFormat, targetTimeFormat, sourceFormat01, sourceFormat02, sourceFormat03, sourceFormat04, sourceFormat05, sourceFormat06;
+    	
+    	targetDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    	targetTimeFormat = new SimpleDateFormat("HH:mm:ss");
+    	sourceFormat01 = new SimpleDateFormat("dd-MMM-yyyy");
+    	sourceFormat02 = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    	sourceFormat03 = new SimpleDateFormat("dd MMM yyyy");
+    	sourceFormat04 = new SimpleDateFormat("dd/MM/yyyy");
+    	sourceFormat05 = new SimpleDateFormat("dd/MM/yy");
+    	sourceFormat06 = new SimpleDateFormat("dd-MM-yyyy");
     	
 		try (CSVParser csvParser = new CSVParser(new BufferedReader(new InputStreamReader(multipartFile.getInputStream())), CSVFormat.DEFAULT)) {
 			for (CSVRecord csvRecord : csvParser.getRecords()) {
@@ -73,8 +84,8 @@ public class SbAcTxnService {
 				// TODO: Following hard-coded transformation is to be performed based on import-specification
 				if (bankAccountDvId == 89 || bankAccountDvId == 98 || bankAccountDvId == 99) { // ICICI
 					// dd/MM/yyyy
-					valueDateStr = cellContentList.get(2).substring(6) + "-" + cellContentList.get(2).substring(3, 5) + "-" + cellContentList.get(2).substring(0, 2);
-					transactionDateStr = cellContentList.get(3).substring(6) + "-" + cellContentList.get(3).substring(3, 5) + "-" + cellContentList.get(3).substring(0, 2);
+					valueDateStr = targetDateFormat.format(sourceFormat04.parse(cellContentList.get(2)));
+					transactionDateStr = targetDateFormat.format(sourceFormat04.parse(cellContentList.get(3)));
 					if (!cellContentList.get(4).equals("-")) {
 						reference = cellContentList.get(4);
 					}
@@ -89,10 +100,10 @@ public class SbAcTxnService {
 					balance = Double.parseDouble(cellContentList.get(8));
 				} else if (bankAccountDvId == 90 || bankAccountDvId == 91 || bankAccountDvId == 112) { // HDFC
 					// dd/MM/yy
-					transactionDateStr = "20" + cellContentList.get(0).substring(6) + "-" + cellContentList.get(0).substring(3, 5) + "-" + cellContentList.get(0).substring(0, 2);
+					transactionDateStr = targetDateFormat.format(sourceFormat05.parse(cellContentList.get(0)));
 					narration = cellContentList.get(1);
 					reference = cellContentList.get(2);
-					valueDateStr = "20" + cellContentList.get(3).substring(6) + "-" + cellContentList.get(3).substring(3, 5) + "-" + cellContentList.get(3).substring(0, 2);
+					valueDateStr = targetDateFormat.format(sourceFormat05.parse(cellContentList.get(3)));
 					if (cellContentList.get(4).equals("")) {
 						amount = Double.parseDouble(cellContentList.get(5));
 						bookingDvId = Constants.DVID_BOOKING_CREDIT;
@@ -102,9 +113,9 @@ public class SbAcTxnService {
 					}
 					balance = Double.parseDouble(cellContentList.get(6));
 				} else if (bankAccountDvId == 94 || bankAccountDvId == 100) { // UBoI
-					// dd-MM-yyyy hh:mm:ss
-					transactionDateStr = cellContentList.get(1).substring(6, 10) + "-" + cellContentList.get(1).substring(3, 5) + "-" + cellContentList.get(1).substring(0, 2);
-					transactionTime = cellContentList.get(1).substring(11, 19);
+					// dd-MM-yyyy HH:mm:ss
+					transactionDateStr = targetDateFormat.format(sourceFormat02.parse(cellContentList.get(1)));
+					transactionTime = targetTimeFormat.format(sourceFormat02.parse(cellContentList.get(1)));
 					transactionId = cellContentList.get(2);
 					narration = cellContentList.get(3);
 					if (!cellContentList.get(5).equals("'-") && !cellContentList.get(5).equals("-") && !cellContentList.get(5).equals("")) {
@@ -123,8 +134,8 @@ public class SbAcTxnService {
 					balance = Double.parseDouble(cellContentList.get(9));
 				} else if (bankAccountDvId == 95) { // Indian
 					// dd/MM/yyyy
-					valueDateStr = cellContentList.get(0).substring(6) + "-" + cellContentList.get(0).substring(3, 5) + "-" + cellContentList.get(0).substring(0, 2);
-					transactionDateStr = cellContentList.get(1).substring(6) + "-" + cellContentList.get(1).substring(3, 5) + "-" + cellContentList.get(1).substring(0, 2);
+					valueDateStr = targetDateFormat.format(sourceFormat04.parse(cellContentList.get(0)));
+					transactionDateStr = targetDateFormat.format(sourceFormat04.parse(cellContentList.get(1)));
 					remitterBranch = cellContentList.get(2);
 					narration = cellContentList.get(3);
 					if (!cellContentList.get(4).equals("")) {
@@ -139,14 +150,125 @@ public class SbAcTxnService {
 					}
 					balance = Double.parseDouble(cellContentList.get(7).substring(0, cellContentList.get(7).length() - 2));
 				} else if (bankAccountDvId == 97) { // IOB
+					// dd-MMM-yyyy
+					transactionDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(0)));
+					valueDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(1)));
+					if (!cellContentList.get(2).equals("")) {
+						reference = cellContentList.get(2);
+					}
+					narration = cellContentList.get(3);
+					transactionCodeDvId = Constants.DESC_TO_ID_MAP.get(Constants.CATEGORY_TRANSACTION_CODE + ":" + cellContentList.get(4));
+					if (transactionCodeDvId == null) {
+						throw new AppException("Invalid Transaction Code", null);
+					}
+					if (cellContentList.get(5).equals("")) {
+						amount = Double.parseDouble(cellContentList.get(6));
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						amount = Double.parseDouble(cellContentList.get(5));
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					balance = Double.parseDouble(cellContentList.get(7));
 				} else if (bankAccountDvId == 108) { // PO
+					// dd-MM-yyyy
+					transactionDateStr = targetDateFormat.format(sourceFormat06.parse(cellContentList.get(2)));
+					valueDateStr = targetDateFormat.format(sourceFormat06.parse(cellContentList.get(3)));
+					narration = cellContentList.get(7);
+					if (cellContentList.get(11).equals("Cr.")) {
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					amount = Double.parseDouble(cellContentList.get(12).replace(",", ""));
+					balance = Double.parseDouble(cellContentList.get(14).replace(",", ""));
 				} else if (bankAccountDvId == 135 || bankAccountDvId == 204) { // Canara
+					cellContentList.replaceAll( cellContent -> {
+						return (cellContent.startsWith("=\"") ? cellContent.substring(2, cellContent.length() - 1) : cellContent);
+					});
+					// dd-MM-yyyy HH:mm:ss
+					transactionDateStr = targetDateFormat.format(sourceFormat02.parse(cellContentList.get(0)));
+					transactionTime = targetTimeFormat.format(sourceFormat02.parse(cellContentList.get(0)));
+					// dd MMM yyyy
+					valueDateStr = targetDateFormat.format(sourceFormat03.parse(cellContentList.get(1)));
+					if (!cellContentList.get(2).equals("") && !cellContentList.get(2).equals(" ") && !cellContentList.get(2).equals("0") && !cellContentList.get(2).equals("000000000000")) {
+						reference = cellContentList.get(2);
+					}
+					narration = cellContentList.get(3);
+					branchCode = Integer.valueOf(cellContentList.get(4));
+					if (cellContentList.get(5).equals("")) {
+						amount = Double.parseDouble(cellContentList.get(6).replace(",", ""));
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						amount = Double.parseDouble(cellContentList.get(5).replace(",", ""));
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					balance = Double.parseDouble(cellContentList.get(7).replace(",", ""));
 				} else if (bankAccountDvId == 157) { // ESAF
+					// dd/MM/yyyy
+					transactionDateStr = targetDateFormat.format(sourceFormat04.parse(cellContentList.get(1)));
+					narration = cellContentList.get(3);
+					if (cellContentList.get(11).equals("")) {
+						amount = Double.parseDouble(cellContentList.get(14).replace(",", ""));
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						amount = Double.parseDouble(cellContentList.get(11).replace(",", ""));
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					balance = Double.parseDouble(cellContentList.get(19).replace(",", ""));
 				} else if (bankAccountDvId == 165 || bankAccountDvId == 207 || bankAccountDvId == 208) { // Zerodha
+					narration = cellContentList.get(0);
+					// yyyy-MM-dd
+					transactionDateStr = cellContentList.get(1);
+					costCenterDvId = Constants.DESC_TO_ID_MAP.get(Constants.CATEGORY_COST_CENTER + ":" + cellContentList.get(2));
+					if (costCenterDvId == null) {
+						throw new AppException("Invalid Cost Center", null);
+					}
+					voucherTypeDvId = Constants.DESC_TO_ID_MAP.get(Constants.CATEGORY_VOUCHER_TYPE + ":" + cellContentList.get(3));
+					if (voucherTypeDvId == null) {
+						throw new AppException("Invalid Voucher Type", null);
+					}
+					if (cellContentList.get(4).equals("")) {
+						amount = Double.parseDouble(cellContentList.get(5));
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						amount = Double.parseDouble(cellContentList.get(4));
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					balance = Double.parseDouble(cellContentList.get(6));
 				} else if (bankAccountDvId == 178) { // Kotak Mahindra
+					// dd-MM-yyyy
+					transactionDateStr = targetDateFormat.format(sourceFormat06.parse(cellContentList.get(1)));
+					valueDateStr = targetDateFormat.format(sourceFormat06.parse(cellContentList.get(2)));
+					narration = cellContentList.get(3);
+					if (!cellContentList.get(4).equals("")) {
+						reference = cellContentList.get(4);
+					}
+					amount = Double.parseDouble(cellContentList.get(5).replace(",", ""));
+					if (cellContentList.get(6).equals("CR")) {
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					balance = Double.parseDouble(cellContentList.get(7).replace(",", ""));
 				} else if (bankAccountDvId == 239 || bankAccountDvId == 241) { // ICICI-PPF
+					// dd/MM/yyyy
+					transactionDateStr = targetDateFormat.format(sourceFormat04.parse(cellContentList.get(2)));
+					if (!cellContentList.get(3).equals("-")) {
+						reference = cellContentList.get(3);
+					}
+					narration = cellContentList.get(4);
+					if (cellContentList.get(6).equals("-")) {
+						amount = Double.parseDouble(cellContentList.get(7).replace(",", ""));
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						amount = Double.parseDouble(cellContentList.get(6).replace(",", ""));
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					balance = Double.parseDouble(cellContentList.get(8).replace(",", ""));
 				} else if (bankAccountDvId == 240) { // HDFC-PPF
+					
 				} else if (bankAccountDvId == 242) { // PO-PPF
+					
 				} else {
 					throw new AppException("Unexpected bank account", null);
 				}

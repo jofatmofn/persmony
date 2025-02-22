@@ -20,7 +20,7 @@ public class InvestVO {
 	Long dematAccountDvId;
 	Long taxabilityDvId;
 	Boolean isAccrualApplicable;
-	Long bankDvId;
+	Long savingsAccountTransactionId;
 	String investmentIdWithProvider;
 	Double units;
 	Double faceValue, cleanPrice, accruedInterest, charges;

@@ -12,7 +12,6 @@ public class SingleRealisationVO {
 	long realisationTypeDvId;
 	long investmentTransactionId;
 	Long savingsAccountTransactionId;
-	Long bankAccountDvId;
 	Long realisationId;
 	Double netAmount, returnedPrincipalAmount, interestAmount, tdsAmount;
 	Date transactionDate;

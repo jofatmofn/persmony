@@ -13,6 +13,6 @@ public class TxnSingleRealisationWithBankVO {
 	long transactionTypeDvId;
 	Double netAmount, returnedPrincipalAmount, interestAmount, tdsAmount;
 	Date transactionDate;
-	Long bankAccountDvId;
+	Long savingsAccountTransactionId;
 	Long taxGroupDvId;
 }

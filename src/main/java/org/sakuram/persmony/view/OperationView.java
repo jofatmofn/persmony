@@ -288,7 +288,7 @@ public class OperationView extends Div {
 		formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
 		
 		realisationIdIntegerField = new IntegerField();
-		sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId(), () -> Date.valueOf(transactionDatePicker.getValue()));
+		sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO == null || investmentTransaction2VO.getDefaultBankAccountIdValueVO() == null ? null : investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId()), () -> (transactionDatePicker == null || transactionDatePicker.getValue() == null ? null : Date.valueOf(transactionDatePicker.getValue())));
 		if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 			formLayout.addFormItem(sbAcTxnComponent.getLayout(), "SB A/c Txn Id");
 		} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
@@ -323,7 +323,7 @@ public class OperationView extends Div {
 					return;
 				}
 				if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
-					if (sbAcTxnComponent.getSavingsAccountTransactionId() == null || sbAcTxnComponent.getSavingsAccountTransactionId() <= 0) {
+					if (sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue() == null || sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue() <= 0) {
 						showError("Invalid SB A/c Txn Id");
 						return;
 					}
@@ -339,8 +339,7 @@ public class OperationView extends Div {
 				singleRealisationVO = new SingleRealisationVO(
 						Long.valueOf(selectedRealisationIdValueVO.getId()),
 						investmentTransaction2VO.getInvestmentTransactionId(),
-						sbAcTxnComponent.getSavingsAccountTransactionId(),
-						null,
+						Long.valueOf(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue()),
 						realisationIdIntegerField.getValue() == null ? null : Long.valueOf(realisationIdIntegerField.getValue()),
 						amountComponent.getNetAmount(),
 						amountComponent.getReturnedPrincipalAmount(),
@@ -370,6 +369,8 @@ public class OperationView extends Div {
 		Select<IdValueVO> bankAccountDvSelect, taxGroupDvSelect;
 		Button saveButton;
 		String label;
+		HorizontalLayout hLayout;
+		SbAcTxnComponent sbAcTxnComponent;
 		
 		label = (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_PAYMENT) ? "Paid" : ((transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_RECEIPT) ? "Received" : "Accrued");
 		// UI Elements
@@ -384,9 +385,13 @@ public class OperationView extends Div {
 		
 		if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
 			bankAccountDvSelect = null;
+			sbAcTxnComponent = null;
 		} else {
+			hLayout = new HorizontalLayout();
+			formLayout.addFormItem(hLayout, "Realisation");
 			bankAccountDvSelect = newDvSelect("Bank Account", Constants.CATEGORY_ACCOUNT, false);
-			formLayout.addFormItem(bankAccountDvSelect, "Bank Account");
+			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (bankAccountDvSelect == null || bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()), () -> (transactionDatePicker == null || transactionDatePicker.getValue() == null ? null : Date.valueOf(transactionDatePicker.getValue())));
+			hLayout.add(bankAccountDvSelect, sbAcTxnComponent.getLayout());
 		}
 		
 		taxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
@@ -415,7 +420,7 @@ public class OperationView extends Div {
 					showError("Date cannot be Empty");
 					return;
 				}
-				if (transactionTypeDvId != Constants.DVID_TRANSACTION_TYPE_ACCRUAL && bankAccountDvSelect.getValue() == null) {
+				if (transactionTypeDvId != Constants.DVID_TRANSACTION_TYPE_ACCRUAL && (sbAcTxnComponent == null || sbAcTxnComponent.getSbAcTxnIdIntegerField() == null)) {
 					showError("Account cannot be Empty");
 					return;
 				}
@@ -429,7 +434,7 @@ public class OperationView extends Div {
 						amountComponent.getInterestAmount(),
 						amountComponent.getTdsAmount(),
 						Date.valueOf(transactionDatePicker.getValue()),
-						(transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL || bankAccountDvSelect.getValue() == null) ? null : bankAccountDvSelect.getValue().getId(),
+						(transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL || sbAcTxnComponent.getSbAcTxnIdIntegerField() == null) ? null : Long.valueOf(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue()),
 						taxGroupDvSelect.getValue() == null? null : taxGroupDvSelect.getValue().getId());
 				try {
 					moneyTransactionService.txnSingleRealisationWithBank(txnSingleRealisationWithBankVO);
@@ -453,6 +458,7 @@ public class OperationView extends Div {
 		HorizontalLayout hLayout;		
 		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
 		List<ScheduleVO> paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList;
+		SbAcTxnComponent sbAcTxnComponent;
 
 		// UI Elements
 		hLayout = new HorizontalLayout();
@@ -497,9 +503,6 @@ public class OperationView extends Div {
 		accrualApplicabilityRadioButtonGroup.setItems("Not Known", "Not Applicable", "Applicable");
 		accrualApplicabilityRadioButtonGroup.setValue("Not Known");
 		
-		bankAccountDvSelect = newDvSelect("Account", Constants.CATEGORY_ACCOUNT, true);
-		formLayout.addFormItem(bankAccountDvSelect, "Realisation from Account");
-
 		unitsNumberField = new NumberField();
 		formLayout.addFormItem(unitsNumberField, "No. of Units");
 		
@@ -546,6 +549,12 @@ public class OperationView extends Div {
 		});
 		hLayout.add(paymentScheduleButton, receiptScheduleButton, accrualScheduleButton);
 		
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Investment Realisation");
+		bankAccountDvSelect = newDvSelect("Account", Constants.CATEGORY_ACCOUNT, true);
+		sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (bankAccountDvSelect == null || bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()), () -> (paymentScheduleVOList == null || paymentScheduleVOList.size() == 0 ? null : paymentScheduleVOList.get(0).getDueDate()));
+		hLayout.add(bankAccountDvSelect, sbAcTxnComponent.getLayout());
+
 		dynamicReceiptPeriodicityRadioButtonGroup = new RadioButtonGroup<>();
 		formLayout.addFormItem(dynamicReceiptPeriodicityRadioButtonGroup, "Dynamic Receipt Periodicity");
 		dynamicReceiptPeriodicityRadioButtonGroup.setItems("Not Applicable", "Yearly");
@@ -603,7 +612,7 @@ public class OperationView extends Div {
 						dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(),
 						taxabilityDvSelect.getValue() == null ? null : taxabilityDvSelect.getValue().getId(),
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
-						(bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()),
+						(sbAcTxnComponent.getSbAcTxnIdIntegerField() == null ? null : Long.valueOf(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue())),
 						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
 						unitsNumberField.getValue() == null ? null : (double)unitsNumberField.getValue().doubleValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),
