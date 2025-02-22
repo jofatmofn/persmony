@@ -39,9 +39,9 @@ public class SbAcTxnService {
 	
 	public void importSavingsAccountTransactions(long bankAccountDvId, MultipartFile multipartFile) throws IOException, ParseException {
     	List<String> cellContentList;
-    	String transactionDateStr, valueDateStr, reference, narration, transactionId, utrNumber, remitterBranch, transactionTime, endAccountReference;
+    	String transactionDateStr, valueDateStr, reference, narration, transactionId, utrNumber, remitterBranch, transactionTime;
     	Double amount, balance;
-    	Long bookingDvId, transactionCodeDvId, costCenterDvId, voucherTypeDvId, transactionCategoryDvId;
+    	Long bookingDvId, transactionCodeDvId, costCenterDvId, voucherTypeDvId;
     	Integer branchCode;
     	SimpleDateFormat targetDateFormat, targetTimeFormat, sourceFormat01, sourceFormat02, sourceFormat03, sourceFormat04, sourceFormat05, sourceFormat06;
     	
@@ -71,14 +71,12 @@ public class SbAcTxnService {
 				utrNumber = null;
 				remitterBranch = null;
 				transactionTime = null;
-				endAccountReference = null;
 				amount = null;
 				balance = null;
 				bookingDvId = null;
 				transactionCodeDvId = null;
 				costCenterDvId = null;
 				voucherTypeDvId = null;
-				transactionCategoryDvId = null;
 				branchCode = null;
 				
 				// TODO: Following hard-coded transformation is to be performed based on import-specification
@@ -227,7 +225,7 @@ public class SbAcTxnService {
 					if (voucherTypeDvId == null) {
 						throw new AppException("Invalid Voucher Type", null);
 					}
-					if (cellContentList.get(4).equals("")) {
+					if (cellContentList.get(4).equals("") || cellContentList.get(4).equals("0.000000")) {
 						amount = Double.parseDouble(cellContentList.get(5));
 						bookingDvId = Constants.DVID_BOOKING_CREDIT;
 					} else {
@@ -274,7 +272,7 @@ public class SbAcTxnService {
 				}
 				
 				savingsAccountTransactionRepository.save(new SavingsAccountTransaction(
-						bankAccountDvId, transactionDateStr, amount, bookingDvId, valueDateStr, reference, narration, balance, transactionId, utrNumber, remitterBranch, transactionCodeDvId, branchCode, transactionTime, costCenterDvId, voucherTypeDvId, transactionCategoryDvId, endAccountReference
+						bankAccountDvId, transactionDateStr, amount, bookingDvId, valueDateStr, reference, narration, balance, transactionId, utrNumber, remitterBranch, transactionCodeDvId, branchCode, transactionTime, costCenterDvId, voucherTypeDvId
 						));
 			}
 		}
@@ -301,17 +299,7 @@ public class SbAcTxnService {
 		
 		savingsAccountTransaction = savingsAccountTransactionRepository.findById(savingsAccountTransactionId)
 			.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + savingsAccountTransactionId, null));
-		if (savingsAccountTransaction.getTransactionCategory() != null) {
-			dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(savingsAccountTransaction.getTransactionCategory());
-			sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(1);
-			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-					null,
-					new IdValueVO(savingsAccountTransaction.getTransactionCategory().getId(), savingsAccountTransaction.getTransactionCategory().getValue()),
-					(dvFlagsSbAcTxnCategoryVO == null || dvFlagsSbAcTxnCategoryVO.getDvCategory().equals(Constants.CATEGORY_NONE)) ?
-							new IdValueVO(null, savingsAccountTransaction.getEndAccountReference()) :
-							new IdValueVO(Long.parseLong(savingsAccountTransaction.getEndAccountReference()), Constants.domainValueCache.get(Long.parseLong(savingsAccountTransaction.getEndAccountReference())).getValue()),
-					savingsAccountTransaction.getAmount()));
-		} else if (savingsAccountTransaction.getSbAcTxnCategoryList() != null) {
+		if (savingsAccountTransaction.getSbAcTxnCategoryList() != null) {
 			sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(savingsAccountTransaction.getSbAcTxnCategoryList().size());
 			for (SbAcTxnCategory sbAcTxnCategory : savingsAccountTransaction.getSbAcTxnCategoryList()) {
 				dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(sbAcTxnCategory.getTransactionCategory());
@@ -339,16 +327,8 @@ public class SbAcTxnService {
 			.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + savingsAccountTransactionId, null));
 		
 		if (sbAcTxnCategoryVOFromUiList.size() == 0) {
-			savingsAccountTransaction.setTransactionCategory(null);
-			savingsAccountTransaction.setEndAccountReference(null);
-			savingsAccountTransaction.getSbAcTxnCategoryList().clear();
-		} else if (sbAcTxnCategoryVOFromUiList.size() == 1) {
-			savingsAccountTransaction.setTransactionCategory(Constants.domainValueCache.get(sbAcTxnCategoryVOFromUiList.get(0).getTransactionCategory().getId()));
-			savingsAccountTransaction.setEndAccountReference(endAccountReferenceUiToDb(sbAcTxnCategoryVOFromUiList.get(0).getEndAccountReference()));
 			savingsAccountTransaction.getSbAcTxnCategoryList().clear();
 		} else {
-			savingsAccountTransaction.setTransactionCategory(null);
-			savingsAccountTransaction.setEndAccountReference(null);
 			for (int i = 0; i < savingsAccountTransaction.getSbAcTxnCategoryList().size(); i++) {
 				SbAcTxnCategory sbAcTxnCategoryDeleted = savingsAccountTransaction.getSbAcTxnCategoryList().get(i);
 				if (!sbAcTxnCategoryVOFromUiList.stream().anyMatch(sbAcTxnCategoryVOFromUi -> sbAcTxnCategoryVOFromUi.getSbAcTxnCategoryId().equals(sbAcTxnCategoryDeleted.getId()))) {

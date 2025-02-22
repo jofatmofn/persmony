@@ -26,14 +26,13 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 		
 		mainQueryStringBuffer.append("SELECT SAT.id AS satId, baDV.id AS baId, baDV.value AS bankAccount, SAT.transaction_date, SAT.amount, bDV.id AS bId, bDV.value AS booking, SAT.value_date, SAT.reference, ");
 		mainQueryStringBuffer.append("SAT.narration, SAT.balance, SAT.transaction_id, SAT.utr_number, SAT.remitter_branch, tcoDV.id AS tcId, tcoDV.value AS transactionCode, SAT.branch_code, ");
-		mainQueryStringBuffer.append("SAT.transaction_time, ccDV.id AS ccId, ccDV.value AS costCenter, vtDV.id AS vtId, vtDV.value AS voucherType, tcaDV.id AS tcaId, tcaDV.value AS transactionCategory, SAT.end_account_reference ");
+		mainQueryStringBuffer.append("SAT.transaction_time, ccDV.id AS ccId, ccDV.value AS costCenter, vtDV.id AS vtId, vtDV.value AS voucherType ");
 		mainQueryStringBuffer.append("FROM savings_account_transaction SAT ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value baDV ON SAT.bank_account_fk = baDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value bDV ON SAT.booking_fk = bDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tcoDV ON SAT.transaction_code_fk = tcoDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ccDV ON SAT.cost_center_fk = ccDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value vtDV ON SAT.voucher_type_fk = vtDV.id ");
-		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tcaDV ON SAT.transaction_category_fk = tcaDV.id ");
 		mainQueryStringBuffer.append("WHERE balance IS NOT NULL "); // TODO: Once the old SAT records are deleted, make this condition as 1 = 1
 
 		if (sbAcTxnCriteriaVO.getFromDate() != null) {
@@ -72,21 +71,10 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 		}
 		
 		if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null && sbAcTxnCriteriaVO.getTransactionCategoryDvId() == -1L) {
-			mainQueryStringBuffer.append("AND SAT.transaction_category_fk IS NULL AND NOT EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
+			mainQueryStringBuffer.append("AND NOT EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
 			mainQueryStringBuffer.append("WHERE SATC.savings_account_transaction_fk = SAT.id) ");
 		} else if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null || sbAcTxnCriteriaVO.getEndAccountReference() != null) {
-			mainQueryStringBuffer.append("AND (1 = 1 ");
-			if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
-				mainQueryStringBuffer.append("AND SAT.transaction_category_fk = ");
-				mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
-				mainQueryStringBuffer.append(" ");
-			}
-			if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
-				mainQueryStringBuffer.append("AND ");
-				mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SAT.end_account_reference", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
-			}
-			mainQueryStringBuffer.append("OR ");
-			mainQueryStringBuffer.append("EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
+			mainQueryStringBuffer.append("AND EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
 			mainQueryStringBuffer.append("WHERE SATC.savings_account_transaction_fk = SAT.id ");
 			if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
 				mainQueryStringBuffer.append("AND SATC.transaction_category_fk = ");
@@ -97,7 +85,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 				mainQueryStringBuffer.append("AND ");
 				mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SATC.end_account_reference", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
 			}
-			mainQueryStringBuffer.append(")) ");
+			mainQueryStringBuffer.append(") ");
 		}
 		
 		mainQueryStringBuffer.append("ORDER BY SAT.transaction_date ");

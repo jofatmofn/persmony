@@ -27,8 +27,6 @@ public class SavingsAccountTransactionVO {
 	String transactionTime;
 	IdValueVO costCenter;
 	IdValueVO voucherType;
-	IdValueVO transactionCategory;
-	String endAccountReference;
 
 	public SavingsAccountTransactionVO(long savingsAccountTransactionId, String bankAccount, Date transactionDate, Double amount) {
 		this.savingsAccountTransactionId = savingsAccountTransactionId;
@@ -72,11 +70,5 @@ public class SavingsAccountTransactionVO {
 		} else {
 			this.voucherType = new IdValueVO(((BigInteger) columns[colPos++]).longValue(), (String) columns[colPos++]);
 		}
-		if (columns[colPos] == null) {
-			colPos = colPos + 2;
-		} else {
-			this.transactionCategory = new IdValueVO(((BigInteger) columns[colPos++]).longValue(), (String) columns[colPos++]);
-		}
-		this.endAccountReference = columns[colPos] == null ? null : (String) columns[colPos]; colPos++;
 	}
 }

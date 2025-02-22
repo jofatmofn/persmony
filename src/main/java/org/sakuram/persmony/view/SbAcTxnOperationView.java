@@ -265,8 +265,7 @@ public class SbAcTxnOperationView extends Div {
 		
 		savingsAccountTransactionsGrid = new Grid<>(SavingsAccountTransactionVO.class);
 		savingsAccountTransactionsGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
-		savingsAccountTransactionsGrid.setColumns("savingsAccountTransactionId", "bankAccount.value", "transactionDate", "narration", "booking.value", "amount", "balance", "valueDate", "reference", "transactionId", "utrNumber", "remitterBranch", "transactionCode.value", "branchCode", "transactionTime", "costCenter.value", "voucherType.value", "transactionCategory.value", "endAccountReference");
-		// savingsAccountTransactionsGrid.setColumns("savingsAccountTransactionId", "bankAccount.value", "transactionDate", "narration", "booking.value", "amount", "balance", "valueDate", "reference", "transactionId", "utrNumber", "remitterBranch", "branchCode", "transactionTime", "transactionCategory == null ? \"\" : transactionCategory.value", "end_account_reference");
+		savingsAccountTransactionsGrid.setColumns("savingsAccountTransactionId", "bankAccount.value", "transactionDate", "narration", "booking.value", "amount", "balance", "valueDate", "reference", "transactionId", "utrNumber", "remitterBranch", "transactionCode.value", "branchCode", "transactionTime", "costCenter.value", "voucherType.value");
 		for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionsGrid.getColumns()) {
 			column.setResizable(true);
 		}

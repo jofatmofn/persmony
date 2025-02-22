@@ -90,13 +90,6 @@ public class SavingsAccountTransaction {
 	@JoinColumn(name="voucher_type_fk", nullable=true)
 	private DomainValue voucherType;
 	
-	@ManyToOne
-	@JoinColumn(name="transaction_category_fk", nullable=true)
-	private DomainValue transactionCategory;
-	
-	@Column(name="end_account_reference", length=127, nullable=true)
-	private String endAccountReference;
-	
 	@JsonIgnore
 	@OneToMany(mappedBy = "savingsAccountTransaction", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("id")
@@ -108,7 +101,7 @@ public class SavingsAccountTransaction {
 		this.amount = amount;
 	}
 	
-	public SavingsAccountTransaction(Long bankAccountDvId, String transactionDateStr, Double amount, Long bookingDvId, String valueDateStr, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId, Long transactionCategoryDvId, String endAccountReference) throws ParseException {
+	public SavingsAccountTransaction(Long bankAccountDvId, String transactionDateStr, Double amount, Long bookingDvId, String valueDateStr, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) throws ParseException {
 		this.bankAccount = (bankAccountDvId == null ? null : Constants.domainValueCache.get(bankAccountDvId));
 		this.transactionDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(transactionDateStr).getTime());
 		this.amount = amount;
@@ -125,7 +118,5 @@ public class SavingsAccountTransaction {
 		this.transactionTime = (transactionTime == null || transactionTime.equals("") ? null : transactionTime);
 		this.costCenter = (costCenterDvId == null ? null : Constants.domainValueCache.get(costCenterDvId));
 		this.voucherType = (voucherTypeDvId == null ? null : Constants.domainValueCache.get(voucherTypeDvId));
-		this.transactionCategory = (transactionCategoryDvId == null ? null : Constants.domainValueCache.get(transactionCategoryDvId));
-		this.endAccountReference = (endAccountReference == null || endAccountReference.equals("") ? null : endAccountReference);
 	}
 }
