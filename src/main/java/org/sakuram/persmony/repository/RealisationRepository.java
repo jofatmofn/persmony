@@ -39,4 +39,5 @@ public interface RealisationRepository extends JpaRepository<Realisation, Long> 
 			+ " ORDER BY I.product_provider_fk, IT.due_date DESC")
 	public List<Object[]> retrieveAccrualsRealisations(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") Long investorId, @Param("productProviderId") Long productProviderId, @Param("taxDetailNotInForm26as") boolean taxDetailNotInForm26as, @Param("taxDetailNotInAis") boolean taxDetailNotInAis, @Param("interestAvailable") boolean interestAvailable, @Param("tdsAvailable") boolean tdsAvailable);
 	
+	public List<Realisation> findByDetailsReference(Long detailsReference);
 }

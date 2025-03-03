@@ -20,7 +20,7 @@ import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
-
+import org.sakuram.persmony.valueobject.SbAcTxnImportStatsVO;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import com.vaadin.flow.component.Component;
@@ -124,11 +124,34 @@ public class SbAcTxnOperationView extends Div {
 		Upload upload;
 		Button importButton;
 		ScopeLocalDummy01 uploadedContents;
+		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
 		
 		uploadedContents = new ScopeLocalDummy01();
 		
+		savingsAccountTransactionsGrid = new Grid<>(SavingsAccountTransactionVO.class);
+		savingsAccountTransactionsGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
+		savingsAccountTransactionsGrid.setAllRowsVisible(true);
+		savingsAccountTransactionsGrid.setColumns("savingsAccountTransactionId", "transactionDate", "narration", "booking.value", "amount", "balance");
+		for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionsGrid.getColumns()) {
+			column.setResizable(true);
+		}
+		
 		bankAccountDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT, null, false, false);
 		formLayout.addFormItem(bankAccountDvSelect, "Account");
+		bankAccountDvSelect.addValueChangeListener(event -> {
+			List<SavingsAccountTransactionVO> recordList;
+			recordList = new ArrayList<SavingsAccountTransactionVO>(1);
+			try {
+				recordList.add(sbAcTxnService.fetchLastSavingsAccountTransaction(bankAccountDvSelect.getValue().getId()));
+			} catch (Exception e) {
+				ViewFuncs.showError(UtilFuncs.messageFromException(e));
+				return;
+			} finally {
+				savingsAccountTransactionsGrid.setItems(recordList);
+			}
+		});
+
+		formLayout.addFormItem(savingsAccountTransactionsGrid, "Last Transaction");
 		
 		fileBuffer = new FileBuffer();
 		upload = new Upload(fileBuffer);
@@ -176,6 +199,7 @@ public class SbAcTxnOperationView extends Div {
 		// On click of Fetch
 		importButton.addClickListener(event -> {
 			Notification notification;
+			SbAcTxnImportStatsVO sbAcTxnImportStatsVO;
 
 			try {
 				// Validation
@@ -189,8 +213,12 @@ public class SbAcTxnOperationView extends Div {
 				}
 				
 				try {
-					sbAcTxnService.importSavingsAccountTransactions(bankAccountDvSelect.getValue().getId(), uploadedContents.getMultipartFile());
-					notification = Notification.show("Savings Account Transactions Imported.");
+					sbAcTxnImportStatsVO = sbAcTxnService.importSavingsAccountTransactions(bankAccountDvSelect.getValue().getId(), uploadedContents.getMultipartFile());
+					notification = Notification.show("Savings Account Transactions Imported.\nCredits: Count - " + sbAcTxnImportStatsVO.getCreditCount() +
+							" Amount - " + sbAcTxnImportStatsVO.getCreditTotal() +
+							"\n.Debits: Count - " + sbAcTxnImportStatsVO.getDebitCount() +
+							" Amount - " + sbAcTxnImportStatsVO.getDebitTotal() + ".");
+					notification.setDuration(15000);
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 					uploadedContents.setMultipartFile(null);
 				} catch (Exception e) {
@@ -250,6 +278,7 @@ public class SbAcTxnOperationView extends Div {
 		formLayout.addFormItem(bookingRadioButtonGroup, "Booking");
 		
 		transactionCategoryDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_TRANSACTION_CATEGORY, null, true, true);
+		transactionCategoryDvSelect.getListDataView().addItem(new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()));
 		formLayout.addFormItem(transactionCategoryDvSelect, "Transaction Category");
 		
 		endAccountReferenceOperatorSelect = ViewFuncs.newSelect(FieldSpecVO.getTxtOperatorList(), "Operator", true, false);
@@ -375,6 +404,9 @@ public class SbAcTxnOperationView extends Div {
 		sbAcTxnCategoryGrid = new Grid<>(SbAcTxnCategoryVO.class, false);
 		sbAcTxnCategoryGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		sbAcTxnCategoryGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
+		for (Column<SbAcTxnCategoryVO> column : sbAcTxnCategoryGrid.getColumns()) {
+			column.setResizable(true);
+		}
 		sbAcTxnCategoryGridLDV = sbAcTxnCategoryGrid.setItems(sbAcTxnCategoryVOList);
 		
 		verticalLayout.add(sbAcTxnCategoryGrid);
@@ -426,7 +458,7 @@ public class SbAcTxnOperationView extends Div {
 						return;
 					}
 				}
-				if (Math.abs(totalAmount - sbAcTxnAmount.doubleValue()) > Constants.EPSILON) {
+				if (!sbAcTxnCategoryVOList.isEmpty() && Math.abs(totalAmount - sbAcTxnAmount.doubleValue()) > Constants.EPSILON) {
 					ViewFuncs.showError("Total of Category-wise amounts (" + totalAmount + ") should match the SB A/c Txn. Amount " + sbAcTxnAmount);
 					return;
 				}
@@ -529,11 +561,13 @@ public class SbAcTxnOperationView extends Div {
 		});
 		
 		sbAcTxnCategoryGrid.addItemDoubleClickListener(e -> {
-			sbAcTxnCategoryEditor.editItem(e.getItem());
-		    Component editorComponent = e.getColumn().getEditorComponent();
-		    if (editorComponent instanceof Focusable<?>) {
-		        ((Focusable<?>) editorComponent).focus();
-		    }
+			if (e.getItem().getTransactionCategory() == null || !e.getItem().getTransactionCategory().getId().equals(Constants.DVID_TRANSACTION_CATEGORY_DTI)) {
+			    sbAcTxnCategoryEditor.editItem(e.getItem());
+			    Component editorComponent = e.getColumn().getEditorComponent();
+			    if (editorComponent instanceof Focusable<?>) {
+			        ((Focusable<?>) editorComponent).focus();
+			    }
+			}
 		});
 		
 		dialog.open();

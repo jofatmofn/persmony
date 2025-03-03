@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
@@ -73,17 +74,33 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 		if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null && sbAcTxnCriteriaVO.getTransactionCategoryDvId() == -1L) {
 			mainQueryStringBuffer.append("AND NOT EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
 			mainQueryStringBuffer.append("WHERE SATC.savings_account_transaction_fk = SAT.id) ");
+			mainQueryStringBuffer.append("AND NOT EXISTS(SELECT 1 FROM realisation R ");
+			mainQueryStringBuffer.append("WHERE R.details_reference = SAT.id) ");
 		} else if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null || sbAcTxnCriteriaVO.getEndAccountReference() != null) {
-			mainQueryStringBuffer.append("AND EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
-			mainQueryStringBuffer.append("WHERE SATC.savings_account_transaction_fk = SAT.id ");
-			if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
-				mainQueryStringBuffer.append("AND SATC.transaction_category_fk = ");
-				mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
-				mainQueryStringBuffer.append(" ");
-			}
-			if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
-				mainQueryStringBuffer.append("AND ");
-				mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SATC.end_account_reference", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
+			if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null && sbAcTxnCriteriaVO.getTransactionCategoryDvId() == Constants.DVID_TRANSACTION_CATEGORY_DTI) {
+				mainQueryStringBuffer.append("AND EXISTS(SELECT 1 FROM realisation R JOIN investment_transaction IT ON R.investment_transaction_fk = IT.id ");
+				mainQueryStringBuffer.append("WHERE R.details_reference = SAT.id ");
+				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
+					if (NumberUtils.isDigits(sbAcTxnCriteriaVO.getEndAccountReference())) {
+						mainQueryStringBuffer.append("AND IT.investment_fk = ");
+						mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getEndAccountReference());
+						mainQueryStringBuffer.append(" ");
+					} else {
+						mainQueryStringBuffer.append("AND 1 = 0 ");
+					}
+				}
+			} else {
+				mainQueryStringBuffer.append("AND EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
+				mainQueryStringBuffer.append("WHERE SATC.savings_account_transaction_fk = SAT.id ");
+				if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
+					mainQueryStringBuffer.append("AND SATC.transaction_category_fk = ");
+					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
+					mainQueryStringBuffer.append(" ");
+				}
+				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
+					mainQueryStringBuffer.append("AND ");
+					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SATC.end_account_reference", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
+				}
 			}
 			mainQueryStringBuffer.append(") ");
 		}

@@ -12,8 +12,10 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.sakuram.persmony.bean.DomainValue;
+import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.bean.SavingsAccountTransaction;
 import org.sakuram.persmony.bean.SbAcTxnCategory;
+import org.sakuram.persmony.repository.RealisationRepository;
 import org.sakuram.persmony.repository.SavingsAccountTransactionRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
 import org.sakuram.persmony.util.AppException;
@@ -24,6 +26,7 @@ import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
+import org.sakuram.persmony.valueobject.SbAcTxnImportStatsVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,15 +39,23 @@ public class SbAcTxnService {
 	SavingsAccountTransactionRepository savingsAccountTransactionRepository;
 	@Autowired
 	SbAcTxnCategoryRepository sbAcTxnCategoryRepository;
+	@Autowired
+	RealisationRepository realisationRepository;
 	
-	public void importSavingsAccountTransactions(long bankAccountDvId, MultipartFile multipartFile) throws IOException, ParseException {
+	public SbAcTxnImportStatsVO importSavingsAccountTransactions(long bankAccountDvId, MultipartFile multipartFile) throws IOException, ParseException {
     	List<String> cellContentList;
     	String transactionDateStr, valueDateStr, reference, narration, transactionId, utrNumber, remitterBranch, transactionTime;
     	Double amount, balance;
     	Long bookingDvId, transactionCodeDvId, costCenterDvId, voucherTypeDvId;
     	Integer branchCode;
     	SimpleDateFormat targetDateFormat, targetTimeFormat, sourceFormat01, sourceFormat02, sourceFormat03, sourceFormat04, sourceFormat05, sourceFormat06;
+    	int debitCount, creditCount;
+    	double debitTotal, creditTotal;
     	
+    	debitCount = 0;
+    	creditCount = 0;
+    	debitTotal = 0;
+    	creditTotal = 0;
     	targetDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     	targetTimeFormat = new SimpleDateFormat("HH:mm:ss");
     	sourceFormat01 = new SimpleDateFormat("dd-MMM-yyyy");
@@ -263,10 +274,25 @@ public class SbAcTxnService {
 						bookingDvId = Constants.DVID_BOOKING_DEBIT;
 					}
 					balance = Double.parseDouble(cellContentList.get(8).replace(",", ""));
-				} else if (bankAccountDvId == 240) { // HDFC-PPF
+				/* } else if (bankAccountDvId == 240) { // HDFC-PPF
 					
-				} else if (bankAccountDvId == 242) { // PO-PPF
+				} else if (bankAccountDvId == 242) { // PO-PPF */
 					
+				} else if (bankAccountDvId == 296) { // Canara-CC
+					// dd-MM-yyyy
+					transactionDateStr = targetDateFormat.format(sourceFormat06.parse(cellContentList.get(0)));
+					reference = cellContentList.get(1);
+					narration = cellContentList.get(2);
+					amount = Double.parseDouble(cellContentList.get(3).substring(0, cellContentList.get(3).length() - 3).replace(",", ""));
+					if (cellContentList.get(3).endsWith("Cr")) {
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					balance = Double.parseDouble(cellContentList.get(4).substring(0, cellContentList.get(4).length() - 3).replace(",", ""));
+					if (cellContentList.get(4).endsWith("Dr") && balance != 0) {
+						balance = -1 * balance;
+					}
 				} else {
 					throw new AppException("Unexpected bank account", null);
 				}
@@ -274,10 +300,34 @@ public class SbAcTxnService {
 				savingsAccountTransactionRepository.save(new SavingsAccountTransaction(
 						bankAccountDvId, transactionDateStr, amount, bookingDvId, valueDateStr, reference, narration, balance, transactionId, utrNumber, remitterBranch, transactionCodeDvId, branchCode, transactionTime, costCenterDvId, voucherTypeDvId
 						));
+				if (bookingDvId == Constants.DVID_BOOKING_DEBIT) {
+					debitCount++;
+					debitTotal += amount;
+				} else {
+					creditCount++;
+					creditTotal += amount;
+				}
 			}
 		}
+		return new SbAcTxnImportStatsVO(debitCount, debitTotal, creditCount, creditTotal);
 	}
-	
+
+	public SavingsAccountTransactionVO fetchLastSavingsAccountTransaction(long bankAccountDvId) {
+		SavingsAccountTransaction savingsAccountTransaction;
+		SavingsAccountTransactionVO savingsAccountTransactionVO;
+		savingsAccountTransaction = savingsAccountTransactionRepository.findLastSbAcTxnInBankAccount(bankAccountDvId);
+		savingsAccountTransactionVO = new SavingsAccountTransactionVO();
+		if (savingsAccountTransaction != null) {
+			savingsAccountTransactionVO.setSavingsAccountTransactionId(savingsAccountTransaction.getId());
+			savingsAccountTransactionVO.setTransactionDate(savingsAccountTransaction.getTransactionDate());
+			savingsAccountTransactionVO.setNarration(savingsAccountTransaction.getNarration());
+			savingsAccountTransactionVO.setBooking(new IdValueVO(savingsAccountTransaction.getBooking().getId(), savingsAccountTransaction.getBooking().getValue()));
+			savingsAccountTransactionVO.setAmount(savingsAccountTransaction.getAmount());
+			savingsAccountTransactionVO.setBalance(savingsAccountTransaction.getBalance());
+		}
+		return savingsAccountTransactionVO;
+	}
+
 	public List<SavingsAccountTransactionVO> searchSavingsAccountTransactions(SbAcTxnCriteriaVO sbAcTxnCriteriaVO) {
 		List<Object[]> savingsAccountTransactionList;
 		List<SavingsAccountTransactionVO> savingsAccountTransactionVOList;
@@ -297,10 +347,10 @@ public class SbAcTxnService {
 		List<SbAcTxnCategoryVO> sbAcTxnCategoryVOList;
 		DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
 		
+		sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>();
 		savingsAccountTransaction = savingsAccountTransactionRepository.findById(savingsAccountTransactionId)
 			.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + savingsAccountTransactionId, null));
 		if (savingsAccountTransaction.getSbAcTxnCategoryList() != null) {
-			sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(savingsAccountTransaction.getSbAcTxnCategoryList().size());
 			for (SbAcTxnCategory sbAcTxnCategory : savingsAccountTransaction.getSbAcTxnCategoryList()) {
 				dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(sbAcTxnCategory.getTransactionCategory());
 				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
@@ -311,8 +361,13 @@ public class SbAcTxnService {
 								new IdValueVO(Long.parseLong(sbAcTxnCategory.getEndAccountReference()), Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()),
 						sbAcTxnCategory.getAmount()));
 			}
-		} else {
-			sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(0);
+		}
+		for (Realisation realisation : realisationRepository.findByDetailsReference(savingsAccountTransactionId)) {
+			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+					-1L,
+					new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()),
+					new IdValueVO(realisation.getInvestmentTransaction().getInvestment().getId(), realisation.getInvestmentTransaction().getInvestment().getProductName()),
+					realisation.getAmount()));
 		}
 
 		return sbAcTxnCategoryVOList;
@@ -338,6 +393,9 @@ public class SbAcTxnService {
 				}
 			}
 			for (SbAcTxnCategoryVO sbAcTxnCategoryVO : sbAcTxnCategoryVOFromUiList) {
+				if (sbAcTxnCategoryVO.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_DTI) {
+					continue;
+				}
 				transactionCategoryDvUi = Constants.domainValueCache.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
 				if (sbAcTxnCategoryVO.getSbAcTxnCategoryId() == null) {
 					SbAcTxnCategory sbAcTxnCategoryInserted = new SbAcTxnCategory(

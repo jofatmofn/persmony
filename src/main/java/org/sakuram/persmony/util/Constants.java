@@ -50,6 +50,7 @@ public class Constants {
 	public static final long DVID_REALISATION_TYPE_CASH = 102;
 	public static final long DVID_REALISATION_TYPE_ANOTHER_REALISATION = 103;
 	public static final long DVID_TRANSACTION_CATEGORY_OTHERS = 221;
+	public static final long DVID_TRANSACTION_CATEGORY_DTI = 231;
 	public static final long DVID_BOOKING_CREDIT = 222;
 	public static final long DVID_BOOKING_DEBIT = 223;
 
