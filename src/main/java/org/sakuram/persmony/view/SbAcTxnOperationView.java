@@ -47,6 +47,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
@@ -80,6 +81,7 @@ public class SbAcTxnOperationView extends Div {
 			{
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Import"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "Categorise"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Create"));
 			}
 		};
 		selectSpan = new Span();
@@ -105,6 +107,9 @@ public class SbAcTxnOperationView extends Div {
 	            case 2:
 	            	handleSbAcTxnCategorise(formLayout);
 	            	break;
+	            case 3:
+	            	handleSbAcTxnCreate(formLayout);
+	            	break;
 	            }
 			} catch (Exception e) {
 				ViewFuncs.showError("System Error!!! Contact Support.");
@@ -116,6 +121,130 @@ public class SbAcTxnOperationView extends Div {
 		selectSpan.add(operationSelect);
 		add(selectSpan);
 		add(formLayout);
+	}
+	
+	private void handleSbAcTxnCreate(FormLayout formLayout) {
+		Select<IdValueVO> bankAccountDvSelect, bookingDvSelect, transactionCodeDvSelect, costCenterDvSelect, voucherTypeDvSelect;
+		DatePicker transactionDateDatePicker, valueDateDatePicker;
+		NumberField amountNumberField, balanceNumberField;
+		TextField referenceTextField, narrationTextField, transactionIdTextField, utrNumberTextField, remitterBranchTextField, transactionTimeTextField;
+		IntegerField branchCodeIntegerField;
+		HorizontalLayout hLayout;
+		Button saveButton;
+		
+		// UI Elements
+		bankAccountDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT, null, true, false);
+		formLayout.addFormItem(bankAccountDvSelect, "Account");
+		
+		transactionDateDatePicker = new DatePicker("Transaction");
+		valueDateDatePicker = new DatePicker("Value");
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Date");
+		hLayout.add(transactionDateDatePicker, valueDateDatePicker);
+		
+		amountNumberField = new NumberField("Txn. Amount");
+		balanceNumberField = new NumberField("Balance");
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Amount");
+		hLayout.add(amountNumberField, balanceNumberField);
+
+		bookingDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_BOOKING, null, false, false);
+		formLayout.addFormItem(bookingDvSelect, "Booking");
+		
+		narrationTextField = new TextField();
+		formLayout.addFormItem(narrationTextField, "Narration");
+		
+		referenceTextField = new TextField();
+		formLayout.addFormItem(referenceTextField, "Reference");
+		
+		transactionIdTextField = new TextField();
+		formLayout.addFormItem(transactionIdTextField, "Transaction Id");
+		
+		utrNumberTextField = new TextField();
+		formLayout.addFormItem(utrNumberTextField, "UTR Number");
+		
+		remitterBranchTextField = new TextField();
+		formLayout.addFormItem(remitterBranchTextField, "Remitter Branch");
+		
+		transactionCodeDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_TRANSACTION_CODE, null, true, false);
+		formLayout.addFormItem(transactionCodeDvSelect, "Transaction Code");
+		
+		branchCodeIntegerField = new IntegerField();
+		formLayout.addFormItem(branchCodeIntegerField, "Branch Code");
+		
+		transactionTimeTextField = new TextField();
+		formLayout.addFormItem(transactionTimeTextField, "Transaction Time");
+		
+		costCenterDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_COST_CENTER, null, true, false);
+		formLayout.addFormItem(costCenterDvSelect, "Cost Center");
+		
+		voucherTypeDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_VOUCHER_TYPE, null, true, false);
+		formLayout.addFormItem(voucherTypeDvSelect, "Voucher Type");
+		
+		saveButton = new Button("Save");
+		formLayout.add(saveButton);
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setDisableOnClick(true);
+		// On click of Save
+		saveButton.addClickListener(event -> {
+			Notification notification;
+			SavingsAccountTransactionVO savingsAccountTransactionVO;
+			
+			try {
+				// Validation
+				if (transactionDateDatePicker.getValue() == null) {
+					ViewFuncs.showError("Transaction Date cannot be Empty");
+					return;
+				}
+				if (bookingDvSelect.getValue() == null) {
+					ViewFuncs.showError("Booking cannot be Empty");
+					return;
+				}
+				if (amountNumberField.getValue() == null || amountNumberField.getValue() == 0) {
+					ViewFuncs.showError("Transaction Amount cannot be Empty");
+					return;
+				}
+				if (narrationTextField.getValue() == null || narrationTextField.getValue().trim().equals("")) {
+					ViewFuncs.showError("Narration cannot be Empty");
+					return;
+				}
+				if (balanceNumberField.getValue() == null) {
+					ViewFuncs.showError("Balance cannot be Empty");
+					return;
+				}
+				
+				// Back-end Call
+				savingsAccountTransactionVO =  new SavingsAccountTransactionVO(
+						-1L,
+						bankAccountDvSelect.getValue() == null ? null : new IdValueVO(bankAccountDvSelect.getValue().getId(), null),
+						Date.valueOf(transactionDateDatePicker.getValue()),
+						(double)amountNumberField.getValue().doubleValue(),
+						new IdValueVO(bookingDvSelect.getValue().getId(), null),
+						valueDateDatePicker.getValue() == null ? null : Date.valueOf(valueDateDatePicker.getValue()),
+						(referenceTextField.getValue() == null || referenceTextField.getValue().equals("") ? null : referenceTextField.getValue()),
+						narrationTextField.getValue(),
+						(double)balanceNumberField.getValue().doubleValue(),
+						(transactionIdTextField.getValue() == null || transactionIdTextField.getValue().equals("") ? null : transactionIdTextField.getValue()),
+						(utrNumberTextField.getValue() == null || utrNumberTextField.getValue().equals("") ? null : utrNumberTextField.getValue()),
+						(remitterBranchTextField.getValue() == null || remitterBranchTextField.getValue().equals("") ? null : remitterBranchTextField.getValue()),
+						transactionCodeDvSelect.getValue() == null ? null : new IdValueVO(transactionCodeDvSelect.getValue().getId(), null),
+						branchCodeIntegerField.getValue() == null ? null : (int)branchCodeIntegerField.getValue().intValue(),
+						(transactionTimeTextField.getValue() == null || transactionTimeTextField.getValue().equals("") ? null : transactionTimeTextField.getValue()),
+						costCenterDvSelect.getValue() == null ? null : new IdValueVO(costCenterDvSelect.getValue().getId(), null),
+						voucherTypeDvSelect.getValue() == null ? null : new IdValueVO(voucherTypeDvSelect.getValue().getId(), null)
+				);
+				try {
+					sbAcTxnService.createSavingsAccountTransaction(savingsAccountTransactionVO);
+					notification = Notification.show("Savings Account Transaction Created Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				} catch (Exception e) {
+					ViewFuncs.showError(UtilFuncs.messageFromException(e));
+					return;
+				}
+			} finally {
+				saveButton.setEnabled(true);
+			}
+		});
 	}
 	
 	private void handleSbAcTxnImport(FormLayout formLayout) {

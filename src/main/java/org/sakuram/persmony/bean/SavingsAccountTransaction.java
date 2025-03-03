@@ -102,11 +102,32 @@ public class SavingsAccountTransaction {
 	}
 	
 	public SavingsAccountTransaction(Long bankAccountDvId, String transactionDateStr, Double amount, Long bookingDvId, String valueDateStr, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) throws ParseException {
+		this(bankAccountDvId,
+				new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(transactionDateStr).getTime()),
+				amount,
+				bookingDvId,
+				(valueDateStr == null || valueDateStr.equals("") ? null : new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(valueDateStr).getTime())),
+				reference,
+				narration,
+				balance,
+				transactionId,
+				utrNumber,
+				remitterBranch,
+				transactionCodeDvId,
+				branchCode,
+				transactionTime,
+				costCenterDvId,
+				voucherTypeDvId
+		);
+	}
+
+	public SavingsAccountTransaction(Long bankAccountDvId, Date transactionDate, Double amount, Long bookingDvId, Date valueDate, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) 
+	{
 		this.bankAccount = (bankAccountDvId == null ? null : Constants.domainValueCache.get(bankAccountDvId));
-		this.transactionDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(transactionDateStr).getTime());
+		this.transactionDate = transactionDate;
 		this.amount = amount;
 		this.booking = Constants.domainValueCache.get(bookingDvId);
-		this.valueDate = (valueDateStr == null || valueDateStr.equals("") ? null : new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(valueDateStr).getTime()));
+		this.valueDate = valueDate;
 		this.reference = (reference == null || reference.equals("") ? null : reference);
 		this.narration = narration;
 		this.balance = balance;

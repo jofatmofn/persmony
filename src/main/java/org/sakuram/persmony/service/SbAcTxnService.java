@@ -428,6 +428,27 @@ public class SbAcTxnService {
 		}
 	}
 	
+	public void createSavingsAccountTransaction(SavingsAccountTransactionVO savingsAccountTransactionVO) {
+		savingsAccountTransactionRepository.save(new SavingsAccountTransaction(
+				savingsAccountTransactionVO.getBankAccount() == null ? null : savingsAccountTransactionVO.getBankAccount().getId(),
+				savingsAccountTransactionVO.getTransactionDate(),
+				savingsAccountTransactionVO.getAmount(),
+				savingsAccountTransactionVO.getBooking() == null ? null : savingsAccountTransactionVO.getBooking().getId(),
+				savingsAccountTransactionVO.getValueDate(),
+				savingsAccountTransactionVO.getReference(),
+				savingsAccountTransactionVO.getNarration(),
+				savingsAccountTransactionVO.getBalance(),
+				savingsAccountTransactionVO.getTransactionId(),
+				savingsAccountTransactionVO.getUtrNumber(),
+				savingsAccountTransactionVO.getRemitterBranch(),
+				savingsAccountTransactionVO.getTransactionCode() == null ? null : savingsAccountTransactionVO.getTransactionCode().getId(),
+				savingsAccountTransactionVO.getBranchCode(),
+				savingsAccountTransactionVO.getTransactionTime(),
+				savingsAccountTransactionVO.getCostCenter() == null ? null : savingsAccountTransactionVO.getCostCenter().getId(),
+				savingsAccountTransactionVO.getVoucherType() == null ? null : savingsAccountTransactionVO.getVoucherType().getId()
+		));
+	}
+	
 	private String endAccountReferenceUiToDb(IdValueVO idValueVO) {
 		if (idValueVO == null) {
 			return null;

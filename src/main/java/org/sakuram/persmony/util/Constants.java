@@ -34,6 +34,7 @@ public class Constants {
 	public static final String CATEGORY_COST_CENTER = "CstCntr";
 	public static final String CATEGORY_VOUCHER_TYPE = "VchrTyp";
 	public static final String CATEGORY_NONE = "None";
+	public static final String CATEGORY_BOOKING = "Booking";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
