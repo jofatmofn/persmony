@@ -60,7 +60,7 @@ public class SavingsAccountTransaction {
 	@Column(name="narration", length=255, nullable=true)	//TOD: false
 	private String narration;
 	
-	@Column(name="balance", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)	//TOD: false
+	@Column(name="balance", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)	//Balance is not applicable for non-banking transaction
 	private Double balance;
 
 	@Column(name="transaction_id", length=15, nullable=true)

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.sakuram.persmony.service.MiscService;
+import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.IdValueVO;
 
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -49,7 +50,7 @@ public class ViewFuncs {
     
     private static void createSelect(Select<IdValueVO> dvSelect, List<IdValueVO> idValueVOList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
 		if (isNullAValue) {
-			idValueVOList.add(0, new IdValueVO(-1L, "Empty"));
+			idValueVOList.add(0, new IdValueVO(Constants.DVID_EMPTY_SELECT, "Empty"));
 		}
 		dvSelect.setItemLabelGenerator(idValueVO -> {
 			if (isNoSelectionAllowed && idValueVO == null) {	// Required if no selection is allowed

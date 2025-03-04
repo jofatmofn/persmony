@@ -208,14 +208,15 @@ public class SbAcTxnOperationView extends Div {
 					ViewFuncs.showError("Narration cannot be Empty");
 					return;
 				}
-				if (balanceNumberField.getValue() == null) {
-					ViewFuncs.showError("Balance cannot be Empty");
+				if (bankAccountDvSelect.getValue() != null && balanceNumberField.getValue() == null ||
+						bankAccountDvSelect.getValue() == null && balanceNumberField.getValue() != null) {
+					ViewFuncs.showError("Balance is applicable (only) for a banking Transaction");
 					return;
 				}
 				
 				// Back-end Call
 				savingsAccountTransactionVO =  new SavingsAccountTransactionVO(
-						-1L,
+						Constants.DVID_EMPTY_SELECT,
 						bankAccountDvSelect.getValue() == null ? null : new IdValueVO(bankAccountDvSelect.getValue().getId(), null),
 						Date.valueOf(transactionDateDatePicker.getValue()),
 						(double)amountNumberField.getValue().doubleValue(),
@@ -223,7 +224,7 @@ public class SbAcTxnOperationView extends Div {
 						valueDateDatePicker.getValue() == null ? null : Date.valueOf(valueDateDatePicker.getValue()),
 						(referenceTextField.getValue() == null || referenceTextField.getValue().equals("") ? null : referenceTextField.getValue()),
 						narrationTextField.getValue(),
-						(double)balanceNumberField.getValue().doubleValue(),
+						(balanceNumberField.getValue() == null ? null : (double)balanceNumberField.getValue().doubleValue()),
 						(transactionIdTextField.getValue() == null || transactionIdTextField.getValue().equals("") ? null : transactionIdTextField.getValue()),
 						(utrNumberTextField.getValue() == null || utrNumberTextField.getValue().equals("") ? null : utrNumberTextField.getValue()),
 						(remitterBranchTextField.getValue() == null || remitterBranchTextField.getValue().equals("") ? null : remitterBranchTextField.getValue()),
@@ -398,7 +399,7 @@ public class SbAcTxnOperationView extends Div {
 		formLayout.addFormItem(hLayout, "Narration");
 		hLayout.add(narrationOperatorSelect, narrationTextField);
 		
-		bankAccountDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT, null, true, false);
+		bankAccountDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT, null, true, true);
 		formLayout.addFormItem(bankAccountDvSelect, "Account");
 		
 		bookingRadioButtonGroup = new RadioButtonGroup<String>();

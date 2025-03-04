@@ -34,7 +34,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tcoDV ON SAT.transaction_code_fk = tcoDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ccDV ON SAT.cost_center_fk = ccDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value vtDV ON SAT.voucher_type_fk = vtDV.id ");
-		mainQueryStringBuffer.append("WHERE balance IS NOT NULL "); // TODO: Once the old SAT records are deleted, make this condition as 1 = 1
+		mainQueryStringBuffer.append("WHERE 1 = 1 ");
 
 		if (sbAcTxnCriteriaVO.getFromDate() != null) {
 			mainQueryStringBuffer.append("AND COALESCE(SAT.value_date, SAT.transaction_date) >= '");
@@ -61,9 +61,13 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SAT.narration", sbAcTxnCriteriaVO.getNarrationOperator(), sbAcTxnCriteriaVO.getNarration())));
 		}
 		if (sbAcTxnCriteriaVO.getBankAccountDvId() != null) {
-			mainQueryStringBuffer.append("AND SAT.bank_account_fk = ");
-			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getBankAccountDvId());
-			mainQueryStringBuffer.append(" ");
+			if (sbAcTxnCriteriaVO.getBankAccountDvId() == Constants.DVID_EMPTY_SELECT) {
+				mainQueryStringBuffer.append("AND SAT.bank_account_fk IS NULL ");
+			} else {
+				mainQueryStringBuffer.append("AND SAT.bank_account_fk = ");
+				mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getBankAccountDvId());
+				mainQueryStringBuffer.append(" ");
+			}
 		}
 		if (sbAcTxnCriteriaVO.getBookingDvId() != null) {
 			mainQueryStringBuffer.append("AND SAT.booking_fk = ");
@@ -71,7 +75,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append(" ");
 		}
 		
-		if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null && sbAcTxnCriteriaVO.getTransactionCategoryDvId() == -1L) {
+		if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null && sbAcTxnCriteriaVO.getTransactionCategoryDvId() == Constants.DVID_EMPTY_SELECT) {
 			mainQueryStringBuffer.append("AND NOT EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
 			mainQueryStringBuffer.append("WHERE SATC.savings_account_transaction_fk = SAT.id) ");
 			mainQueryStringBuffer.append("AND NOT EXISTS(SELECT 1 FROM realisation R ");

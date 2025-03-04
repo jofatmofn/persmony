@@ -51,7 +51,7 @@ public class SavingsAccountTransactionVO {
 		this.valueDate = columns[colPos] == null ? null : (Date) columns[colPos]; colPos++;
 		this.reference = columns[colPos] == null ? null : (String) columns[colPos]; colPos++;
 		this.narration = columns[colPos] == null ? null : (String) columns[colPos]; colPos++;
-		this.balance = ((BigDecimal) columns[colPos++]).doubleValue();
+		this.balance = columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue(); colPos++;
 		this.transactionId = columns[colPos] == null ? null : (String) columns[colPos]; colPos++;
 		this.utrNumber = columns[colPos] == null ? null : (String) columns[colPos]; colPos++;
 		this.remitterBranch = columns[colPos] == null ? null : (String) columns[colPos]; colPos++;
