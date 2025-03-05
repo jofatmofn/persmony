@@ -36,6 +36,16 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value vtDV ON SAT.voucher_type_fk = vtDV.id ");
 		mainQueryStringBuffer.append("WHERE 1 = 1 ");
 
+		if (sbAcTxnCriteriaVO.getFromId() != null) {
+			mainQueryStringBuffer.append("AND SAT.id >= ");
+			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getFromId());
+			mainQueryStringBuffer.append(" ");
+		}
+		if (sbAcTxnCriteriaVO.getToId() != null) {
+			mainQueryStringBuffer.append("AND SAT.id <= ");
+			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getToId());
+			mainQueryStringBuffer.append(" ");
+		}
 		if (sbAcTxnCriteriaVO.getFromDate() != null) {
 			mainQueryStringBuffer.append("AND COALESCE(SAT.value_date, SAT.transaction_date) >= '");
 			mainQueryStringBuffer.append(Constants.ANSI_DATE_FORMAT.format(sbAcTxnCriteriaVO.getFromDate()));
@@ -109,7 +119,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append(") ");
 		}
 		
-		mainQueryStringBuffer.append("ORDER BY SAT.transaction_date ");
+		mainQueryStringBuffer.append("ORDER BY SAT.transaction_date, SAT.id ");
 		queryString = mainQueryStringBuffer.toString();
     	LogManager.getLogger().debug(queryString);
     	query = entityManager.createNativeQuery(queryString);

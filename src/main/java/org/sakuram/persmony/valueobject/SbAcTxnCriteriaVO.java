@@ -11,6 +11,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SbAcTxnCriteriaVO {
+	Long fromId;
+	Long toId;
 	Date fromDate;
 	Date toDate;
 	Double fromAmount;

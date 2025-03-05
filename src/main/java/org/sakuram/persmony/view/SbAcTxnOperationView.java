@@ -364,6 +364,7 @@ public class SbAcTxnOperationView extends Div {
 	
 	private void handleSbAcTxnCategorise(FormLayout formLayout) {
 		DatePicker sbAcTxnFromDatePicker, sbAcTxnToDatePicker;
+		IntegerField sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField;	// TODO: LongField
 		NumberField sbAcTxnFromAmoutNumberField, sbAcTxnToAmoutNumberField;
 		TextField narrationTextField, endAccountReferenceTextField;
 		Select<IdValueVO> bankAccountDvSelect, transactionCategoryDvSelect;
@@ -380,6 +381,12 @@ public class SbAcTxnOperationView extends Div {
 			ViewFuncs.showError(UtilFuncs.messageFromException(e));
 			return;
 		}
+		
+		sbAcTxnFromIdIntegerField = new IntegerField("From");
+		sbAcTxnToIdIntegerField = new IntegerField("To");
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "SB Ac Txn Id");
+		hLayout.add(sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField);
 		
 		sbAcTxnFromDatePicker = new DatePicker("From");
 		sbAcTxnToDatePicker = new DatePicker("To");
@@ -438,6 +445,11 @@ public class SbAcTxnOperationView extends Div {
 
 			try {
 				// Validation
+				if (sbAcTxnFromIdIntegerField.getValue() != null && sbAcTxnToIdIntegerField.getValue() != null &&
+						sbAcTxnFromIdIntegerField.getValue() > sbAcTxnToIdIntegerField.getValue()) {
+					ViewFuncs.showError("From SB Ac Txn Id cannot be greater than the To SB Ac Txn Id");
+					return;
+				}
 				if (sbAcTxnFromDatePicker.getValue() != null && sbAcTxnToDatePicker.getValue() != null &&
 						Date.valueOf(sbAcTxnFromDatePicker.getValue()).after(Date.valueOf(sbAcTxnToDatePicker.getValue()))) {
 					ViewFuncs.showError("From Date cannot be after the To Date");
@@ -471,6 +483,8 @@ public class SbAcTxnOperationView extends Div {
 				
 				// Back-end Call
 				sbAcTxnCriteriaVO = new SbAcTxnCriteriaVO(
+						sbAcTxnFromIdIntegerField.getValue() == null ? null : (long)sbAcTxnFromIdIntegerField.getValue(),
+						sbAcTxnToIdIntegerField.getValue() == null ? null : (long)sbAcTxnToIdIntegerField.getValue(),
 						sbAcTxnFromDatePicker.getValue() == null ? null : Date.valueOf(sbAcTxnFromDatePicker.getValue()),
 						sbAcTxnToDatePicker.getValue() == null ? null : Date.valueOf(sbAcTxnToDatePicker.getValue()),
 						sbAcTxnFromAmoutNumberField.getValue() == null ? null : (double)sbAcTxnFromAmoutNumberField.getValue().doubleValue(),
