@@ -16,6 +16,7 @@ public class Constants {
 	public static final double EPSILON = 0.0000000009D;
 	
 	public static final String CATEGORY_INVESTOR = "Invstr";
+	public static final String CATEGORY_PRIMARY_INVESTOR = "PrimaryInvestor";
 	public static final String CATEGORY_PARTY = "Party"; /* Product Provider, Facilitator */
 	public static final String CATEGORY_PRODUCT_TYPE = "PrdType";
 	public static final String CATEGORY_ACCOUNTING_BASIS = "AcBasis";
@@ -52,9 +53,28 @@ public class Constants {
 	public static final long DVID_REALISATION_TYPE_ANOTHER_REALISATION = 103;
 	public static final long DVID_TRANSACTION_CATEGORY_OTHERS = 221;
 	public static final long DVID_TRANSACTION_CATEGORY_DTI = 231;
+	public static final long DVID_TRANSACTION_CATEGORY_PROPERTY_RENT = 219;
+	public static final long DVID_TRANSACTION_CATEGORY_TAX_RENTAL_INCOME = 282;
+	public static final long DVID_TRANSACTION_CATEGORY_TAX_PROPERTY = 281;
+	public static final long DVID_TRANSACTION_CATEGORY_TAX_WATER = 283;
+	public static final long DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND = 233;
+	public static final long DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND_TDS = 272;
+	public static final long DVID_TRANSACTION_CATEGORY_MUTUAL_FUND_DIVIDEND = 234;
+	public static final long DVID_TRANSACTION_CATEGORY_MUTUAL_FUND_DIVIDEND_TDS = 214;
+	public static final long DVID_TRANSACTION_CATEGORY_SB_INTEREST = 218;
+	public static final long DVID_TRANSACTION_CATEGORY_IT_REFUND_INTEREST = 304;
+	public static final long DVID_TRANSACTION_CATEGORY_IT_REFUND_INTEREST_TDS = 305;
+	public static final long DVID_TRANSACTION_CATEGORY_NPS_TIER_1 = 212;
+	public static final long DVID_TRANSACTION_CATEGORY_NPS_TIER_2 = 213;
+	public static final long DVID_TRANSACTION_CATEGORY_DONATION = 217;
+	public static final long DVID_TRANSACTION_CATEGORY_EQUITY_BUYBACK = 307;
+	public static final long DVID_TRANSACTION_CATEGORY_EQUITY_BUYBACK_TDS = 308;
+	public static final long DVID_TRANSACTION_CATEGORY_INTERACCOUNTS_GIFT_TRANSFER = 275;
+	public static final long DVID_TRANSACTION_CATEGORY_INCOME_TAX = 216;
 	public static final long DVID_BOOKING_CREDIT = 222;
 	public static final long DVID_BOOKING_DEBIT = 223;
 	public static final long DVID_EMPTY_SELECT = -1L;
+	public static final long DVID_NO_BANK_ACCOUNT_DEFAULT_INVESTOR = 1;
 
 	public static final int FLAG_POSITION_ACCOUNT_TYPE = 0;
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;
@@ -72,6 +92,9 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_SAVINGS = "SB";
 	public static final String ACCOUNT_TYPE_FUNDS = "Funds";
 	public static final String ACCOUNT_TYPE_DEMAT = "Demat";
+	public static final String ACCOUNT_TYPE_PPF = "PPF";
+
+	public static final String END_ACCOUNT_REFERENCE_HEALTH_INSURANCE = "Health Insurance";
 	
 	public static final char ACCOUNT_STATUS_OPEN = 'O';
 	public static final char ACCOUNT_STATUS_CLOSED = 'C';

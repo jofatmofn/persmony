@@ -10,13 +10,20 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.ObjectUtils;
 import org.javatuples.Pair;
+import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.bean.Realisation;
+import org.sakuram.persmony.bean.SavingsAccountTransaction;
+import org.sakuram.persmony.bean.SbAcTxnCategory;
 import org.sakuram.persmony.repository.InvestmentRepository;
 import org.sakuram.persmony.repository.InvestmentTransactionRepository;
+import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.util.DomainValueFlags;
+import org.sakuram.persmony.valueobject.DetailsForTaxFilingRequestVO;
+import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.PeriodSummaryCriteriaVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +40,8 @@ public class ReportService {
 	InvestmentRepository investmentRepository;
 	@Autowired
 	InvestmentTransactionRepository investmentTransactionRepository;
+	@Autowired
+	SbAcTxnCategoryRepository sbAcTxnCategoryRepository;
 
 	final Integer CRITERION_INVESTOR = 1;
 	final Integer CRITERION_IS_CLOSED = 2;
@@ -436,6 +445,345 @@ public class ReportService {
 		recordList.add(new Object[] {"Tax Slabs are not taken into consideration. Flat 30% is used to compute the tax. There's no surcharge."});
 		recordList.add(new Object[] {"Some of the income might be post TDS, but not known yet, and hence treated as 0 TDS."});
 		recordList.add(new Object[] {"Incomes and TDS outside PersMony are not included."});
+		return reportList;
+	}
+
+	public List<List<Object[]>> detailsForTaxFiling(DetailsForTaxFilingRequestVO incomeTaxFilingDetailsRequestVO) throws ParseException {
+		List<List<Object[]>> reportList;
+		List<Object[]> recordList;
+		List<List<Object[]>> reportTableList;
+		Object[] previousReportRow;
+		java.sql.Date fyStartDate, fyEndDate;
+		DvFlagsAccountVO dvFlagsAccountVO;
+		DomainValue domainValue;
+		SavingsAccountTransaction savingsAccountTransaction;
+
+		final int TABLE_IND_HP_RENT = 0;
+		final int TABLE_IND_HP_TAX_RENTAL_INCOME = 1;
+		final int TABLE_IND_HP_TAX_PROPERTY_WATER = 2;
+		final int TABLE_IND_OS_DIVIDEND = 3;
+		final int TABLE_IND_OS_SB_INTEREST = 4;
+		final int TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST = 5;
+		final int TABLE_IND_OS_IT_REFUND_INTEREST = 6;
+		final int TABLE_IND_OS_OTHER_INTEREST = 7;
+		final int TABLE_IND_VI_A_INVESTMENT = 8;
+		final int TABLE_IND_80G = 9;
+		final int TABLE_IND_EI_INTEREST = 10;
+		final int TABLE_IND_EI_OTHER = 11;
+		final int TABLE_IND_TAX_PAYMENT_ADV_SA = 12;
+		final int TABLE_IND_80D_HEALTH_INSURANCE = 13;
+		final int NO_OF_TABLES = 14;
+
+		reportList = new ArrayList<List<Object[]>>(1);
+		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
+
+		reportTableList = new ArrayList<List<Object[]>>(NO_OF_TABLES);
+		for(int i = 0; i < NO_OF_TABLES; i++) {
+			reportTableList.add(new ArrayList<Object[]>());
+		}
+
+		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(incomeTaxFilingDetailsRequestVO.getFyStartYear() + "-04-01").getTime());
+		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1) + "-03-31").getTime());
+		// TODO: What-if ValueDate is present?
+		// TODO: What-if the date and FY as per the provider don't match?
+
+		for (SbAcTxnCategory sbAcTxnCategory : sbAcTxnCategoryRepository.findBySavingsAccountTransactionTransactionDateBetweenOrderBySavingsAccountTransactionTransactionDateAscSavingsAccountTransactionIdAsc(fyStartDate, fyEndDate)) {
+			savingsAccountTransaction = sbAcTxnCategory.getSavingsAccountTransaction();
+
+			if (savingsAccountTransaction.getBankAccount() == null) {
+				dvFlagsAccountVO = null;
+				domainValue = Constants.domainValueCache.get(Constants.DVID_NO_BANK_ACCOUNT_DEFAULT_INVESTOR); // TODO: Handle this in a better way
+			} else {
+				dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(savingsAccountTransaction.getBankAccount());
+				domainValue = miscService.getPrimaryInvestor(Constants.domainValueCache.get(dvFlagsAccountVO.getInvestorDvId()));
+			}
+
+			if (domainValue.getId() != incomeTaxFilingDetailsRequestVO.getInvestorDvId()) {
+				continue;
+			}
+
+			if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_PROPERTY_RENT) {
+				reportTableList.get(TABLE_IND_HP_RENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TAX_RENTAL_INCOME) {
+				reportTableList.get(TABLE_IND_HP_TAX_RENTAL_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TAX_PROPERTY ||
+					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TAX_WATER) {
+				reportTableList.get(TABLE_IND_HP_TAX_PROPERTY_WATER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
+						(sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TAX_PROPERTY ? "Property" : "Water"),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND ||
+					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_MUTUAL_FUND_DIVIDEND) {
+				if (reportTableList.get(TABLE_IND_OS_DIVIDEND).size() > 0) {
+					previousReportRow = reportTableList.get(TABLE_IND_OS_DIVIDEND).get(reportTableList.get(TABLE_IND_OS_DIVIDEND).size() - 1);
+				} else {
+					previousReportRow = new Object[] {"", "", "", "", "", ""};
+				}
+				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
+						previousReportRow[3].equals(sbAcTxnCategory.getEndAccountReference()) &&
+						previousReportRow[4].equals("")) {
+					previousReportRow[4] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
+				} else {
+					reportTableList.get(TABLE_IND_OS_DIVIDEND).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+							sbAcTxnCategory.getEndAccountReference(),
+							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+				}
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND_TDS ||
+					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_MUTUAL_FUND_DIVIDEND_TDS) {
+				if (reportTableList.get(TABLE_IND_OS_DIVIDEND).size() > 0) {
+					previousReportRow = reportTableList.get(TABLE_IND_OS_DIVIDEND).get(reportTableList.get(TABLE_IND_OS_DIVIDEND).size() - 1);
+				} else {
+					previousReportRow = new Object[] {"", "", "", "", "", ""};
+				}
+				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
+						previousReportRow[3].equals(sbAcTxnCategory.getEndAccountReference()) &&
+						previousReportRow[5].equals("")) {
+					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
+				} else {
+					reportTableList.get(TABLE_IND_OS_DIVIDEND).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+							sbAcTxnCategory.getEndAccountReference(), "",
+							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+				}
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SB_INTEREST &&
+					dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_SAVINGS)) {
+				// savingsAccountTransaction.getBankAccount() shouldn't be null
+				reportTableList.get(TABLE_IND_OS_SB_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						savingsAccountTransaction.getBankAccount().getValue(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SB_INTEREST &&
+					dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_PPF)) {
+				// savingsAccountTransaction.getBankAccount() shouldn't be null
+				reportTableList.get(TABLE_IND_EI_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						"PPF Interest",
+						savingsAccountTransaction.getBankAccount().getValue(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_IT_REFUND_INTEREST) {
+				if (reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).size() > 0) {
+					previousReportRow = reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).get(reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).size() - 1);
+				} else {
+					previousReportRow = new Object[] {"", "", "", "", "", ""};
+				}
+				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
+						previousReportRow[3].equals(Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()) &&
+						previousReportRow[4].equals("")) {
+					previousReportRow[4] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
+				} else {
+					reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+							Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
+							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+				}
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_IT_REFUND_INTEREST_TDS) {
+				if (reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).size() > 0) {
+					previousReportRow = reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).get(reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).size() - 1);
+				} else {
+					previousReportRow = new Object[] {"", "", "", "", "", ""};
+				}
+				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
+						previousReportRow[3].equals(Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()) &&
+						previousReportRow[5].equals("")) {
+					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
+				} else {
+					reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+							Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(), "",
+							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+				}
+			} else if (dvFlagsAccountVO != null && dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_PPF)) {
+				reportTableList.get(TABLE_IND_VI_A_INVESTMENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						"PPF – 80C",
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_NPS_TIER_1) {
+				reportTableList.get(TABLE_IND_VI_A_INVESTMENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						"NPS Tier 1 – 80CCD(1B)",
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_NPS_TIER_2) {
+				reportTableList.get(TABLE_IND_VI_A_INVESTMENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						"NPS Tier 2 – 80C",
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_DONATION) {
+				reportTableList.get(TABLE_IND_80G).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_BUYBACK) {
+				if (reportTableList.get(TABLE_IND_EI_OTHER).size() > 0) {
+					previousReportRow = reportTableList.get(TABLE_IND_EI_OTHER).get(reportTableList.get(TABLE_IND_EI_OTHER).size() - 1);
+				} else {
+					previousReportRow = new Object[] {"", "", "", "", "", "", ""};
+				}
+				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
+						previousReportRow[3].equals("Buyback CG - 10(34A)") &&
+						previousReportRow[4].equals(sbAcTxnCategory.getEndAccountReference()) &&
+						previousReportRow[5].equals("")) {
+					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
+				} else {
+					reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+							"Buyback CG - 10(34A)",
+							sbAcTxnCategory.getEndAccountReference(),
+							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+				}
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_BUYBACK_TDS) {
+				if (reportTableList.get(TABLE_IND_EI_OTHER).size() > 0) {
+					previousReportRow = reportTableList.get(TABLE_IND_EI_OTHER).get(reportTableList.get(TABLE_IND_EI_OTHER).size() - 1);
+				} else {
+					previousReportRow = new Object[] {"", "", "", "", "", "", ""};
+				}
+				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
+						previousReportRow[3].equals("Buyback CG - 10(34A)") &&
+						previousReportRow[4].equals(sbAcTxnCategory.getEndAccountReference()) &&
+						previousReportRow[6].equals("")) {
+					previousReportRow[6] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
+				} else {
+					reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+							"Buyback CG - 10(34A)",
+							sbAcTxnCategory.getEndAccountReference(), "",
+							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+				}
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INTERACCOUNTS_GIFT_TRANSFER &&
+					savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT) {
+				reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						"Gift Received – 56(2)(vi)(a)", "", sbAcTxnCategory.getAmount(), ""});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INCOME_TAX) {
+				reportTableList.get(TABLE_IND_TAX_PAYMENT_ADV_SA).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_OTHERS &&
+					sbAcTxnCategory.getEndAccountReference().equals(Constants.END_ACCOUNT_REFERENCE_HEALTH_INSURANCE)) {
+				reportTableList.get(TABLE_IND_80D_HEALTH_INSURANCE).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			}
+		}
+
+		recordList.add(new Object[] {"SCHEDULE SALARY"});
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"SCHEDULE HP"});
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Rent"});
+		recordList.add(new Object[] {"", "", "Date", "Property", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_HP_RENT));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Tax On Rent"});
+		recordList.add(new Object[] {"", "", "Date", "Property", "Tax"});
+		recordList.addAll(reportTableList.get(TABLE_IND_HP_TAX_RENTAL_INCOME));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Property/Water Tax"});
+		recordList.add(new Object[] {"", "", "Date", "Property", "Type", "Tax"});
+		recordList.addAll(reportTableList.get(TABLE_IND_HP_TAX_PROPERTY_WATER));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"SCHEDULE CG"});
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"SCHEDULE OS"});
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Dividend"});
+		recordList.add(new Object[] {"", "", "Date", "ISIN", "Amount", "TDS"});
+		recordList.addAll(reportTableList.get(TABLE_IND_OS_DIVIDEND));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "SB Interest"});
+		recordList.add(new Object[] {"", "", "Date", "Account No.", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_OS_SB_INTEREST));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Bank/PO Deposit Interest"});
+		recordList.add(new Object[] {"", "", "Date", "Provider", "Account No.", "Amount", "TDS"});
+		recordList.addAll(reportTableList.get(TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "IT Refund Interest"});
+		recordList.add(new Object[] {"", "", "Date", "PAN", "Amount", "TDS"}); // PAN is not really required, it's used for programming convenience
+		recordList.addAll(reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Other Interest"});
+		recordList.add(new Object[] {"", "", "Date", "Provider", "Account No.", "Amount", "TDS"});
+		recordList.addAll(reportTableList.get(TABLE_IND_OS_OTHER_INTEREST));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"SCHEDULE VI-A"});
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Part B"});
+		recordList.add(new Object[] {"", "", "Date", "Type", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_VI_A_INVESTMENT));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[] {"", "", "Refer Schedule 80D for Health Insurance, 80G for Donations"});
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Part C"});
+		recordList.add(new Object[1]);
+		recordList.add(new Object[] {"", "", "Refer Schedule OS - SB Interest for 80TTA"});
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"SCHEDULE 80G"});
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Donation"});
+		recordList.add(new Object[] {"", "", "Date", "Donee", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_80G));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"SCHEDULE SI"});
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "", "Refer Schedule CG for LTCG, STCG"});
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"SCHEDULE EI"});
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Interest"});
+		recordList.add(new Object[] {"", "", "Date", "Provider", "Account No.", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_EI_INTEREST));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Other"});
+		recordList.add(new Object[] {"", "", "Date", "Type", "Reference", "Amount", "TDS"});
+		recordList.addAll(reportTableList.get(TABLE_IND_EI_OTHER));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"TAX PAYMENTS"});
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Advance/Self Assessment Tax"});
+		recordList.add(new Object[] {"", "", "Date", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_TAX_PAYMENT_ADV_SA));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"SCHEDULE 80D"});
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Health Insurance"});
+		recordList.add(new Object[] {"", "", "Date", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_80D_HEALTH_INSURANCE));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
 		return reportList;
 	}
 }

@@ -9,8 +9,12 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.ReportService;
+import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
+import org.sakuram.persmony.valueobject.DetailsForTaxFilingRequestVO;
+import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.PeriodSummaryCriteriaVO;
 import org.vaadin.stefan.LazyDownloadButton;
 
@@ -32,12 +36,13 @@ public class ReportView extends VerticalLayout {
 	int currentReportInd, nameReportInd;
 	List<List<Object[]>> reportList;
 	
-	public ReportView(ReportService reportService) {
+	public ReportView(ReportService reportService, MiscService miscService) {
 		Select<String> reportSelect;
 		LazyDownloadButton generateButton;
 		FormLayout formLayout;
 		DatePicker periodFromDatePicker, periodToDatePicker;
 		IntegerField financialYearStartIntegerField;
+		Select<IdValueVO> investorDvSelect;
 		
 		reportSelect = new Select<String>();
 		reportSelect.setItems("All Pending Transactions",
@@ -45,7 +50,8 @@ public class ReportView extends VerticalLayout {
 				"Open Investments",
 				"Period Summary",
 				"Anticipated Vs. Actual",
-				"Tax Liability");
+				"Tax Liability",
+				"Details for Tax Filing");
 		reportSelect.setLabel("Report");
 		reportSelect.setPlaceholder("Select Report");
 		add(reportSelect);
@@ -59,6 +65,7 @@ public class ReportView extends VerticalLayout {
 		periodFromDatePicker = new DatePicker("From");
 		periodToDatePicker = new DatePicker("To");
 		financialYearStartIntegerField = new IntegerField();
+		investorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_PRIMARY_INVESTOR, "Investor", false, false);
 		reportSelect.addValueChangeListener(event -> {
 			currentReportInd = -1;
 			HorizontalLayout hLayout;		
@@ -73,6 +80,11 @@ public class ReportView extends VerticalLayout {
 	        		hLayout.add(periodFromDatePicker, periodToDatePicker);
 	            	break;
 	            case "Tax Liability":
+	        		financialYearStartIntegerField.setLabel("FY Start Year");
+	        		formLayout.add(financialYearStartIntegerField);
+	            	break;
+	            case "Details for Tax Filing":
+	        		formLayout.add(investorDvSelect);
 	        		financialYearStartIntegerField.setLabel("FY Start Year");
 	        		formLayout.add(financialYearStartIntegerField);
 	            	break;
@@ -140,6 +152,21 @@ public class ReportView extends VerticalLayout {
 										return new ByteArrayInputStream(new byte[0]);
 									}
 				            		reportList = reportService.advanceTaxLiability(financialYearStartIntegerField.getValue());
+					            	break;
+					            case "Details for Tax Filing":
+					            	if (financialYearStartIntegerField.getValue() == null || investorDvSelect.getValue() == null) {
+					            		if (investorDvSelect.getValue() == null) {
+											showError("Select an Investor before clicking Generate");					            			
+					            		} else {
+					            			showError("Provide the FY Start Year before clicking Generate");
+					            		}
+										currentReportInd = -1;
+										return new ByteArrayInputStream(new byte[0]);
+									}
+				            		reportList = reportService.detailsForTaxFiling(new DetailsForTaxFilingRequestVO(
+				            				financialYearStartIntegerField.getValue(),
+				            				investorDvSelect.getValue().getId()
+				            				));
 					            	break;
 					            }
 							} catch (Exception e) {

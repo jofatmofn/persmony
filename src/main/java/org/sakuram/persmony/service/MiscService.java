@@ -64,6 +64,17 @@ public class MiscService {
     	DomainValue domainValue;
     	
     	idValueVOList = new ArrayList<IdValueVO>();
+    	if (category.equals(Constants.CATEGORY_PRIMARY_INVESTOR)) {
+        	for (Long dvId : Constants.categoryDvIdCache.get(Constants.CATEGORY_INVESTOR)) {
+    			DvFlagsInvestorVO dvFlagsInvestorVO;
+        		domainValue = Constants.domainValueCache.get(dvId);
+    			dvFlagsInvestorVO = (DvFlagsInvestorVO) DomainValueFlags.getDvFlagsVO(domainValue);
+    			if (dvFlagsInvestorVO == null) {
+    				idValueVOList.add(new IdValueVO(domainValue.getId(), domainValue.getValue()));
+    			}
+        	}
+    		return idValueVOList;
+    	}
     	for (Long dvId : Constants.categoryDvIdCache.get(category)) {
     		String label;
     		domainValue = Constants.domainValueCache.get(dvId);
@@ -281,4 +292,17 @@ public class MiscService {
     	
 		return txnCatToDvCatMap;
     }
+    
+    public DomainValue getPrimaryInvestor(DomainValue investorDv) {
+		DvFlagsInvestorVO dvFlagsInvestorVO;
+		
+		dvFlagsInvestorVO = (DvFlagsInvestorVO) DomainValueFlags.getDvFlagsVO(investorDv);
+		if (dvFlagsInvestorVO == null) {
+			return investorDv;
+		} else {
+			return Constants.domainValueCache.get(dvFlagsInvestorVO.getRealInvestors()[0]);
+		}
+    	
+    }
+    
 }
