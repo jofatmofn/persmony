@@ -25,11 +25,11 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 		
 		mainQueryStringBuffer = new StringBuffer();
 		
-		mainQueryStringBuffer.append("SELECT SAT.id AS satId, baDV.id AS baId, baDV.value AS bankAccount, SAT.transaction_date, SAT.amount, bDV.id AS bId, bDV.value AS booking, SAT.value_date, SAT.reference, ");
+		mainQueryStringBuffer.append("SELECT SAT.id AS satId, baDV.id AS baId, baDV.value AS bankAccountOrInvestor, SAT.transaction_date, SAT.amount, bDV.id AS bId, bDV.value AS booking, SAT.value_date, SAT.reference, ");
 		mainQueryStringBuffer.append("SAT.narration, SAT.balance, SAT.transaction_id, SAT.utr_number, SAT.remitter_branch, tcoDV.id AS tcId, tcoDV.value AS transactionCode, SAT.branch_code, ");
 		mainQueryStringBuffer.append("SAT.transaction_time, ccDV.id AS ccId, ccDV.value AS costCenter, vtDV.id AS vtId, vtDV.value AS voucherType ");
 		mainQueryStringBuffer.append("FROM savings_account_transaction SAT ");
-		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value baDV ON SAT.bank_account_fk = baDV.id ");
+		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value baDV ON SAT.bank_account_or_investor_fk = baDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value bDV ON SAT.booking_fk = bDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tcoDV ON SAT.transaction_code_fk = tcoDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ccDV ON SAT.cost_center_fk = ccDV.id ");
@@ -70,14 +70,10 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append("AND ");
 			mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SAT.narration", sbAcTxnCriteriaVO.getNarrationOperator(), sbAcTxnCriteriaVO.getNarration())));
 		}
-		if (sbAcTxnCriteriaVO.getBankAccountDvId() != null) {
-			if (sbAcTxnCriteriaVO.getBankAccountDvId() == Constants.DVID_EMPTY_SELECT) {
-				mainQueryStringBuffer.append("AND SAT.bank_account_fk IS NULL ");
-			} else {
-				mainQueryStringBuffer.append("AND SAT.bank_account_fk = ");
-				mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getBankAccountDvId());
-				mainQueryStringBuffer.append(" ");
-			}
+		if (sbAcTxnCriteriaVO.getBankAccountOrInvestorDvId() != null) {
+			mainQueryStringBuffer.append("AND SAT.bank_account_or_investor_fk = ");
+			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getBankAccountOrInvestorDvId());
+			mainQueryStringBuffer.append(" ");
 		}
 		if (sbAcTxnCriteriaVO.getBookingDvId() != null) {
 			mainQueryStringBuffer.append("AND SAT.booking_fk = ");

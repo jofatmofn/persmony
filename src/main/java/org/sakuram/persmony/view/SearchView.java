@@ -240,7 +240,7 @@ public class SearchView extends Div {
 				verticalLayout.add(realisationGrid);
 				
 				savingsAccountTransactionGrid = new Grid<>(SavingsAccountTransactionVO.class);
-				savingsAccountTransactionGrid.setColumns("savingsAccountTransactionId", "bankAccount.value", "transactionDate", "amount");
+				savingsAccountTransactionGrid.setColumns("savingsAccountTransactionId", "bankAccountOrInvestor.value", "transactionDate", "amount");
 				for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionGrid.getColumns()) {
 					column.setResizable(true);
 				}

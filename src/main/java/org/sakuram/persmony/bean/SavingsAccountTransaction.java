@@ -38,8 +38,8 @@ public class SavingsAccountTransaction {
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name="bank_account_fk", nullable=true) // Ideally speaking this should NOT be NULLable. But this table accommodates entries which does not involve a bank account.
-	private DomainValue bankAccount;
+	@JoinColumn(name="bank_account_or_investor_fk", nullable=false)
+	private DomainValue bankAccountOrInvestor;
 	
 	@Column(name="transaction_date", nullable=false)
 	private Date transactionDate;
@@ -95,14 +95,14 @@ public class SavingsAccountTransaction {
 	@OrderBy("id")
 	private List<SbAcTxnCategory> sbAcTxnCategoryList;
 	
-	public SavingsAccountTransaction(DomainValue bankAccount, Date transactionDate, Double amount) {
-		this.bankAccount = bankAccount;
+	public SavingsAccountTransaction(DomainValue bankAccountOrInvestor, Date transactionDate, Double amount) {
+		this.bankAccountOrInvestor = bankAccountOrInvestor;
 		this.transactionDate = transactionDate;
 		this.amount = amount;
 	}
 	
-	public SavingsAccountTransaction(Long bankAccountDvId, String transactionDateStr, Double amount, Long bookingDvId, String valueDateStr, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) throws ParseException {
-		this(bankAccountDvId,
+	public SavingsAccountTransaction(Long bankAccountOrInvestorDvId, String transactionDateStr, Double amount, Long bookingDvId, String valueDateStr, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) throws ParseException {
+		this(bankAccountOrInvestorDvId,
 				new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(transactionDateStr).getTime()),
 				amount,
 				bookingDvId,
@@ -121,9 +121,9 @@ public class SavingsAccountTransaction {
 		);
 	}
 
-	public SavingsAccountTransaction(Long bankAccountDvId, Date transactionDate, Double amount, Long bookingDvId, Date valueDate, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) 
+	public SavingsAccountTransaction(Long bankAccountOrInvestorDvId, Date transactionDate, Double amount, Long bookingDvId, Date valueDate, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) 
 	{
-		this.bankAccount = (bankAccountDvId == null ? null : Constants.domainValueCache.get(bankAccountDvId));
+		this.bankAccountOrInvestor = (bankAccountOrInvestorDvId == null ? null : Constants.domainValueCache.get(bankAccountOrInvestorDvId));
 		this.transactionDate = transactionDate;
 		this.amount = amount;
 		this.booking = Constants.domainValueCache.get(bookingDvId);

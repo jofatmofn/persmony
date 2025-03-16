@@ -61,6 +61,17 @@ public class MiscService {
     
     public List<IdValueVO> fetchDvsOfCategory(String category, boolean enhanced) {
     	List<IdValueVO> idValueVOList;
+    	
+    	idValueVOList = new ArrayList<IdValueVO>();
+    	for (String oneCategory : category.split("\\+")) {
+    		idValueVOList.addAll(fetchDvsOfOneCategory(oneCategory, enhanced));
+    	}
+    	
+    	return idValueVOList;
+    }
+    
+    public List<IdValueVO> fetchDvsOfOneCategory(String category, boolean enhanced) {
+    	List<IdValueVO> idValueVOList;
     	DomainValue domainValue;
     	
     	idValueVOList = new ArrayList<IdValueVO>();

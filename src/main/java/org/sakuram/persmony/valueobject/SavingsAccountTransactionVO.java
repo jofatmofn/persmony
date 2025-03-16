@@ -13,7 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class SavingsAccountTransactionVO {
 	long savingsAccountTransactionId;
-	IdValueVO bankAccount;
+	IdValueVO bankAccountOrInvestor;
 	Date transactionDate;
 	Double amount;
 	IdValueVO booking;
@@ -30,9 +30,9 @@ public class SavingsAccountTransactionVO {
 	IdValueVO costCenter;
 	IdValueVO voucherType;
 
-	public SavingsAccountTransactionVO(long savingsAccountTransactionId, String bankAccount, Date transactionDate, Double amount) {
+	public SavingsAccountTransactionVO(long savingsAccountTransactionId, String bankAccountOrInvestor, Date transactionDate, Double amount) {
 		this.savingsAccountTransactionId = savingsAccountTransactionId;
-		this.bankAccount = new IdValueVO(null, bankAccount);
+		this.bankAccountOrInvestor = new IdValueVO(null, bankAccountOrInvestor);
 		this.transactionDate = transactionDate;
 		this.amount = amount;
 	}
@@ -43,7 +43,7 @@ public class SavingsAccountTransactionVO {
 		if (columns[colPos] == null) {
 			colPos = colPos + 2;
 		} else {
-			this.bankAccount = new IdValueVO(((BigInteger) columns[colPos++]).longValue(), (String) columns[colPos++]);
+			this.bankAccountOrInvestor = new IdValueVO(((BigInteger) columns[colPos++]).longValue(), (String) columns[colPos++]);
 		}
 		this.transactionDate = (Date) columns[colPos++];
 		this.amount = ((BigDecimal) columns[colPos++]).doubleValue();

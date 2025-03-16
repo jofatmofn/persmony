@@ -59,7 +59,7 @@ public class SbAcTxnComponent {
 				sbAcTxnCriteriaVO = new SbAcTxnCriteriaVO();
 				sbAcTxnCriteriaVO.setFromDate(transactionDateSupplier.get());
 				sbAcTxnCriteriaVO.setToDate(transactionDateSupplier.get());
-				sbAcTxnCriteriaVO.setBankAccountDvId(bankAccountDvIdSupplier.get());
+				sbAcTxnCriteriaVO.setBankAccountOrInvestorDvId(bankAccountDvIdSupplier.get());
 
 				dialog = new Dialog();
 				dialog.setHeaderTitle("SB A/c Transactions");
@@ -75,7 +75,7 @@ public class SbAcTxnComponent {
 				
 				savingsAccountTransactionsGrid = new Grid<>(SavingsAccountTransactionVO.class);
 				savingsAccountTransactionsGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
-				savingsAccountTransactionsGrid.setColumns("savingsAccountTransactionId", "bankAccount.value", "transactionDate", "narration", "booking.value", "amount", "balance", "valueDate", "reference", "transactionId", "utrNumber", "remitterBranch", "transactionCode.value", "branchCode", "transactionTime", "costCenter.value", "voucherType.value");
+				savingsAccountTransactionsGrid.setColumns("savingsAccountTransactionId", "bankAccountOrInvestor.value", "transactionDate", "narration", "booking.value", "amount", "balance", "valueDate", "reference", "transactionId", "utrNumber", "remitterBranch", "transactionCode.value", "branchCode", "transactionTime", "costCenter.value", "voucherType.value");
 				for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionsGrid.getColumns()) {
 					column.setResizable(true);
 				}

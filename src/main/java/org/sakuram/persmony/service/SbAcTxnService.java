@@ -430,7 +430,7 @@ public class SbAcTxnService {
 	
 	public void createSavingsAccountTransaction(SavingsAccountTransactionVO savingsAccountTransactionVO) {
 		savingsAccountTransactionRepository.save(new SavingsAccountTransaction(
-				savingsAccountTransactionVO.getBankAccount() == null ? null : savingsAccountTransactionVO.getBankAccount().getId(),
+				savingsAccountTransactionVO.getBankAccountOrInvestor() == null ? null : savingsAccountTransactionVO.getBankAccountOrInvestor().getId(),
 				savingsAccountTransactionVO.getTransactionDate(),
 				savingsAccountTransactionVO.getAmount(),
 				savingsAccountTransactionVO.getBooking() == null ? null : savingsAccountTransactionVO.getBooking().getId(),

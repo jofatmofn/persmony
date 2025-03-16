@@ -534,7 +534,7 @@ public class MoneyTransactionService {
     						.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + realisation.getDetailsReference(), null));
     				savingsAccountTransactionVOList.add(new SavingsAccountTransactionVO(
     						savingsAccountTransaction.getId(),
-    						savingsAccountTransaction.getBankAccount().getValue(),
+    						savingsAccountTransaction.getBankAccountOrInvestor().getValue(),
     						savingsAccountTransaction.getTransactionDate(),
     						savingsAccountTransaction.getAmount()
     						));

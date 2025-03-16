@@ -24,6 +24,8 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.DomainValueFlags;
 import org.sakuram.persmony.valueobject.DetailsForTaxFilingRequestVO;
 import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
+import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
+import org.sakuram.persmony.valueobject.DvFlagsVO;
 import org.sakuram.persmony.valueobject.PeriodSummaryCriteriaVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -454,6 +456,7 @@ public class ReportService {
 		List<List<Object[]>> reportTableList;
 		Object[] previousReportRow;
 		java.sql.Date fyStartDate, fyEndDate;
+		DvFlagsVO dvFlagsVO;
 		DvFlagsAccountVO dvFlagsAccountVO;
 		DomainValue domainValue;
 		SavingsAccountTransaction savingsAccountTransaction;
@@ -491,14 +494,17 @@ public class ReportService {
 		for (SbAcTxnCategory sbAcTxnCategory : sbAcTxnCategoryRepository.findBySavingsAccountTransactionTransactionDateBetweenOrderBySavingsAccountTransactionTransactionDateAscSavingsAccountTransactionIdAsc(fyStartDate, fyEndDate)) {
 			savingsAccountTransaction = sbAcTxnCategory.getSavingsAccountTransaction();
 
-			if (savingsAccountTransaction.getBankAccount() == null) {
-				dvFlagsAccountVO = null;
-				domainValue = Constants.domainValueCache.get(Constants.DVID_NO_BANK_ACCOUNT_DEFAULT_INVESTOR); // TODO: Handle this in a better way
-			} else {
-				dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(savingsAccountTransaction.getBankAccount());
-				domainValue = miscService.getPrimaryInvestor(Constants.domainValueCache.get(dvFlagsAccountVO.getInvestorDvId()));
+			dvFlagsAccountVO = null;
+			domainValue = savingsAccountTransaction.getBankAccountOrInvestor();
+			dvFlagsVO = DomainValueFlags.getDvFlagsVO(savingsAccountTransaction.getBankAccountOrInvestor());
+			if (dvFlagsVO instanceof DvFlagsAccountVO) {
+				dvFlagsAccountVO = (DvFlagsAccountVO) dvFlagsVO;
+				domainValue = Constants.domainValueCache.get(dvFlagsAccountVO.getInvestorDvId());
+			} else if (dvFlagsVO != null && !(dvFlagsVO instanceof DvFlagsInvestorVO)) {
+				throw new AppException("Unexpected Bank Account / Investor", null);
 			}
 
+			domainValue = miscService.getPrimaryInvestor(domainValue);
 			if (domainValue.getId() != incomeTaxFilingDetailsRequestVO.getInvestorDvId()) {
 				continue;
 			}
@@ -551,16 +557,14 @@ public class ReportService {
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SB_INTEREST &&
 					dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_SAVINGS)) {
-				// savingsAccountTransaction.getBankAccount() shouldn't be null
 				reportTableList.get(TABLE_IND_OS_SB_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-						savingsAccountTransaction.getBankAccount().getValue(),
+						savingsAccountTransaction.getBankAccountOrInvestor().getValue(),
 						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SB_INTEREST &&
 					dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_PPF)) {
-				// savingsAccountTransaction.getBankAccount() shouldn't be null
 				reportTableList.get(TABLE_IND_EI_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						"PPF Interest",
-						savingsAccountTransaction.getBankAccount().getValue(),
+						savingsAccountTransaction.getBankAccountOrInvestor().getValue(),
 						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_IT_REFUND_INTEREST) {
 				if (reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).size() > 0) {

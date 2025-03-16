@@ -80,7 +80,7 @@ public class SbAcTxnOperationView extends Div {
 
 			{
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Import"));
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "Categorise"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "View/Categorise"));
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Create"));
 			}
 		};
@@ -124,7 +124,7 @@ public class SbAcTxnOperationView extends Div {
 	}
 	
 	private void handleSbAcTxnCreate(FormLayout formLayout) {
-		Select<IdValueVO> bankAccountDvSelect, bookingDvSelect, transactionCodeDvSelect, costCenterDvSelect, voucherTypeDvSelect;
+		Select<IdValueVO> bankAccountOrInvestorDvSelect, bookingDvSelect, transactionCodeDvSelect, costCenterDvSelect, voucherTypeDvSelect;
 		DatePicker transactionDateDatePicker, valueDateDatePicker;
 		NumberField amountNumberField, balanceNumberField;
 		TextField referenceTextField, narrationTextField, transactionIdTextField, utrNumberTextField, remitterBranchTextField, transactionTimeTextField;
@@ -133,8 +133,8 @@ public class SbAcTxnOperationView extends Div {
 		Button saveButton;
 		
 		// UI Elements
-		bankAccountDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT, null, true, false);
-		formLayout.addFormItem(bankAccountDvSelect, "Account");
+		bankAccountOrInvestorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT + "+" + Constants.CATEGORY_PRIMARY_INVESTOR, null, false, false);
+		formLayout.addFormItem(bankAccountOrInvestorDvSelect, "Account");
 		
 		transactionDateDatePicker = new DatePicker("Transaction");
 		valueDateDatePicker = new DatePicker("Value");
@@ -208,8 +208,8 @@ public class SbAcTxnOperationView extends Div {
 					ViewFuncs.showError("Narration cannot be Empty");
 					return;
 				}
-				if (bankAccountDvSelect.getValue() != null && balanceNumberField.getValue() == null ||
-						bankAccountDvSelect.getValue() == null && balanceNumberField.getValue() != null) {
+				if (bankAccountOrInvestorDvSelect.getValue() != null && balanceNumberField.getValue() == null ||
+						bankAccountOrInvestorDvSelect.getValue() == null && balanceNumberField.getValue() != null) {
 					ViewFuncs.showError("Balance is applicable (only) for a banking Transaction");
 					return;
 				}
@@ -217,7 +217,7 @@ public class SbAcTxnOperationView extends Div {
 				// Back-end Call
 				savingsAccountTransactionVO =  new SavingsAccountTransactionVO(
 						Constants.DVID_EMPTY_SELECT,
-						bankAccountDvSelect.getValue() == null ? null : new IdValueVO(bankAccountDvSelect.getValue().getId(), null),
+						bankAccountOrInvestorDvSelect.getValue() == null ? null : new IdValueVO(bankAccountOrInvestorDvSelect.getValue().getId(), null),
 						Date.valueOf(transactionDateDatePicker.getValue()),
 						(double)amountNumberField.getValue().doubleValue(),
 						new IdValueVO(bookingDvSelect.getValue().getId(), null),
@@ -367,7 +367,7 @@ public class SbAcTxnOperationView extends Div {
 		IntegerField sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField;	// TODO: LongField
 		NumberField sbAcTxnFromAmoutNumberField, sbAcTxnToAmoutNumberField;
 		TextField narrationTextField, endAccountReferenceTextField;
-		Select<IdValueVO> bankAccountDvSelect, transactionCategoryDvSelect;
+		Select<IdValueVO> bankAccountOrInvestorDvSelect, transactionCategoryDvSelect;
 		RadioButtonGroup<String> bookingRadioButtonGroup;
 		HorizontalLayout hLayout;
 		Select<IdValueVO> narrationOperatorSelect, endAccountReferenceOperatorSelect;
@@ -406,8 +406,8 @@ public class SbAcTxnOperationView extends Div {
 		formLayout.addFormItem(hLayout, "Narration");
 		hLayout.add(narrationOperatorSelect, narrationTextField);
 		
-		bankAccountDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT, null, true, true);
-		formLayout.addFormItem(bankAccountDvSelect, "Account");
+		bankAccountOrInvestorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT + "+" + Constants.CATEGORY_PRIMARY_INVESTOR, null, true, false);
+		formLayout.addFormItem(bankAccountOrInvestorDvSelect, "Account");
 		
 		bookingRadioButtonGroup = new RadioButtonGroup<String>();
 		bookingRadioButtonGroup.setItems("Both", "Credit Only", "Debit Only");
@@ -431,7 +431,7 @@ public class SbAcTxnOperationView extends Div {
 		
 		savingsAccountTransactionsGrid = new Grid<>(SavingsAccountTransactionVO.class);
 		savingsAccountTransactionsGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
-		savingsAccountTransactionsGrid.setColumns("savingsAccountTransactionId", "bankAccount.value", "transactionDate", "narration", "booking.value", "amount", "balance", "valueDate", "reference", "transactionId", "utrNumber", "remitterBranch", "transactionCode.value", "branchCode", "transactionTime", "costCenter.value", "voucherType.value");
+		savingsAccountTransactionsGrid.setColumns("savingsAccountTransactionId", "bankAccountOrInvestor.value", "transactionDate", "narration", "booking.value", "amount", "balance", "valueDate", "reference", "transactionId", "utrNumber", "remitterBranch", "transactionCode.value", "branchCode", "transactionTime", "costCenter.value", "voucherType.value");
 		for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionsGrid.getColumns()) {
 			column.setResizable(true);
 		}
@@ -491,7 +491,7 @@ public class SbAcTxnOperationView extends Div {
 						sbAcTxnToAmoutNumberField.getValue() == null ? null : (double)sbAcTxnToAmoutNumberField.getValue().doubleValue(),
 						narrationTextField.getValue().equals("") ? null : narrationTextField.getValue(),
 						narrationOperatorSelect.getValue() == null ? null : narrationOperatorSelect.getValue().getValue(),
-						bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId(),
+						bankAccountOrInvestorDvSelect.getValue() == null ? null : bankAccountOrInvestorDvSelect.getValue().getId(),
 						bookingRadioButtonGroup.getValue().equals("Both") ? null : (bookingRadioButtonGroup.getValue().equals("Credit Only") ? 222L : 223),
 						transactionCategoryDvSelect.getValue() == null ? null : transactionCategoryDvSelect.getValue().getId(),
 						endAccountReferenceTextField.getValue().equals("") ? null : endAccountReferenceTextField.getValue(),

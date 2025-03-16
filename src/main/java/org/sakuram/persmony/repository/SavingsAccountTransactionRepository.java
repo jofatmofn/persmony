@@ -10,7 +10,7 @@ public interface SavingsAccountTransactionRepository extends JpaRepository<Savin
 	
 	@Query(nativeQuery = true, value =
 			"SELECT * FROM savings_account_transaction WHERE id = "
-			+ "(SELECT MAX(id) FROM savings_account_transaction	WHERE bank_account_fk = :#{#bankAccountDvId} AND transaction_date = "
-			+ "(SELECT MAX(transaction_date) FROM savings_account_transaction WHERE bank_account_fk = :#{#bankAccountDvId}))")
-	public SavingsAccountTransaction findLastSbAcTxnInBankAccount(@Param("bankAccountDvId") long bankAccountDvId);
+			+ "(SELECT MAX(id) FROM savings_account_transaction	WHERE bank_account_or_investor_fk = :#{#bankAccountOrInvestorDvId} AND transaction_date = "
+			+ "(SELECT MAX(transaction_date) FROM savings_account_transaction WHERE bank_account_or_investor_fk = :#{#bankAccountOrInvestorDvId}))")
+	public SavingsAccountTransaction findLastSbAcTxnInBankAccount(@Param("bankAccountOrInvestorDvId") long bankAccountOrInvestorDvId);
 }
