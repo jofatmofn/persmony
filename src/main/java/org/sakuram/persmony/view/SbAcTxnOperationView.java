@@ -8,6 +8,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.fileupload.disk.DiskFileItem;
@@ -33,6 +34,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.Grid.NestedNullBehavior;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -373,6 +375,7 @@ public class SbAcTxnOperationView extends Div {
 		Select<IdValueVO> narrationOperatorSelect, endAccountReferenceOperatorSelect;
 		Button fetchButton;
 		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
+		GridContextMenu<SavingsAccountTransactionVO> sATGridContextMenu;
 		Map<Long, String> txnCatToDvCatMap;
 		
 		try {
@@ -515,6 +518,34 @@ public class SbAcTxnOperationView extends Div {
 			acceptSbAcTxnCategory(event.getItem().getSavingsAccountTransactionId(), event.getItem().getAmount(), txnCatToDvCatMap);
 		});
 		
+		sATGridContextMenu = savingsAccountTransactionsGrid.addContextMenu();
+		sATGridContextMenu.addItem("Categorise", event -> {	// Same as Double Click
+			Optional<SavingsAccountTransactionVO> savingsAccountTransactionVO;
+			
+			savingsAccountTransactionVO = event.getItem();
+			if (savingsAccountTransactionVO.isPresent()) {
+				acceptSbAcTxnCategory(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), savingsAccountTransactionVO.get().getAmount(), txnCatToDvCatMap);
+			}
+		});
+		sATGridContextMenu.addItem("No Category", event -> {
+			Optional<SavingsAccountTransactionVO> savingsAccountTransactionVO;
+			List<SbAcTxnCategoryVO> sbAcTxnCategoryVOList;
+			Notification notification;
+			
+			savingsAccountTransactionVO = event.getItem();
+			if (savingsAccountTransactionVO.isPresent()) {
+				sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(1);
+				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+						null,
+						new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_NONE, null),
+						null,
+						savingsAccountTransactionVO.get().getAmount()
+						));
+				sbAcTxnService.saveSbAcTxnCategories(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), sbAcTxnCategoryVOList);
+				notification = Notification.show("Categorised Successfully.");
+				notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+			}
+		});
 	}
 	
 	private void acceptSbAcTxnCategory(long savingsAccountTransactionId, Double sbAcTxnAmount, Map<Long, String> txnCatToDvCatMap) {

@@ -71,6 +71,7 @@ public class Constants {
 	public static final long DVID_TRANSACTION_CATEGORY_EQUITY_BUYBACK_TDS = 308;
 	public static final long DVID_TRANSACTION_CATEGORY_INTERACCOUNTS_GIFT_TRANSFER = 275;
 	public static final long DVID_TRANSACTION_CATEGORY_INCOME_TAX = 216;
+	public static final long DVID_TRANSACTION_CATEGORY_NONE = 303;
 	public static final long DVID_BOOKING_CREDIT = 222;
 	public static final long DVID_BOOKING_DEBIT = 223;
 	public static final long DVID_EMPTY_SELECT = -1L;

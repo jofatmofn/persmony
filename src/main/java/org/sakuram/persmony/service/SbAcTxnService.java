@@ -386,7 +386,7 @@ public class SbAcTxnService {
 		} else {
 			for (int i = 0; i < savingsAccountTransaction.getSbAcTxnCategoryList().size(); i++) {
 				SbAcTxnCategory sbAcTxnCategoryDeleted = savingsAccountTransaction.getSbAcTxnCategoryList().get(i);
-				if (!sbAcTxnCategoryVOFromUiList.stream().anyMatch(sbAcTxnCategoryVOFromUi -> sbAcTxnCategoryVOFromUi.getSbAcTxnCategoryId().equals(sbAcTxnCategoryDeleted.getId()))) {
+				if (!sbAcTxnCategoryVOFromUiList.stream().anyMatch(sbAcTxnCategoryVOFromUi -> (sbAcTxnCategoryVOFromUi.getSbAcTxnCategoryId() == null ? false : sbAcTxnCategoryVOFromUi.getSbAcTxnCategoryId().equals(sbAcTxnCategoryDeleted.getId())))) {
 					sbAcTxnCategoryRepository.delete(sbAcTxnCategoryDeleted);
 					savingsAccountTransaction.getSbAcTxnCategoryList().remove(sbAcTxnCategoryDeleted); // Because of the bi-directional relationship, this additional step is required
 					i--;
