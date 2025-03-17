@@ -626,7 +626,9 @@ public class SbAcTxnOperationView extends Div {
 						ViewFuncs.showError("Transaction Category and Amount cannot be empty");
 						return;
 					}
-					totalAmount += sbAcTxnCategoryVO.getAmount();
+					if (!sbAcTxnCategoryVO.getTransactionCategory().getId().equals(Constants.DVID_TRANSACTION_CATEGORY_DTI)) {
+						totalAmount += sbAcTxnCategoryVO.getAmount();
+					}
 					dvCategory = txnCatToDvCatMap.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
 					if ((dvCategory == null || !dvCategory.equals(Constants.CATEGORY_NONE)) && sbAcTxnCategoryVO.getEndAccountReference() == null) {
 						ViewFuncs.showError("End Account Reference cannot be empty");
@@ -671,7 +673,9 @@ public class SbAcTxnOperationView extends Div {
 			Button delButton = new Button();
 			delButton.setIcon(new Icon(VaadinIcon.TRASH));
 			delButton.addClickListener(e->{
-				sbAcTxnCategoryGridLDV.removeItem(sbAcTxnCategoryVO);
+				if (sbAcTxnCategoryVO.getTransactionCategory() == null || !sbAcTxnCategoryVO.getTransactionCategory().getId().equals(Constants.DVID_TRANSACTION_CATEGORY_DTI)) {
+					sbAcTxnCategoryGridLDV.removeItem(sbAcTxnCategoryVO);
+				}
 			});
 			return delButton;
 		}).setWidth("120px").setFlexGrow(0);

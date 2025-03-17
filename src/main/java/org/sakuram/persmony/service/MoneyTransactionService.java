@@ -488,6 +488,7 @@ public class MoneyTransactionService {
     	List<SavingsAccountTransactionVO> savingsAccountTransactionVOList;
 		Investment investment;
 		SavingsAccountTransaction savingsAccountTransaction;
+		List<Long> savingsAccountTransactionList;
 		
 		investmentDetailsVO = new InvestmentDetailsVO();
 		investment = investmentRepository.findById(investmentId)
@@ -499,6 +500,7 @@ public class MoneyTransactionService {
     	savingsAccountTransactionVOList = new ArrayList<SavingsAccountTransactionVO>();
     	investmentDetailsVO.setSavingsAccountTransactionVOList(savingsAccountTransactionVOList);
     	
+		savingsAccountTransactionList = new ArrayList<Long>();
     	for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
     		investmentTransactionVOList.add(new InvestmentTransactionVO(
     				investmentTransaction.getId(),
@@ -515,7 +517,6 @@ public class MoneyTransactionService {
     				investmentTransaction.getAssessmentYear().shortValue()
     				));
     		for (Realisation realisation : investmentTransaction.getRealisationList()) {
-    			// TODO: Handle possible Duplicates
     			realisationVOList.add(new RealisationVO(
     					realisation.getId(),
     					investmentTransaction.getId(),
@@ -529,7 +530,10 @@ public class MoneyTransactionService {
     					realisation.getTdsReference()
     					));
     			if (realisation.getRealisationType() != null && realisation.getRealisationType().getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
-        			// TODO: Handle possible Duplicates
+    				if (savingsAccountTransactionList.contains(realisation.getDetailsReference().longValue())) {
+    					continue;
+    				}
+    				savingsAccountTransactionList.add(realisation.getDetailsReference().longValue());
     				savingsAccountTransaction = savingsAccountTransactionRepository.findById(realisation.getDetailsReference())
     						.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + realisation.getDetailsReference(), null));
     				savingsAccountTransactionVOList.add(new SavingsAccountTransactionVO(

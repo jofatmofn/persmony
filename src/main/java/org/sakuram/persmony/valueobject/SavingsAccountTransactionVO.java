@@ -47,7 +47,11 @@ public class SavingsAccountTransactionVO {
 		}
 		this.transactionDate = (Date) columns[colPos++];
 		this.amount = ((BigDecimal) columns[colPos++]).doubleValue();
-		this.booking = new IdValueVO(((BigInteger) columns[colPos++]).longValue(), (String) columns[colPos++]);
+		if (columns[colPos] == null) {
+			colPos = colPos + 2;
+		} else {
+			this.booking = new IdValueVO(((BigInteger) columns[colPos++]).longValue(), (String) columns[colPos++]);
+		}
 		this.valueDate = columns[colPos] == null ? null : (Date) columns[colPos]; colPos++;
 		this.reference = columns[colPos] == null ? null : (String) columns[colPos]; colPos++;
 		this.narration = columns[colPos] == null ? null : (String) columns[colPos]; colPos++;

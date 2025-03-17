@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -83,6 +84,7 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "investmentTransaction", cascade = CascadeType.ALL)
+	@OrderBy("realisationDate")
 	private List<Realisation> realisationList;
 
 	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Double dueAmount, DomainValue status, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxGroup, BigDecimal assessmentYear, List<Realisation> realisationList) {

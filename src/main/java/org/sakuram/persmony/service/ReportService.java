@@ -458,7 +458,7 @@ public class ReportService {
 		java.sql.Date fyStartDate, fyEndDate;
 		DvFlagsVO dvFlagsVO;
 		DvFlagsAccountVO dvFlagsAccountVO;
-		DomainValue domainValue;
+		DomainValue investorDomainValue;
 		SavingsAccountTransaction savingsAccountTransaction;
 
 		final int TABLE_IND_HP_RENT = 0;
@@ -495,17 +495,19 @@ public class ReportService {
 			savingsAccountTransaction = sbAcTxnCategory.getSavingsAccountTransaction();
 
 			dvFlagsAccountVO = null;
-			domainValue = savingsAccountTransaction.getBankAccountOrInvestor();
+			investorDomainValue = savingsAccountTransaction.getBankAccountOrInvestor();
 			dvFlagsVO = DomainValueFlags.getDvFlagsVO(savingsAccountTransaction.getBankAccountOrInvestor());
 			if (dvFlagsVO instanceof DvFlagsAccountVO) {
 				dvFlagsAccountVO = (DvFlagsAccountVO) dvFlagsVO;
-				domainValue = Constants.domainValueCache.get(dvFlagsAccountVO.getInvestorDvId());
+				investorDomainValue = Constants.domainValueCache.get(dvFlagsAccountVO.getInvestorDvId());
 			} else if (dvFlagsVO != null && !(dvFlagsVO instanceof DvFlagsInvestorVO)) {
 				throw new AppException("Unexpected Bank Account / Investor", null);
 			}
 
-			domainValue = miscService.getPrimaryInvestor(domainValue);
-			if (domainValue.getId() != incomeTaxFilingDetailsRequestVO.getInvestorDvId()) {
+			investorDomainValue = miscService.getPrimaryInvestor(investorDomainValue);
+			if (investorDomainValue.getId() != incomeTaxFilingDetailsRequestVO.getInvestorDvId() &&
+					(sbAcTxnCategory.getEndAccountReference() == null ||
+					!sbAcTxnCategory.getEndAccountReference().equals(String.valueOf(incomeTaxFilingDetailsRequestVO.getInvestorDvId())))) {
 				continue;
 			}
 
@@ -647,7 +649,9 @@ public class ReportService {
 							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INTERACCOUNTS_GIFT_TRANSFER &&
-					savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT) {
+					(savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ||
+					savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
+					sbAcTxnCategory.getEndAccountReference().equals(String.valueOf(incomeTaxFilingDetailsRequestVO.getInvestorDvId())))) {
 				reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						"Gift Received – 56(2)(vi)(a)", "", sbAcTxnCategory.getAmount(), ""});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INCOME_TAX) {
