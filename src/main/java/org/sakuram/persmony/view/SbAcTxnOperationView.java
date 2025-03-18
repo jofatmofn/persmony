@@ -516,6 +516,7 @@ public class SbAcTxnOperationView extends Div {
 
 		savingsAccountTransactionsGrid.addItemDoubleClickListener(event -> {
 			acceptSbAcTxnCategory(event.getItem().getSavingsAccountTransactionId(), event.getItem().getAmount(), txnCatToDvCatMap);
+			savingsAccountTransactionsGrid.select(event.getItem());
 		});
 		
 		sATGridContextMenu = savingsAccountTransactionsGrid.addContextMenu();
@@ -525,6 +526,7 @@ public class SbAcTxnOperationView extends Div {
 			savingsAccountTransactionVO = event.getItem();
 			if (savingsAccountTransactionVO.isPresent()) {
 				acceptSbAcTxnCategory(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), savingsAccountTransactionVO.get().getAmount(), txnCatToDvCatMap);
+				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
 			}
 		});
 		sATGridContextMenu.addItem("No Category", event -> {
@@ -542,6 +544,7 @@ public class SbAcTxnOperationView extends Div {
 						savingsAccountTransactionVO.get().getAmount()
 						));
 				sbAcTxnService.saveSbAcTxnCategories(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), sbAcTxnCategoryVOList);
+				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
 				notification = Notification.show("Categorised Successfully.");
 				notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 			}
@@ -607,7 +610,6 @@ public class SbAcTxnOperationView extends Div {
 		saveButton.setDisableOnClick(true);
 		saveButton.addClickListener(event -> {
 			try {
-				double totalAmount;
 				Notification notification;
 				
 				for (int i = 0; i < sbAcTxnCategoryVOList.size(); i++) {
@@ -618,7 +620,6 @@ public class SbAcTxnOperationView extends Div {
 						i--;
 					}
 				}
-				totalAmount = 0D;
 				// Validations
 				for (SbAcTxnCategoryVO sbAcTxnCategoryVO : sbAcTxnCategoryVOList) {
 					String dvCategory;
@@ -626,18 +627,11 @@ public class SbAcTxnOperationView extends Div {
 						ViewFuncs.showError("Transaction Category and Amount cannot be empty");
 						return;
 					}
-					if (!sbAcTxnCategoryVO.getTransactionCategory().getId().equals(Constants.DVID_TRANSACTION_CATEGORY_DTI)) {
-						totalAmount += sbAcTxnCategoryVO.getAmount();
-					}
 					dvCategory = txnCatToDvCatMap.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
 					if ((dvCategory == null || !dvCategory.equals(Constants.CATEGORY_NONE)) && sbAcTxnCategoryVO.getEndAccountReference() == null) {
 						ViewFuncs.showError("End Account Reference cannot be empty");
 						return;
 					}
-				}
-				if (!sbAcTxnCategoryVOList.isEmpty() && Math.abs(totalAmount - sbAcTxnAmount.doubleValue()) > Constants.EPSILON) {
-					ViewFuncs.showError("Total of Category-wise amounts (" + totalAmount + ") should match the SB A/c Txn. Amount " + sbAcTxnAmount);
-					return;
 				}
 				try {
 					sbAcTxnService.saveSbAcTxnCategories(savingsAccountTransactionId, sbAcTxnCategoryVOList);

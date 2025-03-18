@@ -648,7 +648,8 @@ public class ReportService {
 							sbAcTxnCategory.getEndAccountReference(), "",
 							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 				}
-			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INTERACCOUNTS_GIFT_TRANSFER &&
+			} else if ((sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_GIFT ||
+					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_ON_BEHALF_GIFT) &&
 					(savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ||
 					savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
 					sbAcTxnCategory.getEndAccountReference().equals(String.valueOf(incomeTaxFilingDetailsRequestVO.getInvestorDvId())))) {
