@@ -1,6 +1,7 @@
 package org.sakuram.persmony.service;
 
 import java.math.BigInteger;
+import java.sql.Date;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import org.sakuram.persmony.bean.SavingsAccountTransaction;
 import org.sakuram.persmony.bean.SbAcTxnCategory;
 import org.sakuram.persmony.repository.InvestmentRepository;
 import org.sakuram.persmony.repository.InvestmentTransactionRepository;
+import org.sakuram.persmony.repository.RealisationRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
@@ -44,6 +46,8 @@ public class ReportService {
 	InvestmentTransactionRepository investmentTransactionRepository;
 	@Autowired
 	SbAcTxnCategoryRepository sbAcTxnCategoryRepository;
+	@Autowired
+	RealisationRepository realisationRepository;
 
 	final Integer CRITERION_INVESTOR = 1;
 	final Integer CRITERION_IS_CLOSED = 2;
@@ -377,7 +381,7 @@ public class ReportService {
 				continue;
 			}
 		
-			if (investment.getDefaultTaxGroup() != null && Constants.TAXFREE_GROUP_LIST.contains(investment.getDefaultTaxGroup().getId())) {
+			if (investment.getDefaultTaxGroup() != null && Constants.DVID_TAX_GROUP_EXEMPTED_LIST.contains(investment.getDefaultTaxGroup().getId())) {
 				continue;
 			}
 			
@@ -460,6 +464,7 @@ public class ReportService {
 		DvFlagsAccountVO dvFlagsAccountVO;
 		DomainValue investorDomainValue;
 		SavingsAccountTransaction savingsAccountTransaction;
+		Date realisationDate;
 
 		final int TABLE_IND_HP_RENT = 0;
 		final int TABLE_IND_HP_TAX_RENTAL_INCOME = 1;
@@ -670,6 +675,35 @@ public class ReportService {
 					sbAcTxnCategory.getEndAccountReference().equals(Constants.END_ACCOUNT_REFERENCE_HEALTH_INSURANCE)) {
 				reportTableList.get(TABLE_IND_80D_HEALTH_INSURANCE).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			}
+		}
+
+		for (Realisation realisation : realisationRepository.retrieveRealisationsForIt(fyStartDate, fyEndDate, incomeTaxFilingDetailsRequestVO.getInvestorDvId())) {
+			realisationDate = ObjectUtils.defaultIfNull(realisation.getAccountedRealisationDate(), realisation.getRealisationDate());
+
+			if (realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
+					realisation.getInvestmentTransaction().getTaxGroup() != null) {
+				if (Constants.DVID_TAX_GROUP_EXEMPTED_LIST.contains(realisation.getInvestmentTransaction().getTaxGroup().getId())) {
+					reportTableList.get(TABLE_IND_EI_INTEREST).add(new Object[] {"", "", realisationDate,
+							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
+							realisation.getInvestmentTransaction().getInvestment().getInvestmentIdWithProvider(),
+							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount())
+							});
+				} else if (Constants.DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST == realisation.getInvestmentTransaction().getTaxGroup().getId()) {
+					reportTableList.get(TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST).add(new Object[] {"", "", realisationDate,
+							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
+							realisation.getInvestmentTransaction().getInvestment().getInvestmentIdWithProvider(),
+							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount()),
+							realisation.getTdsAmount()
+							});
+				} else {
+					reportTableList.get(TABLE_IND_OS_OTHER_INTEREST).add(new Object[] {"", "", realisationDate,
+							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
+							realisation.getInvestmentTransaction().getInvestment().getInvestmentIdWithProvider(),
+							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount()),
+							realisation.getTdsAmount()
+							});
+				}
 			}
 		}
 

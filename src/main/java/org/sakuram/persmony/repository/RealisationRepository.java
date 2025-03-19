@@ -38,5 +38,14 @@ public interface RealisationRepository extends JpaRepository<Realisation, Long> 
 			+ "		OR (IT.transaction_type_fk = 74 AND IT.tds_amount IS NOT NULL))"
 			+ " ORDER BY I.product_provider_fk, IT.due_date DESC")
 	public List<Object[]> retrieveAccrualsRealisations(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") Long investorId, @Param("productProviderId") Long productProviderId, @Param("taxDetailNotInForm26as") boolean taxDetailNotInForm26as, @Param("taxDetailNotInAis") boolean taxDetailNotInAis, @Param("interestAvailable") boolean interestAvailable, @Param("tdsAvailable") boolean tdsAvailable);
-	
+
+	@Query(nativeQuery = true, value =
+			"SELECT R.*"
+			+ " FROM realisation R"
+			+ " LEFT OUTER JOIN investment_transaction IT ON R.investment_transaction_fk = IT.id"
+			+ "	LEFT OUTER JOIN investment I ON IT.investment_fk = I.id"
+			+ "	WHERE COALESCE(R.accounted_realisation_date,R.realisation_date) BETWEEN :#{#fromDate} AND :#{#toDate}"
+			+ " AND I.investor_fk = :#{#investorId}"
+			+ " ORDER BY COALESCE(R.accounted_realisation_date,R.realisation_date)")
+	public List<Realisation> retrieveRealisationsForIt(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") Long investorId);
 }

@@ -76,6 +76,7 @@ public class Constants {
 	public static final long DVID_BOOKING_CREDIT = 222;
 	public static final long DVID_BOOKING_DEBIT = 223;
 	public static final long DVID_EMPTY_SELECT = -1L;
+	public static final long DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST = 199;
 
 	public static final int FLAG_POSITION_ACCOUNT_TYPE = 0;
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;
@@ -115,7 +116,8 @@ public class Constants {
 			{"Mar-15", 0.25},
 	};
 	
-	public static final List<Long> TAXFREE_GROUP_LIST = Arrays.asList(196L, 198L);
+	public static final List<Long> DVID_TAX_GROUP_EXEMPTED_LIST = Arrays.asList(196L, 198L);
+	public static final List<Long> DVID_TAX_GROUP_OTHER_LIST = Arrays.asList(197L, 200L);
 	
 	public static final Map<Long, Long> INVESTOR_MAP = Map.ofEntries(	// For performance, hard-coded. TODO: Should be read from DB
 		    Map.entry(107L, 1L),
