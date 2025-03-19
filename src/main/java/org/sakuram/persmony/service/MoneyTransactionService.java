@@ -71,6 +71,7 @@ public class MoneyTransactionService {
 				singleRealisationVO.getTransactionDate(),
 				Constants.domainValueCache.get(singleRealisationVO.getRealisationTypeDvId()),
 				null,
+				null,
 				singleRealisationVO.getNetAmount(),
 				singleRealisationVO.getReturnedPrincipalAmount(),
 				singleRealisationVO.getInterestAmount(),
@@ -83,16 +84,16 @@ public class MoneyTransactionService {
 				savingsAccountTransaction = savingsAccountTransactionRepository.findById(singleRealisationVO.getSavingsAccountTransactionId())
 						.orElseThrow(() -> new AppException("Invalid Account Transaction Id " + singleRealisationVO.getSavingsAccountTransactionId(), null));
 			}
-			realisation.setDetailsReference(savingsAccountTransaction.getId());
+			realisation.setSavingsAccountTransaction(savingsAccountTransaction);
 		} else if (singleRealisationVO.getRealisationTypeDvId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
 			if (singleRealisationVO.getRealisationId() != null) {
 				referencedRealisation = realisationRepository.findById(singleRealisationVO.getRealisationId())
 						.orElseThrow(() -> new AppException("Invalid Realisation Id " + singleRealisationVO.getRealisationId(), null));
-				if (referencedRealisation.getDetailsReference() != null) {
+				if (referencedRealisation.getSavingsAccountTransaction() != null || referencedRealisation.getReferredRealisation() != null) {
 					throw new AppException("Realisation Id " + singleRealisationVO.getRealisationId() + " is already mapped and cannot be reused.", null);
 				}
-				realisation.setDetailsReference(singleRealisationVO.getRealisationId());
-				referencedRealisation.setDetailsReference(realisation.getId());
+				realisation.setReferredRealisation(referencedRealisation);
+				referencedRealisation.setReferredRealisation(realisation);
 			}
 		}
 		
@@ -231,6 +232,7 @@ public class MoneyTransactionService {
 				realisationDate,
 				Constants.domainValueCache.get(Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
 				null,
+				null,
 				realisationAmount,
 				null,
 				null,
@@ -269,10 +271,10 @@ public class MoneyTransactionService {
 				renewedInvestment.getDefaultTaxGroup()
 				);
 		
-		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation.getId(), null);
+		niPaymentRealisation = openNew(newInvestment, renewalVO.getPaymentScheduleVOList(), renewalVO.getReceiptScheduleVOList(), renewalVO.getAccrualScheduleVOList(), riReceiptRealisation, null);
 		
 		realisationRepository.flush();
-		riReceiptRealisation.setDetailsReference(niPaymentRealisation.getId());
+		riReceiptRealisation.setReferredRealisation(niPaymentRealisation);
 		realisationRepository.save(riReceiptRealisation);
 		
 		System.out.println("renewal completed.");
@@ -318,7 +320,11 @@ public class MoneyTransactionService {
 				Constants.domainValueCache.get(investVO.getDefaultTaxGroupDvId())
 				);
 		
-		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null, investVO.getSavingsAccountTransactionId());
+		openNew(newInvestment, investVO.getPaymentScheduleVOList(), investVO.getReceiptScheduleVOList(), investVO.getAccrualScheduleVOList(), null,
+				(investVO.getSavingsAccountTransactionId() == null ? null :
+				savingsAccountTransactionRepository.findById(investVO.getSavingsAccountTransactionId())
+				.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + investVO.getSavingsAccountTransactionId(), null)))
+				);
 		
 		System.out.println("invest completed.");
 	}
@@ -487,7 +493,6 @@ public class MoneyTransactionService {
     	List<RealisationVO> realisationVOList;
     	List<SavingsAccountTransactionVO> savingsAccountTransactionVOList;
 		Investment investment;
-		SavingsAccountTransaction savingsAccountTransaction;
 		List<Long> savingsAccountTransactionList;
 		
 		investmentDetailsVO = new InvestmentDetailsVO();
@@ -522,7 +527,8 @@ public class MoneyTransactionService {
     					investmentTransaction.getId(),
     					realisation.getRealisationDate(),
     					realisation.getRealisationType() == null ? "Not available" : realisation.getRealisationType().getValue(),
-    					realisation.getDetailsReference(),
+    					(realisation.getSavingsAccountTransaction() == null ? null : realisation.getSavingsAccountTransaction().getId()),
+    					(realisation.getReferredRealisation() == null ? null : realisation.getReferredRealisation().getId()),
     					realisation.getAmount(),
     					realisation.getReturnedPrincipalAmount(),
     					realisation.getInterestAmount(),
@@ -530,17 +536,18 @@ public class MoneyTransactionService {
     					realisation.getTdsReference()
     					));
     			if (realisation.getRealisationType() != null && realisation.getRealisationType().getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
-    				if (savingsAccountTransactionList.contains(realisation.getDetailsReference().longValue())) {
+    				if (realisation.getSavingsAccountTransaction() == null) {
+    					throw new AppException("No Savings Account Transaction available for the Realisation " + realisation.getId(), null);
+    				}
+    				if (savingsAccountTransactionList.contains(realisation.getSavingsAccountTransaction().getId())) {
     					continue;
     				}
-    				savingsAccountTransactionList.add(realisation.getDetailsReference().longValue());
-    				savingsAccountTransaction = savingsAccountTransactionRepository.findById(realisation.getDetailsReference())
-    						.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + realisation.getDetailsReference(), null));
+    				savingsAccountTransactionList.add(realisation.getSavingsAccountTransaction().getId());
     				savingsAccountTransactionVOList.add(new SavingsAccountTransactionVO(
-    						savingsAccountTransaction.getId(),
-    						savingsAccountTransaction.getBankAccountOrInvestor().getValue(),
-    						savingsAccountTransaction.getTransactionDate(),
-    						savingsAccountTransaction.getAmount()
+    						realisation.getSavingsAccountTransaction().getId(),
+    						realisation.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(),
+    						realisation.getSavingsAccountTransaction().getTransactionDate(),
+    						realisation.getSavingsAccountTransaction().getAmount()
     						));
     			}
     		}
@@ -627,7 +634,7 @@ public class MoneyTransactionService {
 		}
 	}
 	
-	private Realisation openNew(Investment newInvestment, List<ScheduleVO> paymentScheduleVOList, List<ScheduleVO> receiptScheduleVOList, List<ScheduleVO> accrualScheduleVOList, Long riReceiptRealisationId, Long savingsAccountTransactionId) {
+	private Realisation openNew(Investment newInvestment, List<ScheduleVO> paymentScheduleVOList, List<ScheduleVO> receiptScheduleVOList, List<ScheduleVO> accrualScheduleVOList, Realisation riReceiptRealisation, SavingsAccountTransaction savingsAccountTransaction) {
 		InvestmentTransaction niPaymentTransaction;
 		Realisation niPaymentRealisation = null;
 		boolean is_first;
@@ -647,7 +654,7 @@ public class MoneyTransactionService {
 					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_TYPE_PAYMENT),
 					paymentScheduleVO.getDueDate(),
 					paymentScheduleVO.getDueAmount(),
-					Constants.domainValueCache.get(is_first && (savingsAccountTransactionId != null || riReceiptRealisationId != null) ? Constants.DVID_TRANSACTION_STATUS_COMPLETED : Constants.DVID_TRANSACTION_STATUS_PENDING),
+					Constants.domainValueCache.get(is_first && (savingsAccountTransaction != null || riReceiptRealisation != null) ? Constants.DVID_TRANSACTION_STATUS_COMPLETED : Constants.DVID_TRANSACTION_STATUS_PENDING),
 					paymentScheduleVO.getReturnedPrincipalAmount(),
 					paymentScheduleVO.getInterestAmount(),
 					paymentScheduleVO.getTdsAmount(),
@@ -657,12 +664,13 @@ public class MoneyTransactionService {
 			niPaymentTransaction = investmentTransactionRepository.save(niPaymentTransaction);
 			
 			if (is_first) {
-				if (savingsAccountTransactionId != null || riReceiptRealisationId != null) {
+				if (savingsAccountTransaction != null || riReceiptRealisation != null) {
 					niPaymentRealisation = new Realisation(
 							niPaymentTransaction,
 							paymentScheduleVO.getDueDate(),
-							Constants.domainValueCache.get(riReceiptRealisationId == null? (savingsAccountTransactionId == null? Constants.DVID_REALISATION_TYPE_CASH : Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) : Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
-							riReceiptRealisationId == null? savingsAccountTransactionId : riReceiptRealisationId,
+							Constants.domainValueCache.get(riReceiptRealisation == null? (savingsAccountTransaction == null? Constants.DVID_REALISATION_TYPE_CASH : Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) : Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION),
+							savingsAccountTransaction,
+							riReceiptRealisation,
 							paymentScheduleVO.getDueAmount(),
 							null,
 							null,

@@ -95,6 +95,11 @@ public class SavingsAccountTransaction {
 	@OrderBy("id")
 	private List<SbAcTxnCategory> sbAcTxnCategoryList;
 	
+	@JsonIgnore
+	@OneToMany(mappedBy = "savingsAccountTransaction", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("realisation_date")
+	private List<Realisation> realisationList;
+	
 	public SavingsAccountTransaction(DomainValue bankAccountOrInvestor, Date transactionDate, Double amount) {
 		this.bankAccountOrInvestor = bankAccountOrInvestor;
 		this.transactionDate = transactionDate;

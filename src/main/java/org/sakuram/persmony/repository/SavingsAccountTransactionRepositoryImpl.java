@@ -85,11 +85,11 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append("AND NOT EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
 			mainQueryStringBuffer.append("WHERE SATC.savings_account_transaction_fk = SAT.id) ");
 			mainQueryStringBuffer.append("AND NOT EXISTS(SELECT 1 FROM realisation R ");
-			mainQueryStringBuffer.append("WHERE R.details_reference = SAT.id) ");
+			mainQueryStringBuffer.append("WHERE R.savings_account_transaction_fk = SAT.id) ");
 		} else if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null || sbAcTxnCriteriaVO.getEndAccountReference() != null) {
 			if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null && sbAcTxnCriteriaVO.getTransactionCategoryDvId() == Constants.DVID_TRANSACTION_CATEGORY_DTI) {
 				mainQueryStringBuffer.append("AND EXISTS(SELECT 1 FROM realisation R JOIN investment_transaction IT ON R.investment_transaction_fk = IT.id ");
-				mainQueryStringBuffer.append("WHERE R.details_reference = SAT.id ");
+				mainQueryStringBuffer.append("WHERE R.savings_account_transaction_fk = SAT.id ");
 				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
 					if (NumberUtils.isDigits(sbAcTxnCriteriaVO.getEndAccountReference())) {
 						mainQueryStringBuffer.append("AND IT.investment_fk = ");

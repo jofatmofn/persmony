@@ -488,12 +488,20 @@ public class ReportService {
 
 		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(incomeTaxFilingDetailsRequestVO.getFyStartYear() + "-04-01").getTime());
 		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1) + "-03-31").getTime());
-		// TODO: What-if ValueDate is present?
 		// TODO: What-if the date and FY as per the provider don't match?
 
-		for (SbAcTxnCategory sbAcTxnCategory : sbAcTxnCategoryRepository.findBySavingsAccountTransactionTransactionDateBetweenOrderBySavingsAccountTransactionTransactionDateAscSavingsAccountTransactionIdAsc(fyStartDate, fyEndDate)) {
+		for (SbAcTxnCategory sbAcTxnCategory : sbAcTxnCategoryRepository.findBySavingsAccountTransactionTransactionDateBetweenOrderBySavingsAccountTransactionTransactionDateAscSavingsAccountTransactionIdAsc(
+				java.sql.Date.valueOf(fyStartDate.toLocalDate().minusDays(10)),
+				java.sql.Date.valueOf(fyEndDate.toLocalDate().plusDays(10)))) {
+			// To use value date, if available, 10 days on each side
+			
 			savingsAccountTransaction = sbAcTxnCategory.getSavingsAccountTransaction();
 
+			if (ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).before(fyStartDate) ||
+					ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).after(fyEndDate)) {
+				continue;
+			}
+			
 			dvFlagsAccountVO = null;
 			investorDomainValue = savingsAccountTransaction.getBankAccountOrInvestor();
 			dvFlagsVO = DomainValueFlags.getDvFlagsVO(savingsAccountTransaction.getBankAccountOrInvestor());
@@ -665,6 +673,11 @@ public class ReportService {
 			}
 		}
 
+		recordList.add(new Object[] {"Details for filing Income Tax Returns"});
+		recordList.add(new Object[] {"Assessee", Constants.domainValueCache.get(incomeTaxFilingDetailsRequestVO.getInvestorDvId()).getValue()});
+		recordList.add(new Object[] {"Period", fyStartDate.toString(), fyEndDate.toString()});
+		recordList.add(new Object[1]);
+		
 		recordList.add(new Object[] {"SCHEDULE SALARY"});
 		recordList.add(new Object[1]);
 		recordList.add(new Object[1]);

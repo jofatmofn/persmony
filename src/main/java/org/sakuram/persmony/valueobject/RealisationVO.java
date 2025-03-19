@@ -13,7 +13,8 @@ public class RealisationVO {
 	long investmentTransactionId;
 	Date realisationDate;
 	String realisationType;
-	Long detailsReference;	/* Could be id of realisation or saving account transaction */
+	Long savingsAccountTransactionId;
+	Long referredRealisationId;
 	Double amount;
 	Double returnedPrincipalAmount;
 	Double interestAmount;

@@ -42,8 +42,13 @@ public class Realisation {
 	@JoinColumn(name="realisation_type_fk", nullable=true)
 	private DomainValue realisationType;
 	
-	@Column(name="details_reference", nullable=true)
-	private Long detailsReference;	/* Could be id of realisation or saving account transaction */
+	@ManyToOne
+	@JoinColumn(name="savings_account_transaction_fk", nullable=true)
+	private SavingsAccountTransaction savingsAccountTransaction;
+	
+	@ManyToOne
+	@JoinColumn(name="referred_realisation_fk", nullable=true)
+	private Realisation referredRealisation;
 	
 	@Column(name="amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double amount;
@@ -66,11 +71,12 @@ public class Realisation {
 	@Column(name="form26as_booking_date", nullable=true)
 	private Date Form26asBookingDate;
 	
-	public Realisation(InvestmentTransaction investmentTransaction, Date realisationDate, DomainValue realisationType, Long detailsReference, Double amount, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount) {
+	public Realisation(InvestmentTransaction investmentTransaction, Date realisationDate, DomainValue realisationType, SavingsAccountTransaction savingsAccountTransaction, Realisation realisation, Double amount, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount) {
 		this.investmentTransaction = investmentTransaction;
 		this.realisationDate = realisationDate;
 		this.realisationType = realisationType;
-		this.detailsReference = detailsReference;
+		this.savingsAccountTransaction = savingsAccountTransaction;
+		this.referredRealisation = realisation;
 		this.amount = amount;
 		this.returnedPrincipalAmount = returnedPrincipalAmount;
 		this.interestAmount = interestAmount;

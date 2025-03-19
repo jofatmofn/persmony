@@ -183,7 +183,7 @@ public class Constants {
 			put("R.interest_amount", new FieldSpecVO("Realisation Interest Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("R.returned_principal_amount", new FieldSpecVO("Realisation Returned Principal Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("R.tds_amount", new FieldSpecVO("Realisation TDS Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
-			put("R.details_reference", new FieldSpecVO("Reference", FieldSpecVO.DataType.OTHERS, true, false, false, null));
+			put("R.savings_account_transaction_fk", new FieldSpecVO("SAT Id", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			// label, dataType, isSequencable, isFreeText, isDvSelect, dvCategory
 		}
 	};

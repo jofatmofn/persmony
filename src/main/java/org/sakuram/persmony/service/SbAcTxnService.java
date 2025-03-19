@@ -362,7 +362,7 @@ public class SbAcTxnService {
 						sbAcTxnCategory.getAmount()));
 			}
 		}
-		for (Realisation realisation : realisationRepository.findByDetailsReference(savingsAccountTransactionId)) {
+		for (Realisation realisation : savingsAccountTransaction.getRealisationList()) {
 			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 					-1L,
 					new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()),

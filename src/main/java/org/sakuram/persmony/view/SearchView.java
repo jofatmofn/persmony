@@ -232,7 +232,9 @@ public class SearchView extends Div {
 				verticalLayout.add(investmentTransactionsGrid);
 				
 				realisationGrid = new Grid<>(RealisationVO.class);
-				realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "detailsReference", "amount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "tdsReference");
+				realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "amount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "tdsReference");
+				realisationGrid.addColumn(realisationVO -> realisationVO.getSavingsAccountTransactionId() == null ? realisationVO.getReferredRealisationId() : realisationVO.getSavingsAccountTransactionId())
+					.setHeader("Referred SAT/Realisation");
 				for (Column<RealisationVO> column : realisationGrid.getColumns()) {
 					column.setResizable(true);
 				}
