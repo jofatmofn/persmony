@@ -359,73 +359,16 @@ public class ReportService {
 	public List<List<Object[]>> advanceTaxLiability(int fyStartYear) throws ParseException {
 		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
-		Double[] investorSummary;
-		java.sql.Date fyStartDate, fyEndDate, forInterestStartDate, forInterestEndDate;
-		long fyDays, interestDays, investor;
 		Map<Long, Double[]> investorDvIdToTaxLiabilitysMap;
 		final Object headerArray[] = {"Investor", "By Date", "Income", "Tax Liability", "TDS"};
+
+		investorDvIdToTaxLiabilitysMap = fetchAccrualForFy(fyStartYear, null).getValue0();
 		
 		reportList = new ArrayList<List<Object[]>>(1);
 		recordList = new ArrayList<Object[]>();
 		reportList.add(recordList);
 		
 		recordList.add(headerArray);
-		investorDvIdToTaxLiabilitysMap = new HashMap<Long, Double[]>();
-		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(fyStartYear + "-04-01").getTime());
-		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((fyStartYear + 1) + "-03-31").getTime());
-		fyDays = Duration.between(fyStartDate.toLocalDate().atStartOfDay(), fyEndDate.toLocalDate().atStartOfDay()).toDays() + 1;
-		for (Investment investment : investmentRepository.findByInvestmentEndDateGreaterThanEqualAndInvestmentStartDateLessThanEqual(fyStartDate, fyEndDate)) {
-			// Additional Filters not used in DB, now applied in Java
-			
-			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
-				continue;
-			}
-		
-			if (investment.getDefaultTaxGroup() != null && Constants.DVID_TAX_GROUP_EXEMPTED_LIST.contains(investment.getDefaultTaxGroup().getId())) {
-				continue;
-			}
-			
-			// Income
-			forInterestStartDate = investment.getInvestmentStartDate().before(fyStartDate) ? fyStartDate : investment.getInvestmentStartDate();
-			forInterestEndDate = investment.getInvestmentEndDate().after(fyEndDate) ? fyEndDate : investment.getInvestmentEndDate();
-			interestDays = Duration.between(forInterestStartDate.toLocalDate().atStartOfDay(), forInterestEndDate.toLocalDate().atStartOfDay()).toDays() + 1;
-			
-			if (Constants.INVESTOR_MAP.containsKey(investment.getInvestor().getId())) {
-				investor = Constants.INVESTOR_MAP.get(investment.getInvestor().getId());
-			} else { // Joint investors, take the first one
-				investor = investment.getInvestor().getId();
-			}
-			investorSummary = investorDvIdToTaxLiabilitysMap.get(investor);
-			if (investorSummary == null) {
-				investorSummary = new Double[] {0D, 0D};
-			}
-			// System.out.print(investor + "\t" + investment.getId() + "\t" + investment.getWorth() + "\t" + investment.getRateOfInterest() + "\t" + interestDays + "\t" + fyDays + "\t");
-			investorSummary[0] += ObjectUtils.defaultIfNull(investment.getWorth(), 0).doubleValue() *
-					ObjectUtils.defaultIfNull(investment.getRateOfInterest(), 0).doubleValue() / 100 *
-					interestDays / fyDays;
-			// TDS
-			for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
-				if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
-					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL &&
-							investmentTransaction.getDueDate().compareTo(fyStartDate) >= 0 &&
-							investmentTransaction.getDueDate().compareTo(fyEndDate) <= 0) {
-						investorSummary[1] += ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0D).doubleValue();
-					}
-					else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
-						for (Realisation realisation : investmentTransaction.getRealisationList()) {
-							if (realisation.getRealisationDate().compareTo(fyStartDate) >= 0 &&
-								realisation.getRealisationDate().compareTo(fyEndDate) <= 0) {
-								investorSummary[1] += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0D).doubleValue();
-							}
-						}
-					}
-				}
-				// System.out.print(investorSummary[1]);
-			}
-			// System.out.println();
-			investorDvIdToTaxLiabilitysMap.put(investor, investorSummary);
-		}
-		
 		for (Map.Entry<Long, Double[]> investorEntry : investorDvIdToTaxLiabilitysMap.entrySet()) {
 			recordList.add(new Object[] {
 					Constants.domainValueCache.get(investorEntry.getKey()).getValue(),
@@ -459,12 +402,12 @@ public class ReportService {
 		List<Object[]> recordList;
 		List<List<Object[]>> reportTableList;
 		Object[] previousReportRow;
-		java.sql.Date fyStartDate, fyEndDate;
+		java.sql.Date fyStartDate, fyEndDate, realisationDate;
 		DvFlagsVO dvFlagsVO;
 		DvFlagsAccountVO dvFlagsAccountVO;
 		DomainValue investorDomainValue;
 		SavingsAccountTransaction savingsAccountTransaction;
-		Date realisationDate;
+		List<List<Object[]>> accrualDetailsForInvestor;
 
 		final int TABLE_IND_HP_RENT = 0;
 		final int TABLE_IND_HP_TAX_RENTAL_INCOME = 1;
@@ -681,31 +624,32 @@ public class ReportService {
 		for (Realisation realisation : realisationRepository.retrieveRealisationsForIt(fyStartDate, fyEndDate, incomeTaxFilingDetailsRequestVO.getInvestorDvId())) {
 			realisationDate = ObjectUtils.defaultIfNull(realisation.getAccountedRealisationDate(), realisation.getRealisationDate());
 
-			if (realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
-					realisation.getInvestmentTransaction().getTaxGroup() != null) {
-				if (Constants.DVID_TAX_GROUP_EXEMPTED_LIST.contains(realisation.getInvestmentTransaction().getTaxGroup().getId())) {
+			if (realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+				if (realisation.getInvestmentTransaction().getTaxGroup() != null && Constants.DVID_TAX_GROUP_EXEMPTED_LIST.contains(realisation.getInvestmentTransaction().getTaxGroup().getId())) {
 					reportTableList.get(TABLE_IND_EI_INTEREST).add(new Object[] {"", "", realisationDate,
 							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
-							realisation.getInvestmentTransaction().getInvestment().getInvestmentIdWithProvider(),
+							formAccountNo(realisation.getInvestmentTransaction().getInvestment()),
 							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount())
 							});
-				} else if (Constants.DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST == realisation.getInvestmentTransaction().getTaxGroup().getId()) {
+				} else if (realisation.getInvestmentTransaction().getTaxGroup() != null && Constants.DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST == realisation.getInvestmentTransaction().getTaxGroup().getId()) {
 					reportTableList.get(TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST).add(new Object[] {"", "", realisationDate,
 							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
-							realisation.getInvestmentTransaction().getInvestment().getInvestmentIdWithProvider(),
+							formAccountNo(realisation.getInvestmentTransaction().getInvestment()),
 							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount()),
 							realisation.getTdsAmount()
 							});
 				} else {
 					reportTableList.get(TABLE_IND_OS_OTHER_INTEREST).add(new Object[] {"", "", realisationDate,
 							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
-							realisation.getInvestmentTransaction().getInvestment().getInvestmentIdWithProvider(),
+							formAccountNo(realisation.getInvestmentTransaction().getInvestment()),
 							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount()),
 							realisation.getTdsAmount()
 							});
 				}
 			}
 		}
+
+		accrualDetailsForInvestor = fetchAccrualForFy(incomeTaxFilingDetailsRequestVO.getFyStartYear(), incomeTaxFilingDetailsRequestVO.getInvestorDvId()).getValue1();
 
 		recordList.add(new Object[] {"Details for filing Income Tax Returns"});
 		recordList.add(new Object[] {"Assessee", Constants.domainValueCache.get(incomeTaxFilingDetailsRequestVO.getInvestorDvId()).getValue()});
@@ -760,6 +704,8 @@ public class ReportService {
 		recordList.add(new Object[] {"", "", "Date", "Provider", "Account No.", "Amount", "TDS"});
 		recordList.addAll(reportTableList.get(TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST));
 		recordList.add(new Object[1]);
+		recordList.addAll(accrualDetailsForInvestor.get(0));
+		recordList.add(new Object[1]);
 		recordList.add(new Object[1]);
 
 		recordList.add(new Object[] {"", "IT Refund Interest"});
@@ -771,6 +717,8 @@ public class ReportService {
 		recordList.add(new Object[] {"", "Other Interest"});
 		recordList.add(new Object[] {"", "", "Date", "Provider", "Account No.", "Amount", "TDS"});
 		recordList.addAll(reportTableList.get(TABLE_IND_OS_OTHER_INTEREST));
+		recordList.add(new Object[1]);
+		recordList.addAll(accrualDetailsForInvestor.get(1));
 		recordList.add(new Object[1]);
 		recordList.add(new Object[1]);
 
@@ -841,5 +789,110 @@ public class ReportService {
 		recordList.add(new Object[1]);
 
 		return reportList;
+	}
+
+	private Pair<Map<Long, Double[]>, List<List<Object[]>>> fetchAccrualForFy(int fyStartYear, Long investorDvId) throws ParseException {
+		Double investorSummary[];
+		java.sql.Date fyStartDate, fyEndDate, forInterestStartDate, forInterestEndDate;
+		long fyDays, interestDays, investor;
+		Map<Long, Double[]> investorDvIdToTaxLiabilitysMap;
+		List<List<Object[]>> accrualDetailsForInvestor;
+		Date realisationDate;
+		double investmentYearEndAccrual, investmentTransactionAmount;
+		int tdsGroupInd;
+
+		investorDvIdToTaxLiabilitysMap = new HashMap<Long, Double[]>();
+		accrualDetailsForInvestor = new ArrayList<List<Object[]>>(2);
+		accrualDetailsForInvestor.add(new ArrayList<Object[]>());
+		accrualDetailsForInvestor.add(new ArrayList<Object[]>());
+
+		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(fyStartYear + "-04-01").getTime());
+		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((fyStartYear + 1) + "-03-31").getTime());
+		fyDays = Duration.between(fyStartDate.toLocalDate().atStartOfDay(), fyEndDate.toLocalDate().atStartOfDay()).toDays() + 1;
+		for (Investment investment : investmentRepository.retrieveInvestmentWithinPeriod(fyStartDate, fyEndDate)) {
+			// Additional Filters not used in DB, now applied in Java
+
+			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
+				continue;
+			}
+
+			if (investment.getDefaultTaxGroup() != null && Constants.DVID_TAX_GROUP_EXEMPTED_LIST.contains(investment.getDefaultTaxGroup().getId())) {
+				continue;
+			}
+
+			if (investorDvId != null && investment.getInvestor().getId() != investorDvId.longValue()) {
+				continue;
+			}
+
+			// Income
+			forInterestStartDate = (investment.getInvestmentStartDate() == null || investment.getInvestmentStartDate().before(fyStartDate) ? fyStartDate : investment.getInvestmentStartDate());
+			forInterestEndDate = (investment.getInvestmentEndDate() == null || investment.getInvestmentEndDate().after(fyEndDate) ? fyEndDate : investment.getInvestmentEndDate());
+			interestDays = Duration.between(forInterestStartDate.toLocalDate().atStartOfDay(), forInterestEndDate.toLocalDate().atStartOfDay()).toDays();
+
+			if (Constants.INVESTOR_MAP.containsKey(investment.getInvestor().getId())) {
+				investor = Constants.INVESTOR_MAP.get(investment.getInvestor().getId());
+			} else { // Joint investors, take the first one
+				investor = investment.getInvestor().getId();
+			}
+			investorSummary = investorDvIdToTaxLiabilitysMap.get(investor);
+			if (investorSummary == null) {
+				investorSummary = new Double[] {0D, 0D};
+			}
+			investmentYearEndAccrual = ObjectUtils.defaultIfNull(investment.getWorth(), 0).doubleValue() *
+					ObjectUtils.defaultIfNull(investment.getRateOfInterest(), 0).doubleValue() / 100 *
+					interestDays / fyDays;
+			investorSummary[0] += investmentYearEndAccrual;
+			if (investment.getDefaultTaxGroup() != null && Constants.DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST == investment.getDefaultTaxGroup().getId()) {
+				tdsGroupInd = 0;
+			} else {
+				tdsGroupInd = 1;
+			}	// TDS Group defined at investment transaction level is not utilised!!!
+
+			// TDS
+			for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
+				if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
+					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL &&
+							investmentTransaction.getDueDate().compareTo(fyStartDate) >= 0 &&
+							investmentTransaction.getDueDate().compareTo(fyEndDate) <= 0) {
+						investorSummary[1] += ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0D).doubleValue();
+						investmentTransactionAmount = ObjectUtils.defaultIfNull(investmentTransaction.getInterestAmount(), 0D);
+						investmentYearEndAccrual -= investmentTransactionAmount;
+						accrualDetailsForInvestor.get(tdsGroupInd).add(new Object[] {"", "", investmentTransaction.getDueDate(),
+								investment.getProductProvider().getValue(),
+								formAccountNo(investment),
+								investmentTransactionAmount,
+								investmentTransaction.getTdsAmount()
+								});
+					}
+					else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+						for (Realisation realisation : investmentTransaction.getRealisationList()) {
+							realisationDate = ObjectUtils.defaultIfNull(realisation.getAccountedRealisationDate(), realisation.getRealisationDate());
+							if (realisationDate.compareTo(fyStartDate) >= 0 &&
+									realisationDate.compareTo(fyEndDate) <= 0) {
+								investorSummary[1] += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0D).doubleValue();
+								investmentYearEndAccrual -= ObjectUtils.defaultIfNull(realisation.getInterestAmount(), 0D);
+							}
+						}
+					}
+				}
+				// System.out.print(investorSummary[1]);
+			}
+			if (investment.getIsAccrualApplicable() != null && investment.getIsAccrualApplicable() &&
+					investmentYearEndAccrual > 10) { // No specific reason for this value
+				accrualDetailsForInvestor.get(tdsGroupInd).add(new Object[] {"", "", fyEndDate,
+						investment.getProductProvider().getValue(),
+						formAccountNo(investment),
+						investmentYearEndAccrual
+						});
+			}
+			investorDvIdToTaxLiabilitysMap.put(investor, investorSummary);
+		}
+
+		return Pair.with(investorDvIdToTaxLiabilitysMap, accrualDetailsForInvestor);
+	}
+
+	private String formAccountNo(Investment investment) {
+		return investment.getId() + "/" +
+				ObjectUtils.defaultIfNull(investment.getInvestmentIdWithProvider(), "");
 	}
 }
