@@ -14,6 +14,7 @@ public class Constants {
 
 	public static final DateFormat ANSI_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	public static final double EPSILON = 0.0000000009D;
+	public static final double TOLERATED_DIFFERENCE_AMOUNT = 10D;	// No specific reason for this value
 	
 	public static final String CATEGORY_INVESTOR = "Invstr";
 	public static final String CATEGORY_PRIMARY_INVESTOR = "PrimaryInvestor";

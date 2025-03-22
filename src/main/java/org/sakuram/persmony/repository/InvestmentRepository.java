@@ -19,5 +19,5 @@ public interface InvestmentRepository extends JpaRepository<Investment, Long>, I
 			+ " AND (investment_start_date IS NULL OR CAST(:#{#toDate} AS DATE) IS NULL OR investment_start_date <= :#{#toDate})"
 			+ " ORDER BY id"
 			)
-	public List<Investment> retrieveInvestmentWithinPeriod(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
+	public List<Investment> retrieveInvestmentActiveWithinPeriod(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 }

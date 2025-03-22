@@ -51,7 +51,8 @@ public class ReportView extends VerticalLayout {
 				"Period Summary",
 				"Anticipated Vs. Actual",
 				"Tax Liability",
-				"Details for Tax Filing");
+				"Details for Tax Filing",
+				"Readiness for Tax Filing");
 		reportSelect.setLabel("Report");
 		reportSelect.setPlaceholder("Select Report");
 		add(reportSelect);
@@ -84,6 +85,7 @@ public class ReportView extends VerticalLayout {
 	        		formLayout.add(financialYearStartIntegerField);
 	            	break;
 	            case "Details for Tax Filing":
+	            case "Readiness for Tax Filing":
 	        		formLayout.add(investorDvSelect);
 	        		financialYearStartIntegerField.setLabel("FY Start Year");
 	        		formLayout.add(financialYearStartIntegerField);
@@ -154,6 +156,8 @@ public class ReportView extends VerticalLayout {
 				            		reportList = reportService.advanceTaxLiability(financialYearStartIntegerField.getValue());
 					            	break;
 					            case "Details for Tax Filing":
+					            case "Readiness for Tax Filing":
+					            	DetailsForTaxFilingRequestVO detailsForTaxFilingRequestVO;
 					            	if (financialYearStartIntegerField.getValue() == null || investorDvSelect.getValue() == null) {
 					            		if (investorDvSelect.getValue() == null) {
 											showError("Select an Investor before clicking Generate");					            			
@@ -163,10 +167,13 @@ public class ReportView extends VerticalLayout {
 										currentReportInd = -1;
 										return new ByteArrayInputStream(new byte[0]);
 									}
-				            		reportList = reportService.detailsForTaxFiling(new DetailsForTaxFilingRequestVO(
+					            	detailsForTaxFilingRequestVO = new DetailsForTaxFilingRequestVO(
 				            				financialYearStartIntegerField.getValue(),
 				            				investorDvSelect.getValue().getId()
-				            				));
+				            				);
+					            	reportList = reportSelect.getValue().equals("Details for Tax Filing") ?
+					            			reportService.detailsForTaxFiling(detailsForTaxFilingRequestVO) :
+					            			reportService.readinessForTaxFiling(detailsForTaxFilingRequestVO);
 					            	break;
 					            }
 							} catch (Exception e) {

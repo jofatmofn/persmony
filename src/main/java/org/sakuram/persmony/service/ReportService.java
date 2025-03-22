@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.ObjectUtils;
 import org.javatuples.Pair;
+import org.javatuples.Triplet;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
@@ -796,12 +797,122 @@ public class ReportService {
 		return reportList;
 	}
 
-	private Pair<Map<Long, Double[]>, List<List<Object[]>>> fetchAccrualForFy(int fyStartYear, Long investorDvId) throws ParseException {
+	public List<List<Object[]>> readinessForTaxFiling(DetailsForTaxFilingRequestVO incomeTaxFilingDetailsRequestVO) throws ParseException {
+		List<List<Object[]>> reportList;
+		List<Object[]> recordList;
+		java.sql.Date fyStartDate, fyEndDate;
+		double expectedPrincipal, expectedInterest, expectedTds, actualAmount;
+		InvestmentTransaction lastInvestmentTransaction;
+
+		reportList = new ArrayList<List<Object[]>>(1);
+		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
+
+		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(incomeTaxFilingDetailsRequestVO.getFyStartYear() + "-04-01").getTime());
+		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1) + "-03-31").getTime());
+
+		recordList.add(new Object[] {"Readiness for filing Income Tax Returns"});
+		recordList.add(new Object[] {"Assessee", Constants.domainValueCache.get(incomeTaxFilingDetailsRequestVO.getInvestorDvId()).getValue()});
+		recordList.add(new Object[] {"Period", fyStartDate.toString(), fyEndDate.toString()});
+		recordList.add(new Object[1]);
+		recordList.add(new Object[] {"I.id", "IT.id", "R.id", "Type", "Date", "Remarks", "Details..."});
+
+		for (Investment investment : investmentRepository.retrieveInvestmentActiveWithinPeriod(fyStartDate, fyEndDate)) {
+			// Additional Filters not used in DB, now applied in Java
+
+			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
+				continue;
+			}
+
+			if (investment.getInvestor().getId() != incomeTaxFilingDetailsRequestVO.getInvestorDvId()) {
+				continue;
+			}
+
+			expectedPrincipal = 0;
+			expectedInterest = 0;
+			expectedTds = 0;
+			actualAmount = 0;
+			lastInvestmentTransaction = null;
+
+			for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
+
+				if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING &&
+						investmentTransaction.getDueDate().compareTo(fyStartDate) >= 0 &&
+						investmentTransaction.getDueDate().compareTo(fyEndDate) <= 0) {
+					recordList.add(new Object[] {investment.getId(), investmentTransaction.getId(), null,
+							investmentTransaction.getTransactionType().getValue(),
+							investmentTransaction.getDueDate(),
+							"Pending for Realisation",
+							});
+				} else if (investmentTransaction.getDueDate().compareTo(fyEndDate) > 0) {
+					expectedPrincipal = 0;
+					expectedInterest = 0;
+					expectedTds = 0;
+					actualAmount = 0;
+					break;
+				} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
+					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+						if (lastInvestmentTransaction != null &&
+								lastInvestmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+							if (Math.abs(actualAmount - expectedPrincipal - expectedInterest + expectedTds) > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
+								recordList.add(new Object[] {investment.getId(), lastInvestmentTransaction.getId(), null,
+										lastInvestmentTransaction.getTransactionType().getValue(),
+										lastInvestmentTransaction.getDueDate(),
+										"Incomplete Data",
+										expectedPrincipal,
+										expectedInterest,
+										expectedTds,
+										actualAmount});
+							}
+							expectedPrincipal = 0;
+							expectedInterest = 0;
+							expectedTds = 0;
+						}
+						actualAmount = 0;
+						expectedPrincipal += ObjectUtils.defaultIfNull(investmentTransaction.getReturnedPrincipalAmount(), 0D);
+						expectedInterest += ObjectUtils.defaultIfNull(investmentTransaction.getInterestAmount(), 0D);
+						expectedTds += ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0D).doubleValue();
+						lastInvestmentTransaction = investmentTransaction;
+					} else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+						for (Realisation realisation : investmentTransaction.getRealisationList()) {
+							expectedPrincipal += ObjectUtils.defaultIfNull(realisation.getReturnedPrincipalAmount(), 0D);
+							expectedInterest += ObjectUtils.defaultIfNull(realisation.getInterestAmount(), 0D);
+							expectedTds += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0D).doubleValue();
+							actualAmount += ObjectUtils.defaultIfNull(realisation.getAmount(), 0D);
+						}
+						lastInvestmentTransaction = investmentTransaction;
+					}
+				}
+			}
+
+			if (lastInvestmentTransaction != null &&
+					lastInvestmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED &&
+					lastInvestmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
+					Math.abs(actualAmount - expectedPrincipal - expectedInterest + expectedTds) > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
+				recordList.add(new Object[] {investment.getId(), lastInvestmentTransaction.getId(), null,
+						lastInvestmentTransaction.getTransactionType().getValue(),
+						lastInvestmentTransaction.getDueDate(),
+						"Incomplete Data",
+						expectedPrincipal,
+						expectedInterest,
+						expectedTds,
+						actualAmount});
+			}
+		}
+
+		recordList.addAll(fetchAccrualForFy(incomeTaxFilingDetailsRequestVO.getFyStartYear(), incomeTaxFilingDetailsRequestVO.getInvestorDvId()).getValue2());
+
+
+		return reportList;
+	}
+
+	private Triplet<Map<Long, Double[]>, List<List<Object[]>>, List<Object[]>> fetchAccrualForFy(int fyStartYear, Long investorDvId) throws ParseException {
 		Double investorSummary[];
 		java.sql.Date fyStartDate, fyEndDate, forInterestStartDate, forInterestEndDate;
 		long fyDays, interestDays, investor;
 		Map<Long, Double[]> investorDvIdToTaxLiabilitysMap;
 		List<List<Object[]>> accrualDetailsForInvestor;
+		List<Object[]> anticipatedAccrualDetailsForInvestor;
 		Date realisationDate;
 		double investmentYearEndAccrual, investmentTransactionAmount;
 		int tdsGroupInd;
@@ -810,11 +921,12 @@ public class ReportService {
 		accrualDetailsForInvestor = new ArrayList<List<Object[]>>(2);
 		accrualDetailsForInvestor.add(new ArrayList<Object[]>());
 		accrualDetailsForInvestor.add(new ArrayList<Object[]>());
+		anticipatedAccrualDetailsForInvestor = new ArrayList<Object[]>();
 
 		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(fyStartYear + "-04-01").getTime());
 		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((fyStartYear + 1) + "-03-31").getTime());
 		fyDays = Duration.between(fyStartDate.toLocalDate().atStartOfDay(), fyEndDate.toLocalDate().atStartOfDay()).toDays() + 1;
-		for (Investment investment : investmentRepository.retrieveInvestmentWithinPeriod(fyStartDate, fyEndDate)) {
+		for (Investment investment : investmentRepository.retrieveInvestmentActiveWithinPeriod(fyStartDate, fyEndDate)) {
 			// Additional Filters not used in DB, now applied in Java
 
 			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
@@ -825,7 +937,7 @@ public class ReportService {
 				continue;
 			}
 
-			if (investorDvId != null && investment.getInvestor().getId() != investorDvId.longValue()) {
+			if (investorDvId != null && miscService.getPrimaryInvestor(investment.getInvestor()).getId() != investorDvId.longValue()) {
 				continue;
 			}
 
@@ -880,11 +992,13 @@ public class ReportService {
 						}
 					}
 				}
-				// System.out.print(investorSummary[1]);
 			}
 			if (investment.getIsAccrualApplicable() != null && investment.getIsAccrualApplicable() &&
-					investmentYearEndAccrual > 10) { // No specific reason for this value
-				accrualDetailsForInvestor.get(tdsGroupInd).add(new Object[] {"", "", fyEndDate,
+					investmentYearEndAccrual > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
+				anticipatedAccrualDetailsForInvestor.add(new Object[] {investment.getId(), null, null,
+						"Accrual",
+						fyEndDate,
+						"Missing Entry",
 						investment.getProductProvider().getValue(),
 						formAccountNo(investment),
 						investmentYearEndAccrual
@@ -893,7 +1007,7 @@ public class ReportService {
 			investorDvIdToTaxLiabilitysMap.put(investor, investorSummary);
 		}
 
-		return Pair.with(investorDvIdToTaxLiabilitysMap, accrualDetailsForInvestor);
+		return Triplet.with(investorDvIdToTaxLiabilitysMap, accrualDetailsForInvestor, anticipatedAccrualDetailsForInvestor);
 	}
 
 	private String formAccountNo(Investment investment) {
