@@ -570,6 +570,11 @@ public class ReportService {
 				reportTableList.get(TABLE_IND_80G).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
 						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_EXEMPT_DIVIDEND) {
+				reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						"Exempt Dividend",
+						sbAcTxnCategory.getEndAccountReference(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_BUYBACK) {
 				if (reportTableList.get(TABLE_IND_EI_OTHER).size() > 0) {
 					previousReportRow = reportTableList.get(TABLE_IND_EI_OTHER).get(reportTableList.get(TABLE_IND_EI_OTHER).size() - 1);
