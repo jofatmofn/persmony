@@ -26,7 +26,7 @@ public interface RealisationRepository extends JpaRepository<Realisation, Long> 
 			+ " WHERE status_fk IN (69, 71)"			// Only PENDING and COMPLETED, not CANCELLED
 			+ "	AND transaction_type_fk IN (73, 74)"	// Only RECEIPTs and ACCRUALs, not PAYMENTs
 			+ "	AND COALESCE(COALESCE(R.accounted_realisation_date,R.realisation_date), IT.due_date) BETWEEN :#{#fromDate} AND :#{#toDate}"
-			+ " AND CASE WHEN (:#{#investorId} = -1) THEN TRUE ELSE I.investor_fk = :#{#investorId} END"
+			+ " AND (:#{#investorIdCsv} = '' OR I.investor_fk = ANY(CAST(string_to_array(:#{#investorIdCsv}, ',') AS bigint[])))"
 			+ " AND CASE WHEN (:#{#productProviderId} = -1) THEN TRUE ELSE I.product_provider_fk = :#{#productProviderId} END"
 			+ " AND (NOT :#{#taxDetailNotInForm26as} OR (IT.transaction_type_fk = 73 AND R.form26as_booking_date IS NULL)"
 			+ "		OR (IT.transaction_type_fk = 74 AND IT.form26as_booking_date IS NULL))"
@@ -37,7 +37,7 @@ public interface RealisationRepository extends JpaRepository<Realisation, Long> 
 			+ " AND (NOT :#{#tdsAvailable} OR (IT.transaction_type_fk = 73 AND R.tds_amount IS NOT NULL)"
 			+ "		OR (IT.transaction_type_fk = 74 AND IT.tds_amount IS NOT NULL))"
 			+ " ORDER BY I.product_provider_fk, IT.due_date DESC")
-	public List<Object[]> retrieveAccrualsRealisations(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") Long investorId, @Param("productProviderId") Long productProviderId, @Param("taxDetailNotInForm26as") boolean taxDetailNotInForm26as, @Param("taxDetailNotInAis") boolean taxDetailNotInAis, @Param("interestAvailable") boolean interestAvailable, @Param("tdsAvailable") boolean tdsAvailable);
+	public List<Object[]> retrieveAccrualsRealisations(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorIdCsv") String investorIdCsv, @Param("productProviderId") Long productProviderId, @Param("taxDetailNotInForm26as") boolean taxDetailNotInForm26as, @Param("taxDetailNotInAis") boolean taxDetailNotInAis, @Param("interestAvailable") boolean interestAvailable, @Param("tdsAvailable") boolean tdsAvailable);
 
 	@Query(nativeQuery = true, value =
 			"SELECT R.*"

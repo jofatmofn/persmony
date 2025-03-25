@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.bean.Investment;
@@ -565,7 +566,8 @@ public class MoneyTransactionService {
     	for(Object[] record : realisationRepository.retrieveAccrualsRealisations(
     			new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(retrieveAccrualsRealisationsRequestVO.getFyStartYear() + "-04-01").getTime()),
     			new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((retrieveAccrualsRealisationsRequestVO.getFyStartYear() + 1) + "-03-31").getTime()),
-    			retrieveAccrualsRealisationsRequestVO.getInvestorDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getInvestorDvId(),
+    			(retrieveAccrualsRealisationsRequestVO.getInvestorDvId() == null ? "" :
+    				Constants.PRIMARY_TO_INVESTOR_LIST_MAP.get(retrieveAccrualsRealisationsRequestVO.getInvestorDvId()).stream().map(String::valueOf).collect(Collectors.joining(","))),
     			retrieveAccrualsRealisationsRequestVO.getProductProviderDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getProductProviderDvId(),
     			retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInForm26as(),
 				retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInAis(),

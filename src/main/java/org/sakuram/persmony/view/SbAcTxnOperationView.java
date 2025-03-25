@@ -582,9 +582,6 @@ public class SbAcTxnOperationView extends Div {
 		sbAcTxnCategoryGrid = new Grid<>(SbAcTxnCategoryVO.class, false);
 		sbAcTxnCategoryGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		sbAcTxnCategoryGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
-		for (Column<SbAcTxnCategoryVO> column : sbAcTxnCategoryGrid.getColumns()) {
-			column.setResizable(true);
-		}
 		sbAcTxnCategoryGridLDV = sbAcTxnCategoryGrid.setItems(sbAcTxnCategoryVOList);
 		
 		verticalLayout.add(sbAcTxnCategoryGrid);
@@ -656,12 +653,14 @@ public class SbAcTxnOperationView extends Div {
 
 		sbAcTxnCategoryGrid.addColumn("sbAcTxnCategoryId").setHeader("SAT Category Id");
 		transactionCategoryColumn = sbAcTxnCategoryGrid.addColumn("transactionCategory.value").setHeader("Transaction Category");
+		transactionCategoryColumn.setResizable(true);
 		endAccountReferenceColumn = sbAcTxnCategoryGrid.addColumn(sbAcTxnCategoryVO -> {
 			String dvCategory;
 			dvCategory = txnCatToDvCatMap.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
 			if (dvCategory != null && dvCategory.equals(Constants.CATEGORY_NONE)) return "";
 			else return sbAcTxnCategoryVO.getEndAccountReference().getValue() ;
 			}).setHeader("End Account Reference");
+		endAccountReferenceColumn.setResizable(true);
 		amountColumn = sbAcTxnCategoryGrid.addColumn("amount").setHeader("Amount");
 		sbAcTxnCategoryGrid.addComponentColumn(sbAcTxnCategoryVO -> {
 			Button delButton = new Button();

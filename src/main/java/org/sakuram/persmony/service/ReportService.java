@@ -461,8 +461,7 @@ public class ReportService {
 				throw new AppException("Unexpected Bank Account / Investor", null);
 			}
 
-			investorDomainValue = miscService.getPrimaryInvestor(investorDomainValue);
-			if (investorDomainValue.getId() != incomeTaxFilingDetailsRequestVO.getInvestorDvId() &&
+			if (Constants.INVESTOR_TO_PRIMARY_MAP.get(investorDomainValue.getId()) != incomeTaxFilingDetailsRequestVO.getInvestorDvId() &&
 					(sbAcTxnCategory.getEndAccountReference() == null ||
 					!sbAcTxnCategory.getEndAccountReference().equals(String.valueOf(incomeTaxFilingDetailsRequestVO.getInvestorDvId())))) {
 				continue;
@@ -824,7 +823,7 @@ public class ReportService {
 				continue;
 			}
 
-			if (investment.getInvestor().getId() != incomeTaxFilingDetailsRequestVO.getInvestorDvId()) {
+			if (Constants.INVESTOR_TO_PRIMARY_MAP.get(investment.getInvestor().getId()) != incomeTaxFilingDetailsRequestVO.getInvestorDvId()) {
 				continue;
 			}
 
@@ -909,11 +908,11 @@ public class ReportService {
 	private Triplet<Map<Long, Double[]>, List<List<Object[]>>, List<Object[]>> fetchAccrualForFy(int fyStartYear, Long investorDvId) throws ParseException {
 		Double investorSummary[];
 		java.sql.Date fyStartDate, fyEndDate, forInterestStartDate, forInterestEndDate;
-		long fyDays, interestDays, investor;
+		long fyDays, interestDays, investmentPrimaryInvestorDvId;
 		Map<Long, Double[]> investorDvIdToTaxLiabilitysMap;
 		List<List<Object[]>> accrualDetailsForInvestor;
 		List<Object[]> anticipatedAccrualDetailsForInvestor;
-		Date realisationDate;
+		Date realisationDate, investmentLastDate;
 		double investmentYearEndAccrual, investmentTransactionAmount;
 		int tdsGroupInd;
 
@@ -937,21 +936,18 @@ public class ReportService {
 				continue;
 			}
 
-			if (investorDvId != null && miscService.getPrimaryInvestor(investment.getInvestor()).getId() != investorDvId.longValue()) {
+			investmentPrimaryInvestorDvId = Constants.INVESTOR_TO_PRIMARY_MAP.get(investment.getInvestor().getId());
+			if (investorDvId != null && investmentPrimaryInvestorDvId != investorDvId.longValue()) {
 				continue;
 			}
 
 			// Income
 			forInterestStartDate = (investment.getInvestmentStartDate() == null || investment.getInvestmentStartDate().before(fyStartDate) ? fyStartDate : investment.getInvestmentStartDate());
-			forInterestEndDate = (investment.getInvestmentEndDate() == null || investment.getInvestmentEndDate().after(fyEndDate) ? fyEndDate : investment.getInvestmentEndDate());
+			investmentLastDate = ObjectUtils.defaultIfNull(investment.getClosureDate(), investment.getInvestmentEndDate());
+			forInterestEndDate = (investmentLastDate == null || investmentLastDate.after(fyEndDate) ? fyEndDate : investmentLastDate);
 			interestDays = Duration.between(forInterestStartDate.toLocalDate().atStartOfDay(), forInterestEndDate.toLocalDate().atStartOfDay()).toDays();
 
-			if (Constants.INVESTOR_MAP.containsKey(investment.getInvestor().getId())) {
-				investor = Constants.INVESTOR_MAP.get(investment.getInvestor().getId());
-			} else { // Joint investors, take the first one
-				investor = investment.getInvestor().getId();
-			}
-			investorSummary = investorDvIdToTaxLiabilitysMap.get(investor);
+			investorSummary = investorDvIdToTaxLiabilitysMap.get(investmentPrimaryInvestorDvId);
 			if (investorSummary == null) {
 				investorSummary = new Double[] {0D, 0D};
 			}
@@ -1004,7 +1000,7 @@ public class ReportService {
 						investmentYearEndAccrual
 						});
 			}
-			investorDvIdToTaxLiabilitysMap.put(investor, investorSummary);
+			investorDvIdToTaxLiabilitysMap.put(investmentPrimaryInvestorDvId, investorSummary);
 		}
 
 		return Triplet.with(investorDvIdToTaxLiabilitysMap, accrualDetailsForInvestor, anticipatedAccrualDetailsForInvestor);

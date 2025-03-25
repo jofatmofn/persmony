@@ -947,7 +947,7 @@ public class OperationView extends Div {
 		financialYearStartIntegerField = new IntegerField();
 		financialYearStartIntegerField.setLabel("FY Start Year");
 		hLayout.add(financialYearStartIntegerField);
-		investorDvSelect = newDvSelect("Investor", Constants.CATEGORY_INVESTOR, true);
+		investorDvSelect = newDvSelect("Investor", Constants.CATEGORY_PRIMARY_INVESTOR, true);
 		hLayout.add(investorDvSelect);
 		productProviderDvSelect = newDvSelect("Provider", Constants.CATEGORY_PARTY, true);
 		hLayout.add(productProviderDvSelect);

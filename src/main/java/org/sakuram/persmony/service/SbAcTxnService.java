@@ -293,6 +293,19 @@ public class SbAcTxnService {
 					if (cellContentList.get(4).endsWith("Dr") && balance != 0) {
 						balance = -1 * balance;
 					}
+				} else if (bankAccountDvId == 302) {	// SIB
+					transactionDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(1)));
+					valueDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(2)));
+					narration = cellContentList.get(3);
+					reference = cellContentList.get(5);
+					if (cellContentList.get(6).equals("")) {
+						amount = Double.parseDouble(cellContentList.get(8).replace(",", ""));
+						bookingDvId = Constants.DVID_BOOKING_CREDIT;
+					} else {
+						amount = Double.parseDouble(cellContentList.get(6).replace(",", ""));
+						bookingDvId = Constants.DVID_BOOKING_DEBIT;
+					}
+					balance = Double.parseDouble(cellContentList.get(9).replace(",", ""));
 				} else {
 					throw new AppException("Unexpected bank account", null);
 				}
@@ -366,7 +379,11 @@ public class SbAcTxnService {
 			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 					-1L,
 					new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()),
-					new IdValueVO(realisation.getInvestmentTransaction().getInvestment().getId(), realisation.getInvestmentTransaction().getInvestment().getProductName()),
+					new IdValueVO(realisation.getInvestmentTransaction().getInvestment().getId(),
+							realisation.getInvestmentTransaction().getInvestment().getId() +
+							"/" + realisation.getInvestmentTransaction().getId() +
+							"/" + realisation.getId() +
+							"/" + realisation.getInvestmentTransaction().getInvestment().getProductName()),
 					realisation.getAmount()));
 		}
 

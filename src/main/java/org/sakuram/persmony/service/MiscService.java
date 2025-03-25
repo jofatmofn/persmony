@@ -304,17 +304,5 @@ public class MiscService {
     	
 		return txnCatToDvCatMap;
     }
-    
-    public DomainValue getPrimaryInvestor(DomainValue investorDv) {
-		DvFlagsInvestorVO dvFlagsInvestorVO;
-		
-		dvFlagsInvestorVO = (DvFlagsInvestorVO) DomainValueFlags.getDvFlagsVO(investorDv);
-		if (dvFlagsInvestorVO == null) {
-			return investorDv;
-		} else {
-			return Constants.domainValueCache.get(dvFlagsInvestorVO.getRealInvestors()[0]);
-		}
-    	
-    }
-    
+
 }

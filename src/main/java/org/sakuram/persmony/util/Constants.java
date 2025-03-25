@@ -121,9 +121,20 @@ public class Constants {
 	public static final List<Long> DVID_TAX_GROUP_EXEMPTED_LIST = Arrays.asList(196L, 198L);
 	public static final List<Long> DVID_TAX_GROUP_OTHER_LIST = Arrays.asList(197L, 200L);
 	
-	public static final Map<Long, Long> INVESTOR_MAP = Map.ofEntries(	// For performance, hard-coded. TODO: Should be read from DB
+	// For performance, hard-coded. Is it worth reading from DB
+	public static final Map<Long, Long> INVESTOR_TO_PRIMARY_MAP = Map.ofEntries(
+		    Map.entry(1L, 1L),
+		    Map.entry(2L, 2L),
+		    Map.entry(3L, 3L),
+		    Map.entry(4L, 4L),
 		    Map.entry(107L, 1L),
 		    Map.entry(175L, 2L)
+	);
+	public static final Map<Long, List<Long>> PRIMARY_TO_INVESTOR_LIST_MAP = Map.ofEntries(
+		    Map.entry(1L, Arrays.asList(1L, 107L)),
+		    Map.entry(2L, Arrays.asList(2L, 175L)),
+		    Map.entry(3L, Arrays.asList(3L)),
+		    Map.entry(4L, Arrays.asList(4L))
 	);
 
 	public static final Map<String, Long> DESC_TO_ID_MAP = Map.ofEntries(	// TODO: Should be read from DB
