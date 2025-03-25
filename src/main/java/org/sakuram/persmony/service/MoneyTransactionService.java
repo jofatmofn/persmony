@@ -4,7 +4,6 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.bean.Investment;
@@ -563,16 +562,7 @@ public class MoneyTransactionService {
     	retrieveAccrualsRealisationsResponseVO = new RetrieveAccrualsRealisationsResponseVO();
     	dueRealisationVOList = new ArrayList<DueRealisationVO>();
     	retrieveAccrualsRealisationsResponseVO.setDueRealisationVOList(dueRealisationVOList);
-    	for(Object[] record : realisationRepository.retrieveAccrualsRealisations(
-    			new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(retrieveAccrualsRealisationsRequestVO.getFyStartYear() + "-04-01").getTime()),
-    			new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((retrieveAccrualsRealisationsRequestVO.getFyStartYear() + 1) + "-03-31").getTime()),
-    			(retrieveAccrualsRealisationsRequestVO.getInvestorDvId() == null ? "" :
-    				Constants.PRIMARY_TO_INVESTOR_LIST_MAP.get(retrieveAccrualsRealisationsRequestVO.getInvestorDvId()).stream().map(String::valueOf).collect(Collectors.joining(","))),
-    			retrieveAccrualsRealisationsRequestVO.getProductProviderDvId() == null ? -1 : retrieveAccrualsRealisationsRequestVO.getProductProviderDvId(),
-    			retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInForm26as(),
-				retrieveAccrualsRealisationsRequestVO.isTaxDetailNotInAis(),
-				retrieveAccrualsRealisationsRequestVO.isInterestAvailable(),
-				retrieveAccrualsRealisationsRequestVO.isTdsAvailable())) {
+    	for(Object[] record : realisationRepository.retrieveAccrualsRealisations(retrieveAccrualsRealisationsRequestVO)) {
     		dueRealisationVOList.add(new DueRealisationVO(record));
     		
     	}
@@ -592,7 +582,7 @@ public class MoneyTransactionService {
     		investmentTransaction.setInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
     		investmentTransaction.setTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
     		investmentTransaction.setAccrualTdsReference(updateTaxDetailRequestVO.getTdsReference());
-    		investmentTransaction.setInAis(updateTaxDetailRequestVO.getInAis());
+    		investmentTransaction.setInAis(updateTaxDetailRequestVO.getInAis() ? true : null);
     		investmentTransaction.setForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
     	} else {
     		Realisation realisation;
@@ -606,7 +596,7 @@ public class MoneyTransactionService {
     		realisation.setInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
     		realisation.setTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
     		realisation.setTdsReference(updateTaxDetailRequestVO.getTdsReference());
-    		realisation.setInAis(updateTaxDetailRequestVO.getInAis());
+    		realisation.setInAis(updateTaxDetailRequestVO.getInAis() ? true : null);
     		realisation.setForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
     	}
     	

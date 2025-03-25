@@ -8,7 +8,10 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.IdValueVO;
 
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.data.renderer.TextRenderer;
 
 public class ViewFuncs {
 
@@ -48,6 +51,24 @@ public class ViewFuncs {
     	return selectDv;
     }
     
+    public static RadioButtonGroup<Boolean> newTriStateRBG() {
+    	RadioButtonGroup<Boolean> triStateRBG;
+    	triStateRBG = new RadioButtonGroup<Boolean>();
+    	triStateRBG.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+    	triStateRBG.setItems(null, true, false);
+    	triStateRBG.setValue(null);
+    	triStateRBG.setRenderer(new TextRenderer<>((mn) -> {
+    		if (mn == null) {
+    			return "Both";
+    		} else if (mn) {
+    			return "Yes";
+    		} else {
+    			return "No";
+    	    }
+    	}));
+    	return triStateRBG;
+    }
+
     private static void createSelect(Select<IdValueVO> dvSelect, List<IdValueVO> idValueVOList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
 		if (isNullAValue) {
 			idValueVOList.add(0, new IdValueVO(Constants.DVID_EMPTY_SELECT, "Empty"));

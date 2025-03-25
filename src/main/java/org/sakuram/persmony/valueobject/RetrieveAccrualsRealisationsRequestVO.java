@@ -10,8 +10,8 @@ public class RetrieveAccrualsRealisationsRequestVO {
 	int fyStartYear;
 	Long investorDvId;
 	Long productProviderDvId;
-	boolean taxDetailNotInForm26as;
-	boolean taxDetailNotInAis;
-	boolean interestAvailable;
-	boolean tdsAvailable;
+	Boolean inForm26as;
+	Boolean inAis;
+	Boolean withInterest;
+	Boolean withTds;
 }

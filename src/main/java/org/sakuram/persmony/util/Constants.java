@@ -130,11 +130,11 @@ public class Constants {
 		    Map.entry(107L, 1L),
 		    Map.entry(175L, 2L)
 	);
-	public static final Map<Long, List<Long>> PRIMARY_TO_INVESTOR_LIST_MAP = Map.ofEntries(
-		    Map.entry(1L, Arrays.asList(1L, 107L)),
-		    Map.entry(2L, Arrays.asList(2L, 175L)),
-		    Map.entry(3L, Arrays.asList(3L)),
-		    Map.entry(4L, Arrays.asList(4L))
+	public static final Map<Long, long[]> PRIMARY_TO_INVESTOR_LIST_MAP = Map.ofEntries(
+		    Map.entry(1L, new long[] {1L, 107L}),
+		    Map.entry(2L, new long[] {2L, 175L}),
+		    Map.entry(3L, new long[] {3L}),
+		    Map.entry(4L, new long[] {4L})
 	);
 
 	public static final Map<String, Long> DESC_TO_ID_MAP = Map.ofEntries(	// TODO: Should be read from DB

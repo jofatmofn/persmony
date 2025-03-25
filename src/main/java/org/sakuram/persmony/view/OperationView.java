@@ -930,13 +930,12 @@ public class OperationView extends Div {
 	
 	private void handleUpdateTaxDetail(FormLayout parentFormLayout) {
 		HorizontalLayout hLayout;
-		VerticalLayout vLayout;
 		IntegerField financialYearStartIntegerField;
 		Select<IdValueVO> investorDvSelect, productProviderDvSelect;
 		FormLayout formLayout;
 		RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisationsResponseVO;
 		Button proceedButton;
-		Checkbox taxDetailNotInForm26asCheckbox, taxDetailNotInAisCheckbox, interestAvailableCheckbox, tdsAvailableCheckbox;
+		RadioButtonGroup<Boolean> inForm26asRBG, inAisRBG, withInterestRBG, withTdsRBG;
 		
 		retrieveAccrualsRealisationsResponseVO = new RetrieveAccrualsRealisationsResponseVO();
 		
@@ -951,20 +950,23 @@ public class OperationView extends Div {
 		hLayout.add(investorDvSelect);
 		productProviderDvSelect = newDvSelect("Provider", Constants.CATEGORY_PARTY, true);
 		hLayout.add(productProviderDvSelect);
-		vLayout = new VerticalLayout();
-		vLayout.setPadding(false);
-		hLayout.add(vLayout);
-		taxDetailNotInForm26asCheckbox = new Checkbox("Not In Form 26AS");
-		vLayout.add(taxDetailNotInForm26asCheckbox);
-		taxDetailNotInAisCheckbox = new Checkbox("Not In AIS");
-		vLayout.add(taxDetailNotInAisCheckbox);
-		vLayout = new VerticalLayout();
-		vLayout.setPadding(false);
-		hLayout.add(vLayout);
-		interestAvailableCheckbox = new Checkbox("With Interest");
-		vLayout.add(interestAvailableCheckbox);
-		tdsAvailableCheckbox = new Checkbox("With TDS");
-		vLayout.add(tdsAvailableCheckbox);
+		
+		inForm26asRBG = ViewFuncs.newTriStateRBG();
+		inForm26asRBG.setLabel("In Form 26AS");
+		hLayout.add(inForm26asRBG);
+
+		inAisRBG = ViewFuncs.newTriStateRBG();
+		inAisRBG.setLabel("In AIS");
+		hLayout.add(inAisRBG);
+
+		withInterestRBG = ViewFuncs.newTriStateRBG();
+		withInterestRBG.setLabel("With Interest");
+		hLayout.add(withInterestRBG);
+
+		withTdsRBG = ViewFuncs.newTriStateRBG();
+		withTdsRBG.setLabel("With TDS");
+		hLayout.add(withTdsRBG);
+
 		proceedButton = new Button("Proceed");
 		hLayout.add(proceedButton);
 		proceedButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -1001,11 +1003,11 @@ public class OperationView extends Div {
 									financialYearStartIntegerField.getValue(),
 									investorDvSelect.getValue() == null ? null : investorDvSelect.getValue().getId(),
 									productProviderDvSelect.getValue() == null ? null : productProviderDvSelect.getValue().getId(),
-									taxDetailNotInForm26asCheckbox.getValue() == null ? false : taxDetailNotInForm26asCheckbox.getValue(),
-									taxDetailNotInAisCheckbox.getValue() == null ? false : taxDetailNotInAisCheckbox.getValue(),
-									interestAvailableCheckbox.getValue() == null ? false : interestAvailableCheckbox.getValue(),
-									tdsAvailableCheckbox.getValue() == null ? false : tdsAvailableCheckbox.getValue())
-								);
+									inForm26asRBG.getValue(),
+									inAisRBG.getValue(),
+									withInterestRBG.getValue(),
+									withTdsRBG.getValue()
+								));
 						retrieveAccrualsRealisationsResponseVOL.copyTo(retrieveAccrualsRealisationsResponseVO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
 						handleUpdateTaxDetail2(formLayout, retrieveAccrualsRealisationsResponseVO);
 					} catch (Exception e) {
@@ -1158,14 +1160,14 @@ public class OperationView extends Div {
 			    		selectedDueRealisationVO.setInvestmentTransactionInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
 			    		selectedDueRealisationVO.setInvestmentTransactionTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
 			    		selectedDueRealisationVO.setAccrualTdsReference(updateTaxDetailRequestVO.getTdsReference());
-			    		selectedDueRealisationVO.setInvestmentTransactionInAis(updateTaxDetailRequestVO.getInAis());
+			    		selectedDueRealisationVO.setInvestmentTransactionInAis(updateTaxDetailRequestVO.getInAis() ? true : null); // In DB, a FALSE and Not Known will be NULL, but inAisCheckbox.getValue() will never be NULL
 			    		selectedDueRealisationVO.setInvestmentTransactionForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
 			    	} else {
 			    		selectedDueRealisationVO.setRealisationDate(updateTaxDetailRequestVO.getAccountedDate());
 			    		selectedDueRealisationVO.setRealisationInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
 			    		selectedDueRealisationVO.setRealisationTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
 			    		selectedDueRealisationVO.setRealisationTdsReference(updateTaxDetailRequestVO.getTdsReference());
-			    		selectedDueRealisationVO.setRealisationInAis(updateTaxDetailRequestVO.getInAis());
+			    		selectedDueRealisationVO.setRealisationInAis(updateTaxDetailRequestVO.getInAis() ? true : null);
 			    		selectedDueRealisationVO.setRealisationForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
 			    	}
 					accrualsRealisationsGridLDV.refreshItem(selectedDueRealisationVO);
