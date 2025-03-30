@@ -50,6 +50,7 @@ public class ReportView extends VerticalLayout {
 				"Open Investments",
 				"Period Summary",
 				"Anticipated Vs. Actual",
+				"Income Vs. Spend",
 				"Tax Liability",
 				"Details for Tax Filing",
 				"Readiness for Tax Filing");
@@ -76,6 +77,7 @@ public class ReportView extends VerticalLayout {
 	            case "Receipt Transactions":
 	            case "Period Summary":
 	            case "Anticipated Vs. Actual":
+	            case "Income Vs. Spend":
 	        		hLayout = new HorizontalLayout();
 	        		formLayout.addFormItem(hLayout, "Period");
 	        		hLayout.add(periodFromDatePicker, periodToDatePicker);
@@ -128,6 +130,7 @@ public class ReportView extends VerticalLayout {
 					            case "Receipt Transactions":
 					            case "Period Summary":
 					            case "Anticipated Vs. Actual":
+					            case "Income Vs. Spend":
 					            	PeriodSummaryCriteriaVO periodSummaryCriteriaVO;
 					            	if (periodFromDatePicker.getValue() == null || periodToDatePicker.getValue() == null) {
 										showError("Select the period before clicking Generate");
@@ -145,6 +148,9 @@ public class ReportView extends VerticalLayout {
 						            case "Anticipated Vs. Actual":
 					            		reportList = reportService.anticipatedVsActual(periodSummaryCriteriaVO);
 					            		break;
+						            case "Income Vs. Spend":
+						            	reportList = reportService.incomeVsSpend(periodSummaryCriteriaVO);
+						            	break;
 					            	}
 					            	break;
 					            case "Tax Liability":

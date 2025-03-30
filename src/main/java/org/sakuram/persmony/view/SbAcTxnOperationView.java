@@ -625,7 +625,8 @@ public class SbAcTxnOperationView extends Div {
 						return;
 					}
 					dvCategory = txnCatToDvCatMap.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
-					if ((dvCategory == null || !dvCategory.equals(Constants.CATEGORY_NONE)) && sbAcTxnCategoryVO.getEndAccountReference() == null) {
+					if ((dvCategory == null || !dvCategory.equals(Constants.CATEGORY_NONE)) &&
+							(sbAcTxnCategoryVO.getEndAccountReference() == null || sbAcTxnCategoryVO.getEndAccountReference().getValue() == null)) {
 						ViewFuncs.showError("End Account Reference cannot be empty");
 						return;
 					}

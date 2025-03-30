@@ -296,7 +296,7 @@ public class MiscService {
     			DomainValue transactionCategoryDv;
     			transactionCategoryDv = Constants.domainValueCache.get(dvId);
     			dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(transactionCategoryDv);
-    			txnCatToDvCatMap.put(transactionCategoryDv.getId(), dvFlagsSbAcTxnCategoryVO == null ? null: dvFlagsSbAcTxnCategoryVO.getDvCategory());
+    			txnCatToDvCatMap.put(transactionCategoryDv.getId(), dvFlagsSbAcTxnCategoryVO.getDvCategory());
 			} catch (Exception e) {
 				throw new AppException("Invalid Configuration of Transaction Category " + dvId, e);
 	    	}

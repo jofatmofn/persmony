@@ -92,6 +92,7 @@ public class Constants {
 	public static final int FLAG_POSITION_PARTY_ROLES = 0;
 	public static final int FLAG_POSITION_REAL_INVESTORS = 0;
 	public static final int FLAG_POSITION_DV_CATEGORY = 0;
+	public static final int FLAG_POSITION_INCOME_OR_EXPENSE = 1;
 
 	public static final String ACCOUNT_TYPE_SAVINGS = "SB";
 	public static final String ACCOUNT_TYPE_FUNDS = "Funds";

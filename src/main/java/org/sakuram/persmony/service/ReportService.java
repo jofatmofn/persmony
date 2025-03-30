@@ -28,6 +28,7 @@ import org.sakuram.persmony.util.DomainValueFlags;
 import org.sakuram.persmony.valueobject.DetailsForTaxFilingRequestVO;
 import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
+import org.sakuram.persmony.valueobject.DvFlagsSbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.DvFlagsVO;
 import org.sakuram.persmony.valueobject.PeriodSummaryCriteriaVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
@@ -353,6 +354,123 @@ public class ReportService {
 						: (realisationAmountSummary.getAmount() - realisationAmountSummary.getReturnedPrincipalAmount());
 			}
 		}
+		
+		return reportList;
+	}
+	
+	
+	public List<List<Object[]>> incomeVsSpend(PeriodSummaryCriteriaVO periodSummaryCriteriaVO) {
+		List<List<Object[]>> reportList;
+		List<Object[]> recordList;
+		DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
+		double incomeAmount, spendAmount, otherAmount, amount;
+		String treatment;
+		
+		reportList = new ArrayList<List<Object[]>>(1);
+		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
+		
+		recordList.add(new Object[] {"Income Vs. Spend Analysis"});
+		recordList.add(new Object[] {"Period", periodSummaryCriteriaVO.getFromDate().toString(), periodSummaryCriteriaVO.getToDate().toString()});
+		recordList.add(new Object[1]);
+		
+		recordList.add(new Object[] {}); // Indices 3 to 5 to be replaced later
+		recordList.add(new Object[] {});
+		recordList.add(new Object[] {});
+		recordList.add(new Object[] {});
+		
+		incomeAmount = 0;
+		spendAmount= 0;
+		otherAmount = 0;
+		recordList.add(new Object[] {"CatFlag", "Account", "SAT Id", "SATC/R Id", "Category", "EAR", "Booking", "SATC Amount", "Treatment", "Amount"});
+		for (SbAcTxnCategory sbAcTxnCategory : sbAcTxnCategoryRepository.findBySavingsAccountTransactionTransactionDateBetweenOrderBySavingsAccountTransactionTransactionDateAscSavingsAccountTransactionIdAsc(
+				periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate())) {
+			dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(sbAcTxnCategory.getTransactionCategory());
+			if (dvFlagsSbAcTxnCategoryVO.getIOrC() == DvFlagsSbAcTxnCategoryVO.IOrC.INCOME) {
+			}
+			amount = Math.abs(sbAcTxnCategory.getAmount());
+			switch(dvFlagsSbAcTxnCategoryVO.getIOrC()) {
+			case INCOME:
+				incomeAmount += amount;
+				treatment = "I";
+				break;
+			case EXPENSE:
+				spendAmount += amount;
+				treatment = "S";
+				break;
+			case BOOKING_DEPENDENT:
+				if (sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_CREDIT &&
+						sbAcTxnCategory.getAmount() >= 0 || sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
+						sbAcTxnCategory.getAmount() < 0) {
+					incomeAmount += amount;
+					treatment = "I";
+				} else {
+					spendAmount += amount;
+					treatment = "S";
+				}
+				break;
+			default: 	// case NONE
+				if (sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_CREDIT &&
+						sbAcTxnCategory.getAmount() >= 0 || sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
+						sbAcTxnCategory.getAmount() < 0) {
+					otherAmount += amount;
+					treatment = "O+";
+				} else {
+					otherAmount -= amount;
+					treatment = "O-";
+				}
+				break;
+			}
+			recordList.add(new Object[] {dvFlagsSbAcTxnCategoryVO.getIorCString(), sbAcTxnCategory.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(), sbAcTxnCategory.getSavingsAccountTransaction().getId(), sbAcTxnCategory.getId(),
+					sbAcTxnCategory.getTransactionCategory().getValue(), sbAcTxnCategory.getEndAccountReference(),
+					sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getValue(), sbAcTxnCategory.getAmount(), treatment, amount});
+		}
+		
+		// DTI transactions
+		for (Realisation realisation : realisationRepository.findByRealisationDateBetweenOrderByRealisationDateAscSavingsAccountTransactionIdAsc(
+				periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate())) {
+			if (realisation.getRealisationType().getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
+				continue;
+			}
+			
+			if (realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_PAYMENT) {
+				// Investment, not Expense
+				otherAmount -= realisation.getAmount();
+				recordList.add(new Object[] {"DTI", realisation.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(), realisation.getSavingsAccountTransaction().getId(), realisation.getId(),
+						"Investment", null,
+						realisation.getSavingsAccountTransaction().getBooking().getValue(), realisation.getAmount(), "O-", realisation.getAmount()});
+			} else if (realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+				if (realisation.getReturnedPrincipalAmount() == null && realisation.getInterestAmount() == null && realisation.getTdsAmount() != null) {
+					incomeAmount += realisation.getAmount();
+					recordList.add(new Object[] {"DTI", realisation.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(), realisation.getSavingsAccountTransaction().getId(), realisation.getId(),
+							"Approx. Interest", null,
+							realisation.getSavingsAccountTransaction().getBooking().getValue(), realisation.getAmount(), "I", realisation.getAmount()});
+				} else {
+					if (realisation.getReturnedPrincipalAmount() != null) {
+						otherAmount += realisation.getReturnedPrincipalAmount();
+						recordList.add(new Object[] {"DTI", realisation.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(), realisation.getSavingsAccountTransaction().getId(), realisation.getId(),
+								"Principal", null,
+								realisation.getSavingsAccountTransaction().getBooking().getValue(), realisation.getReturnedPrincipalAmount(), "O+", realisation.getReturnedPrincipalAmount()});
+					}
+					if (realisation.getInterestAmount() != null) {
+						incomeAmount += realisation.getInterestAmount();
+						recordList.add(new Object[] {"DTI", realisation.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(), realisation.getSavingsAccountTransaction().getId(), realisation.getId(),
+								"Interest", null,
+								realisation.getSavingsAccountTransaction().getBooking().getValue(), realisation.getInterestAmount(), "I", realisation.getInterestAmount()});
+					}
+					if (realisation.getTdsAmount() != null) {
+						spendAmount += realisation.getTdsAmount();
+						recordList.add(new Object[] {"DTI", realisation.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(), realisation.getSavingsAccountTransaction().getId(), realisation.getId(),
+								"TDS", null,
+								realisation.getSavingsAccountTransaction().getBooking().getValue(), realisation.getTdsAmount(), "S", realisation.getTdsAmount()});
+					}
+				}
+			}
+		}
+		
+		recordList.set(3, new Object[] {"Income", incomeAmount});
+		recordList.set(4, new Object[] {"Expense", spendAmount});
+		recordList.set(5, new Object[] {"Other", otherAmount});
 		
 		return reportList;
 	}

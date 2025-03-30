@@ -297,12 +297,12 @@ public class SbAcTxnService {
 					transactionDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(1)));
 					valueDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(2)));
 					narration = cellContentList.get(3);
-					reference = cellContentList.get(5);
-					if (cellContentList.get(6).equals("")) {
+					reference = cellContentList.get(6);
+					if (cellContentList.get(7).equals("")) {
 						amount = Double.parseDouble(cellContentList.get(8).replace(",", ""));
 						bookingDvId = Constants.DVID_BOOKING_CREDIT;
 					} else {
-						amount = Double.parseDouble(cellContentList.get(6).replace(",", ""));
+						amount = Double.parseDouble(cellContentList.get(7).replace(",", ""));
 						bookingDvId = Constants.DVID_BOOKING_DEBIT;
 					}
 					balance = Double.parseDouble(cellContentList.get(9).replace(",", ""));
@@ -369,7 +369,7 @@ public class SbAcTxnService {
 				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 						sbAcTxnCategory.getId(), 
 						new IdValueVO(sbAcTxnCategory.getTransactionCategory().getId(), sbAcTxnCategory.getTransactionCategory().getValue()),
-						(dvFlagsSbAcTxnCategoryVO == null || dvFlagsSbAcTxnCategoryVO.getDvCategory().equals(Constants.CATEGORY_NONE)) ?
+						(dvFlagsSbAcTxnCategoryVO.getDvCategory() == null || dvFlagsSbAcTxnCategoryVO.getDvCategory().equals(Constants.CATEGORY_NONE)) ?
 								new IdValueVO(null, sbAcTxnCategory.getEndAccountReference()) :
 								new IdValueVO(Long.parseLong(sbAcTxnCategory.getEndAccountReference()), Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()),
 						sbAcTxnCategory.getAmount()));
@@ -474,7 +474,7 @@ public class SbAcTxnService {
 		} else if (idValueVO.getValue() != null) {
 			return idValueVO.getValue();
 		} else {
-			throw new AppException("Unexpected End Account Reference - both id and value are NULLs", null);
+			return null;
 		}
 	}
 }

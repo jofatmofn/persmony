@@ -8,6 +8,7 @@ import java.sql.Date;
 import java.util.List;
 
 import org.sakuram.persmony.bean.Realisation;
+import org.sakuram.persmony.bean.SbAcTxnCategory;
 
 public interface RealisationRepository extends JpaRepository<Realisation, Long>, RealisationRepositoryCustom {
 
@@ -20,4 +21,6 @@ public interface RealisationRepository extends JpaRepository<Realisation, Long>,
 			+ " AND I.investor_fk = :#{#investorId}"
 			+ " ORDER BY COALESCE(R.accounted_realisation_date,R.realisation_date)")
 	public List<Realisation> retrieveRealisationsForIt(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") Long investorId);
+	
+	List<Realisation> findByRealisationDateBetweenOrderByRealisationDateAscSavingsAccountTransactionIdAsc(Date fromDate, Date toDate);
 }

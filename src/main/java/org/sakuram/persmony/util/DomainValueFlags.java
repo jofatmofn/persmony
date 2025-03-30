@@ -81,8 +81,12 @@ public class DomainValueFlags {
 		case Constants.CATEGORY_TRANSACTION_CATEGORY:
 			DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
 			dvFlagsSbAcTxnCategoryVO = new DvFlagsSbAcTxnCategoryVO();
-			if (flagsArr.length > Constants.FLAG_POSITION_REAL_INVESTORS) {
-				dvFlagsSbAcTxnCategoryVO.setDvCategory(flagsArr[Constants.FLAG_POSITION_REAL_INVESTORS]);
+			if (flagsArr.length > Constants.FLAG_POSITION_DV_CATEGORY) {
+				dvFlagsSbAcTxnCategoryVO.setDvCategory(flagsArr[Constants.FLAG_POSITION_DV_CATEGORY].equals("") ? null : 
+					flagsArr[Constants.FLAG_POSITION_DV_CATEGORY]);
+			}
+			if (flagsArr.length > Constants.FLAG_POSITION_INCOME_OR_EXPENSE) {
+				dvFlagsSbAcTxnCategoryVO.setIorCString(flagsArr[Constants.FLAG_POSITION_INCOME_OR_EXPENSE]);
 			}
 			return dvFlagsSbAcTxnCategoryVO;
 		default:
