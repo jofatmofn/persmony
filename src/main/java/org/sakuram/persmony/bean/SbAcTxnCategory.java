@@ -30,6 +30,9 @@ public class SbAcTxnCategory {
 	@JoinColumn(name="savings_account_transaction_fk", nullable=false)
 	private SavingsAccountTransaction savingsAccountTransaction;
 	
+	@Column(name="group_id", nullable=true)
+	private Character groupId;
+
 	@ManyToOne
 	@JoinColumn(name="transaction_category_fk", nullable=false)
 	private DomainValue transactionCategory;
@@ -40,10 +43,11 @@ public class SbAcTxnCategory {
 	@Column(name="amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double amount;
 
-	public SbAcTxnCategory(SavingsAccountTransaction savingsAccountTransaction, DomainValue transactionCategory, String endAccountReference, Double amount) {
+	public SbAcTxnCategory(SavingsAccountTransaction savingsAccountTransaction, DomainValue transactionCategory, String endAccountReference, Character groupId, Double amount) {
 		this.savingsAccountTransaction = savingsAccountTransaction;
 		this.transactionCategory = transactionCategory;
 		this.endAccountReference = endAccountReference;
+		this.groupId = groupId;
 		this.amount = amount;
 	}
 }

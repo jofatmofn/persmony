@@ -12,5 +12,6 @@ public class SbAcTxnCategoryVO {
 	Long sbAcTxnCategoryId;
 	IdValueVO transactionCategory;
 	IdValueVO endAccountReference;
+	Character groupId;
 	Double amount;
 }

@@ -6,8 +6,10 @@ import java.io.OutputStream;
 import java.sql.Date;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -40,6 +42,7 @@ import com.vaadin.flow.component.grid.Grid.NestedNullBehavior;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -541,6 +544,7 @@ public class SbAcTxnOperationView extends Div {
 						null,
 						new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_NONE, null),
 						null,
+						null,
 						savingsAccountTransactionVO.get().getAmount()
 						));
 				sbAcTxnService.saveSbAcTxnCategories(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), sbAcTxnCategoryVOList);
@@ -562,8 +566,10 @@ public class SbAcTxnOperationView extends Div {
 		GridListDataView<SbAcTxnCategoryVO> sbAcTxnCategoryGridLDV;
 		List<SbAcTxnCategoryVO> sbAcTxnCategoryVOList;
 		Select<IdValueVO> transactionCategoryDvSelect;
+		TextField groupIdTextField;
 		NumberField amountNumberField;
-		Grid.Column<SbAcTxnCategoryVO> transactionCategoryColumn, endAccountReferenceColumn, amountColumn;
+		Grid.Column<SbAcTxnCategoryVO> transactionCategoryColumn, endAccountReferenceColumn, amountColumn, groupIdColumn;
+		Label txnAmountLabel;
 		
 		sbAcTxnCategoryVOList = sbAcTxnService.fetchSbAcTxnCategories(savingsAccountTransactionId);
 		
@@ -579,6 +585,9 @@ public class SbAcTxnOperationView extends Div {
 		verticalLayout.getStyle().set("width", "75rem");
 		dialog.add(verticalLayout);
 		
+		txnAmountLabel = new Label("SB A/c Txn. Amount: " + sbAcTxnAmount.doubleValue());
+		verticalLayout.add(txnAmountLabel);
+
 		sbAcTxnCategoryGrid = new Grid<>(SbAcTxnCategoryVO.class, false);
 		sbAcTxnCategoryGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		sbAcTxnCategoryGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
@@ -608,6 +617,7 @@ public class SbAcTxnOperationView extends Div {
 		saveButton.addClickListener(event -> {
 			try {
 				Notification notification;
+				Map<Character, Double> groupwiseTotalMap;
 				
 				for (int i = 0; i < sbAcTxnCategoryVOList.size(); i++) {
 					SbAcTxnCategoryVO sbAcTxnCategoryVO = sbAcTxnCategoryVOList.get(i);
@@ -618,6 +628,7 @@ public class SbAcTxnOperationView extends Div {
 					}
 				}
 				// Validations
+				groupwiseTotalMap = new HashMap<Character, Double>();
 				for (SbAcTxnCategoryVO sbAcTxnCategoryVO : sbAcTxnCategoryVOList) {
 					String dvCategory;
 					if (sbAcTxnCategoryVO.getTransactionCategory() == null || sbAcTxnCategoryVO.getAmount() == null || sbAcTxnCategoryVO.getAmount() == 0) {
@@ -630,7 +641,24 @@ public class SbAcTxnOperationView extends Div {
 						ViewFuncs.showError("End Account Reference cannot be empty");
 						return;
 					}
+					if (sbAcTxnCategoryVOList.stream().anyMatch(
+							o -> o != sbAcTxnCategoryVO &&
+							!Objects.equals(o.getGroupId(), sbAcTxnCategoryVO.getGroupId()) &&
+							sbAcTxnCategoryVO.getTransactionCategory().getValue().equals(o.getTransactionCategory().getValue()))) {
+						ViewFuncs.showError("Same transaction category cannot be used in multiple groups");
+						return;
+					}
+					if (groupwiseTotalMap.containsKey(sbAcTxnCategoryVO.getGroupId())) {
+						groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()) + sbAcTxnCategoryVO.getAmount());
+					} else {
+						groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), sbAcTxnCategoryVO.getAmount());
+					}
+					if (groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()).doubleValue() > sbAcTxnAmount.doubleValue()) {
+						ViewFuncs.showError("Group <" + sbAcTxnCategoryVO.getGroupId() + ">: Total of Category-wise amounts (" + groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()).doubleValue() + ") exceeds the SB A/c Txn. Amount.");
+						return;
+					}
 				}
+
 				try {
 					sbAcTxnService.saveSbAcTxnCategories(savingsAccountTransactionId, sbAcTxnCategoryVOList);
 					notification = Notification.show("Categorised Successfully.");
@@ -663,6 +691,7 @@ public class SbAcTxnOperationView extends Div {
 			}).setHeader("End Account Reference");
 		endAccountReferenceColumn.setResizable(true);
 		amountColumn = sbAcTxnCategoryGrid.addColumn("amount").setHeader("Amount");
+		groupIdColumn = sbAcTxnCategoryGrid.addColumn("groupId").setHeader("Group");
 		sbAcTxnCategoryGrid.addComponentColumn(sbAcTxnCategoryVO -> {
 			Button delButton = new Button();
 			delButton.setIcon(new Icon(VaadinIcon.TRASH));
@@ -690,6 +719,14 @@ public class SbAcTxnOperationView extends Div {
 			.bind(SbAcTxnCategoryVO::getAmount, SbAcTxnCategoryVO::setAmount);
 		amountColumn.setEditorComponent(amountNumberField);
 		
+		groupIdTextField = new TextField();
+		groupIdTextField.setMaxLength(1);
+		addCloseHandler(groupIdTextField, sbAcTxnCategoryEditor);
+		sbAcTxnCategoryBinder.forField(groupIdTextField)
+			.bind(sbAcTxnCategoryVO -> (sbAcTxnCategoryVO != null && sbAcTxnCategoryVO.getGroupId() != null) ? sbAcTxnCategoryVO.getGroupId().toString() : null,
+					(sbAcTxnCategoryVO, groupId) -> sbAcTxnCategoryVO.setGroupId((groupId != null && !groupId.equals("")) ? groupId.charAt(0) : null));
+		groupIdColumn.setEditorComponent(groupIdTextField);
+
 		transactionCategoryDvSelect.addValueChangeListener(event -> {
 			String dvCategory;
 			Select<IdValueVO> endAccountReferenceDvSelect;

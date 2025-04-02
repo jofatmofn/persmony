@@ -372,6 +372,7 @@ public class SbAcTxnService {
 						(dvFlagsSbAcTxnCategoryVO.getDvCategory() == null || dvFlagsSbAcTxnCategoryVO.getDvCategory().equals(Constants.CATEGORY_NONE)) ?
 								new IdValueVO(null, sbAcTxnCategory.getEndAccountReference()) :
 								new IdValueVO(Long.parseLong(sbAcTxnCategory.getEndAccountReference()), Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()),
+						sbAcTxnCategory.getGroupId(),
 						sbAcTxnCategory.getAmount()));
 			}
 		}
@@ -384,6 +385,7 @@ public class SbAcTxnService {
 							"/" + realisation.getInvestmentTransaction().getId() +
 							"/" + realisation.getId() +
 							"/" + realisation.getInvestmentTransaction().getInvestment().getProductName()),
+					null,
 					realisation.getAmount()));
 		}
 
@@ -419,6 +421,7 @@ public class SbAcTxnService {
 							savingsAccountTransaction,
 							transactionCategoryDvUi,
 							endAccountReferenceUiToDb(sbAcTxnCategoryVO.getEndAccountReference()),
+							sbAcTxnCategoryVO.getGroupId(),
 							sbAcTxnCategoryVO.getAmount()
 							);
 					sbAcTxnCategoryRepository.save(sbAcTxnCategoryInserted);
@@ -431,6 +434,7 @@ public class SbAcTxnService {
 									!sbAcTxnCategoryUpdated.getAmount().equals(sbAcTxnCategoryVO.getAmount())) {
 								sbAcTxnCategoryUpdated.setTransactionCategory(transactionCategoryDvUi);
 								sbAcTxnCategoryUpdated.setEndAccountReference(endAccountReferenceUiToDb(sbAcTxnCategoryVO.getEndAccountReference()));
+								sbAcTxnCategoryUpdated.setGroupId(sbAcTxnCategoryVO.getGroupId());
 								sbAcTxnCategoryUpdated.setAmount(sbAcTxnCategoryVO.getAmount());
 							}
 							isFound = true;

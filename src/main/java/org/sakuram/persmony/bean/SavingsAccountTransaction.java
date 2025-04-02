@@ -92,7 +92,7 @@ public class SavingsAccountTransaction {
 	
 	@JsonIgnore
 	@OneToMany(mappedBy = "savingsAccountTransaction", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OrderBy("id")
+	@OrderBy("group_id, id")
 	private List<SbAcTxnCategory> sbAcTxnCategoryList;
 	
 	@JsonIgnore
