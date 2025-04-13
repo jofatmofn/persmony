@@ -58,6 +58,8 @@ public class Constants {
 	public static final long DVID_TRANSACTION_CATEGORY_TAX_RENTAL_INCOME = 282;
 	public static final long DVID_TRANSACTION_CATEGORY_TAX_PROPERTY = 281;
 	public static final long DVID_TRANSACTION_CATEGORY_TAX_WATER = 283;
+	public static final long DVID_TRANSACTION_CATEGORY_EQUITY = 209;
+	public static final long DVID_TRANSACTION_CATEGORY_MUTUAL_FUND = 211;
 	public static final long DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND = 233;
 	public static final long DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND_TDS = 272;
 	public static final long DVID_TRANSACTION_CATEGORY_EQUITY_EXEMPT_DIVIDEND = 274;
@@ -112,6 +114,8 @@ public class Constants {
 	
 	public static final Character DYNAMIC_REALISATION_PERIODICITY_YEAR = 'Y';
 	
+	public static final long NON_SATC_ID = -1;
+
 	public static final Object[][] TAX_PERCENTAGE_ARRAY = {
 			{"Jun-15", 0.15},
 			{"Sep-15", 0.3},

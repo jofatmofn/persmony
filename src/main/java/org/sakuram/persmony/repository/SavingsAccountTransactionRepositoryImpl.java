@@ -34,7 +34,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value tcoDV ON SAT.transaction_code_fk = tcoDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value ccDV ON SAT.cost_center_fk = ccDV.id ");
 		mainQueryStringBuffer.append("LEFT OUTER JOIN domain_value vtDV ON SAT.voucher_type_fk = vtDV.id ");
-		mainQueryStringBuffer.append("WHERE 1 = 1 ");
+		mainQueryStringBuffer.append("WHERE true ");
 
 		if (sbAcTxnCriteriaVO.getFromId() != null) {
 			mainQueryStringBuffer.append("AND SAT.id >= ");
@@ -96,11 +96,42 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 						mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getEndAccountReference());
 						mainQueryStringBuffer.append(" ");
 					} else {
-						mainQueryStringBuffer.append("AND 1 = 0 ");
+						mainQueryStringBuffer.append("AND false ");
 					}
 				}
+				mainQueryStringBuffer.append(") ");
 			} else {
-				mainQueryStringBuffer.append("AND EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
+				mainQueryStringBuffer.append("AND (EXISTS(SELECT 1 FROM contract C JOIN contract_join_sb_ac_txn C2SAT ON C.id = C2SAT.contract_fk ");
+				mainQueryStringBuffer.append("JOIN isin_action IA ON IA.contract_fk = C.id ");
+				mainQueryStringBuffer.append("JOIN isin ON IA.isin_fk = isin.isin ");
+				mainQueryStringBuffer.append("WHERE C2SAT.sb_ac_txn_fk = SAT.id ");
+				if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
+					mainQueryStringBuffer.append("AND isin.security_type = ");
+					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
+					mainQueryStringBuffer.append(" ");
+				}
+				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
+					mainQueryStringBuffer.append("AND ");
+					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("isin.isin", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
+				}
+				mainQueryStringBuffer.append(") ");
+
+				mainQueryStringBuffer.append("OR EXISTS(SELECT 1 FROM contract_eq C JOIN contract_eq_join_sb_ac_txn C2SAT ON C.isin_action_fk = C2SAT.contract_eq_fk ");
+				mainQueryStringBuffer.append("JOIN isin_action IA ON IA.id = C.isin_action_fk ");
+				mainQueryStringBuffer.append("JOIN isin ON IA.isin_fk = isin.isin ");
+				mainQueryStringBuffer.append("WHERE C2SAT.sb_ac_txn_fk = SAT.id ");
+				if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
+					mainQueryStringBuffer.append("AND isin.security_type = ");
+					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
+					mainQueryStringBuffer.append(" ");
+				}
+				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
+					mainQueryStringBuffer.append("AND ");
+					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("isin.isin", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
+				}
+				mainQueryStringBuffer.append(") ");
+
+				mainQueryStringBuffer.append("OR EXISTS(SELECT 1 FROM sb_ac_txn_category SATC ");
 				mainQueryStringBuffer.append("WHERE SATC.savings_account_transaction_fk = SAT.id ");
 				if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
 					mainQueryStringBuffer.append("AND SATC.transaction_category_fk = ");
@@ -111,8 +142,8 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 					mainQueryStringBuffer.append("AND ");
 					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SATC.end_account_reference", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
 				}
+				mainQueryStringBuffer.append(")) ");
 			}
-			mainQueryStringBuffer.append(") ");
 		}
 		
 		mainQueryStringBuffer.append("ORDER BY SAT.transaction_date, SAT.id ");

@@ -11,10 +11,14 @@ import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.sakuram.persmony.bean.Contract;
+import org.sakuram.persmony.bean.ContractEq;
 import org.sakuram.persmony.bean.DomainValue;
+import org.sakuram.persmony.bean.IsinAction;
 import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.bean.SavingsAccountTransaction;
 import org.sakuram.persmony.bean.SbAcTxnCategory;
+import org.sakuram.persmony.bean.Trade;
 import org.sakuram.persmony.repository.RealisationRepository;
 import org.sakuram.persmony.repository.SavingsAccountTransactionRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
@@ -236,7 +240,7 @@ public class SbAcTxnService {
 					if (voucherTypeDvId == null) {
 						throw new AppException("Invalid Voucher Type", null);
 					}
-					if (cellContentList.get(4).equals("") || cellContentList.get(4).equals("0.000000")) {
+					if (cellContentList.get(4).equals("") || Double.parseDouble(cellContentList.get(4)) == 0) {
 						amount = Double.parseDouble(cellContentList.get(5));
 						bookingDvId = Constants.DVID_BOOKING_CREDIT;
 					} else {
@@ -359,6 +363,7 @@ public class SbAcTxnService {
 		SavingsAccountTransaction savingsAccountTransaction;
 		List<SbAcTxnCategoryVO> sbAcTxnCategoryVOList;
 		DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
+		double amount;
 		
 		sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>();
 		savingsAccountTransaction = savingsAccountTransactionRepository.findById(savingsAccountTransactionId)
@@ -378,7 +383,7 @@ public class SbAcTxnService {
 		}
 		for (Realisation realisation : savingsAccountTransaction.getRealisationList()) {
 			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-					-1L,
+					Constants.NON_SATC_ID,
 					new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()),
 					new IdValueVO(realisation.getInvestmentTransaction().getInvestment().getId(),
 							realisation.getInvestmentTransaction().getInvestment().getId() +
@@ -387,6 +392,40 @@ public class SbAcTxnService {
 							"/" + realisation.getInvestmentTransaction().getInvestment().getProductName()),
 					null,
 					realisation.getAmount()));
+		}
+		for (Contract contract : savingsAccountTransaction.getContractList()) {
+			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+					Constants.NON_SATC_ID,
+					new IdValueVO(null, "Security Contract"),
+					new IdValueVO(null, contract.getContractNo()),
+					'A',
+					contract.getNetAmount()));
+			for (IsinAction isinAction : contract.getIsinActionList()) {
+				if (isinAction.getIsin().getSecurityType().getId() != Constants.DVID_TRANSACTION_CATEGORY_DTI) {
+					amount = 0;
+					for (Trade trade : isinAction.getTradeList()) {
+						amount += trade.getQuantity() * (trade.getPricePerUnit() + trade.getBrokeragePerUnit());
+					}
+					sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+							Constants.NON_SATC_ID,
+							new IdValueVO(isinAction.getIsin().getSecurityType()),
+							new IdValueVO(null,
+									isinAction.getActionType().getValue() +
+									"/" + isinAction.getIsin().getIsin()),
+							'B',
+							amount));
+				}
+			}
+		}
+		for (ContractEq contractEq : savingsAccountTransaction.getContractEqList()) {
+			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+					Constants.NON_SATC_ID,
+					new IdValueVO(contractEq.getIsinAction().getIsin().getSecurityType()),
+					new IdValueVO(null,
+							contractEq.getIsinAction().getActionType().getValue() +
+							"/" + contractEq.getIsinAction().getIsin().getIsin()),
+					'A',
+					contractEq.getIsinAction().getQuantity() * contractEq.getPricePerUnit() + contractEq.getStampDuty()));
 		}
 
 		return sbAcTxnCategoryVOList;
@@ -430,7 +469,7 @@ public class SbAcTxnService {
 					for (SbAcTxnCategory sbAcTxnCategoryUpdated : savingsAccountTransaction.getSbAcTxnCategoryList()) {
 						if (sbAcTxnCategoryVO.getSbAcTxnCategoryId().equals(sbAcTxnCategoryUpdated.getId())) {
 							if (sbAcTxnCategoryUpdated.getTransactionCategory().getId() != sbAcTxnCategoryVO.getTransactionCategory().getId() ||
-									!sbAcTxnCategoryUpdated.getEndAccountReference().equals(sbAcTxnCategoryVO.getEndAccountReference()) ||
+									!sbAcTxnCategoryUpdated.getEndAccountReference().equals(sbAcTxnCategoryVO.getEndAccountReference().getValue()) ||
 									!sbAcTxnCategoryUpdated.getAmount().equals(sbAcTxnCategoryVO.getAmount())) {
 								sbAcTxnCategoryUpdated.setTransactionCategory(transactionCategoryDvUi);
 								sbAcTxnCategoryUpdated.setEndAccountReference(endAccountReferenceUiToDb(sbAcTxnCategoryVO.getEndAccountReference()));

@@ -11,6 +11,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
@@ -100,6 +102,23 @@ public class SavingsAccountTransaction {
 	@OrderBy("realisation_date")
 	private List<Realisation> realisationList;
 	
+	@JsonIgnore
+	@ManyToMany
+	@JoinTable(
+			  name = "contract_join_sb_ac_txn",
+			  joinColumns = @JoinColumn(name = "sb_ac_txn_fk"),
+			  inverseJoinColumns = @JoinColumn(name = "contract_fk"))
+	@OrderBy("contract_date")
+	private List<Contract> contractList;
+
+	@JsonIgnore
+	@ManyToMany
+	@JoinTable(
+			  name = "contract_eq_join_sb_ac_txn",
+			  joinColumns = @JoinColumn(name = "sb_ac_txn_fk"),
+			  inverseJoinColumns = @JoinColumn(name = "contract_eq_fk"))
+	private List<ContractEq> contractEqList;
+
 	public SavingsAccountTransaction(DomainValue bankAccountOrInvestor, Date transactionDate, Double amount) {
 		this.bankAccountOrInvestor = bankAccountOrInvestor;
 		this.transactionDate = transactionDate;

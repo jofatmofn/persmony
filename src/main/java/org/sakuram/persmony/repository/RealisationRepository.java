@@ -8,7 +8,6 @@ import java.sql.Date;
 import java.util.List;
 
 import org.sakuram.persmony.bean.Realisation;
-import org.sakuram.persmony.bean.SbAcTxnCategory;
 
 public interface RealisationRepository extends JpaRepository<Realisation, Long>, RealisationRepositoryCustom {
 

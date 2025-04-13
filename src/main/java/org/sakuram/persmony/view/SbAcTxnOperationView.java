@@ -771,7 +771,7 @@ public class SbAcTxnOperationView extends Div {
 		});
 		
 		sbAcTxnCategoryGrid.addItemDoubleClickListener(e -> {
-			if (e.getItem().getTransactionCategory() == null || !e.getItem().getTransactionCategory().getId().equals(Constants.DVID_TRANSACTION_CATEGORY_DTI)) {
+			if (e.getItem().getTransactionCategory() == null || e.getItem().getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
 			    sbAcTxnCategoryEditor.editItem(e.getItem());
 			    Component editorComponent = e.getColumn().getEditorComponent();
 			    if (editorComponent instanceof Focusable<?>) {
