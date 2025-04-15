@@ -411,6 +411,11 @@ public class SbAcTxnOperationView extends Div {
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Narration");
 		hLayout.add(narrationOperatorSelect, narrationTextField);
+		narrationOperatorSelect.addValueChangeListener(event -> {
+			if (narrationOperatorSelect.getValue() == null) {
+				narrationTextField.setValue("");
+			}
+		});
 		
 		bankAccountOrInvestorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT + "+" + Constants.CATEGORY_PRIMARY_INVESTOR, null, true, false);
 		formLayout.addFormItem(bankAccountOrInvestorDvSelect, "Account");
@@ -429,6 +434,11 @@ public class SbAcTxnOperationView extends Div {
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "End Account Reference");
 		hLayout.add(endAccountReferenceOperatorSelect, endAccountReferenceTextField);
+		endAccountReferenceOperatorSelect.addValueChangeListener(event -> {
+			if (endAccountReferenceOperatorSelect.getValue() == null) {
+				endAccountReferenceTextField.setValue("");
+			}
+		});
 		
 		fetchButton = new Button("Fetch");
 		formLayout.add(fetchButton);
@@ -653,8 +663,10 @@ public class SbAcTxnOperationView extends Div {
 					} else {
 						groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), sbAcTxnCategoryVO.getAmount());
 					}
-					if (groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()).doubleValue() > sbAcTxnAmount.doubleValue()) {
-						ViewFuncs.showError("Group <" + sbAcTxnCategoryVO.getGroupId() + ">: Total of Category-wise amounts (" + groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()).doubleValue() + ") exceeds the SB A/c Txn. Amount.");
+				}
+				for (Map.Entry<Character, Double> groupTotalEntry : groupwiseTotalMap.entrySet()) {
+					if (groupTotalEntry.getValue().doubleValue() > sbAcTxnAmount.doubleValue()) {
+						ViewFuncs.showError("Group <" + groupTotalEntry.getKey() + ">: Total of Category-wise amounts (" + groupTotalEntry.getValue().doubleValue() + ") exceeds the SB A/c Txn. Amount.");
 						return;
 					}
 				}
@@ -771,7 +783,7 @@ public class SbAcTxnOperationView extends Div {
 		});
 		
 		sbAcTxnCategoryGrid.addItemDoubleClickListener(e -> {
-			if (e.getItem().getTransactionCategory() == null || e.getItem().getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
+			if (e.getItem().getSbAcTxnCategoryId() == null || e.getItem().getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
 			    sbAcTxnCategoryEditor.editItem(e.getItem());
 			    Component editorComponent = e.getColumn().getEditorComponent();
 			    if (editorComponent instanceof Focusable<?>) {

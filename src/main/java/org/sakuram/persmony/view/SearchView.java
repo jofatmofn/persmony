@@ -31,6 +31,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -211,6 +212,7 @@ public class SearchView extends Div {
 			Grid<RealisationVO> realisationGrid;
 			Grid<SavingsAccountTransactionVO> savingsAccountTransactionGrid;
 			Button closeButton;
+			Label investmentLabel;
 			
 			try {
 				dialog = new Dialog();
@@ -223,6 +225,9 @@ public class SearchView extends Div {
 				verticalLayout.getStyle().set("width", "90rem");
 				dialog.add(verticalLayout);
 				
+				investmentLabel = new Label("Investment: <" + event.getItem().getInvestmentId() + "> / <" + event.getItem().getProductProvider() + "> / <" + event.getItem().getProductName() + "> / <" + event.getItem().getInvestmentIdWithProvider() + ">");
+				verticalLayout.add(investmentLabel);
+
 				investmentTransactionsGrid = new Grid<>(InvestmentTransactionVO.class);
 				investmentTransactionsGrid.setColumns("investmentTransactionId", "transactionType", "dueDate", "assessmentYear", "dueAmount", "status", "settledAmount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "accrualTdsReference", "taxGroup");
 				for (Column<InvestmentTransactionVO> column : investmentTransactionsGrid.getColumns()) {

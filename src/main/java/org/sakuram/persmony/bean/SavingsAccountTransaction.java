@@ -106,7 +106,7 @@ public class SavingsAccountTransaction {
 	@ManyToMany
 	@JoinTable(
 			  name = "contract_join_sb_ac_txn",
-			  joinColumns = @JoinColumn(name = "sb_ac_txn_fk"),
+			  joinColumns = @JoinColumn(name = "savings_account_transaction_fk"),
 			  inverseJoinColumns = @JoinColumn(name = "contract_fk"))
 	@OrderBy("contract_date")
 	private List<Contract> contractList;
@@ -115,7 +115,7 @@ public class SavingsAccountTransaction {
 	@ManyToMany
 	@JoinTable(
 			  name = "contract_eq_join_sb_ac_txn",
-			  joinColumns = @JoinColumn(name = "sb_ac_txn_fk"),
+			  joinColumns = @JoinColumn(name = "savings_account_transaction_fk"),
 			  inverseJoinColumns = @JoinColumn(name = "contract_eq_fk"))
 	private List<ContractEq> contractEqList;
 

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.service.SbAcTxnService;
@@ -203,8 +204,14 @@ public class OperationView extends Div {
 			outFields2FormLayout.remove(outFields2FormLayout.getChildren().collect(Collectors.toList()));
 			outFields3FormLayout.remove(outFields3FormLayout.getChildren().collect(Collectors.toList()));
 			
-			investmentTransaction2VOL = miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue());
+			try {
+				investmentTransaction2VOL = miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue());
+			} catch (Exception e ) {
+				showError(UtilFuncs.messageFromException(e));
+				return;
+			}
 			
+			investmentTransaction2VOL.copyTo(investmentTransaction2VO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
 			investmentIdLabel = new Label(String.valueOf(investmentTransaction2VOL.getInvestmentId()));
 			outFields1FormLayout.addFormItem(investmentIdLabel, "Investment Id");
 			investorLabel = new Label(investmentTransaction2VOL.getInvestor());
@@ -234,21 +241,15 @@ public class OperationView extends Div {
 					investmentTransaction2VO.setInvestmentTransactionId(0);
 					showError("Provide Investment Transaction Id");
 					return;
-				} else if (realisationTypeDvSelect == null || realisationTypeDvSelect.getValue() == null) {
-					showError("Select Realisation Type");
-					return;
 				} else {
 					try {
-						InvestmentTransaction2VO investmentTransaction2VOL;
-						investmentTransaction2VOL = miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue());
-						investmentTransaction2VOL.copyTo(investmentTransaction2VO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
-						// TODO: Display the values from investmentTransactionVO
 						if (investmentTransaction2VO.getStatusDvId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
 							showError("This transaction is currently not pending for realisation");
 							return;
 						}
-						if (investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
-							showError("Realisation of an Accrual transaction cannot be done with this feature");
+						if (investmentTransaction2VO.getTransactionTypeDvId() != Constants.DVID_TRANSACTION_TYPE_ACCRUAL &&
+								(realisationTypeDvSelect == null || realisationTypeDvSelect.getValue() == null)) {
+							showError("Select Realisation Type");
 							return;
 						}
 						handleRealisation2(inFields2FormLayout, realisationTypeDvSelect.getValue(), investmentTransaction2VO);
@@ -280,22 +281,30 @@ public class OperationView extends Div {
 		transactionDatePicker.setValue(investmentTransaction2VO.getDueDate().toLocalDate());
 		formLayout.addFormItem(transactionDatePicker, "Realised Date");
 		
-		lastRealisationCheckbox = new Checkbox();
-		formLayout.addFormItem(lastRealisationCheckbox, "Last Realisation");
-		lastRealisationCheckbox.setValue(true);
-		
-		closureTypeDvSelect = newDvSelect("Account Closure Type", Constants.CATEGORY_CLOSURE_TYPE, false);
-		formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
-		
-		realisationIdIntegerField = new IntegerField();
-		sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO == null || investmentTransaction2VO.getDefaultBankAccountIdValueVO() == null ? null : investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId()), () -> (transactionDatePicker == null || transactionDatePicker.getValue() == null ? null : Date.valueOf(transactionDatePicker.getValue())));
-		if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
-			formLayout.addFormItem(sbAcTxnComponent.getLayout(), "SB A/c Txn Id");
-		} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
-			formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
+		if (investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+			lastRealisationCheckbox = null;
+			closureTypeDvSelect = null;
+			sbAcTxnComponent = null;
+			realisationIdIntegerField = null;
+		} else {
+			lastRealisationCheckbox = new Checkbox();
+			formLayout.addFormItem(lastRealisationCheckbox, "Last Realisation");
+			lastRealisationCheckbox.setValue(true);
+
+			closureTypeDvSelect = newDvSelect("Account Closure Type", Constants.CATEGORY_CLOSURE_TYPE, false);
+			formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
+
+			realisationIdIntegerField = new IntegerField();
+			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO == null || investmentTransaction2VO.getDefaultBankAccountIdValueVO() == null ? null : investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId()), () -> (transactionDatePicker == null || transactionDatePicker.getValue() == null ? null : Date.valueOf(transactionDatePicker.getValue())));
+			if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
+				formLayout.addFormItem(sbAcTxnComponent.getLayout(), "SB A/c Txn Id");
+			} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
+				formLayout.addFormItem(realisationIdIntegerField, "Realisation Id");
+			}
 		}
 		
-		if (investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+		if (investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT ||
+				investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
 			taxGroupDvSelect = newDvSelect("Tax Group", Constants.CATEGORY_TAX_GROUP, true);
 			taxGroupDvSelect.setValue(investmentTransaction2VO.getDefaultTaxGroupIdValueVO());
 			formLayout.addFormItem(taxGroupDvSelect, "Tax Group");
@@ -322,13 +331,17 @@ public class OperationView extends Div {
 					showError("Date cannot be Empty");
 					return;
 				}
-				if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
+				if (investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+					if (ObjectUtils.defaultIfNull(amountComponent.getReturnedPrincipalAmount(), 0).doubleValue() > 0) {
+						showError("Returned Principal Amount is not applicable for Accrual transactions");
+						return;
+					}
+				} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 					if (sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue() == null || sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue() <= 0) {
 						showError("Invalid SB A/c Txn Id");
 						return;
 					}
-				}
-				if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
+				} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
 					if (realisationIdIntegerField.getValue() != null && realisationIdIntegerField.getValue() <= 0) {
 						showError("Invalid Realisation Id");
 						return;
@@ -337,18 +350,18 @@ public class OperationView extends Div {
 				
 				// Back-end Call
 				singleRealisationVO = new SingleRealisationVO(
-						Long.valueOf(selectedRealisationIdValueVO.getId()),
+						selectedRealisationIdValueVO == null ? null : Long.valueOf(selectedRealisationIdValueVO.getId()),
 						investmentTransaction2VO.getInvestmentTransactionId(),
-						Long.valueOf(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue()),
-						realisationIdIntegerField.getValue() == null ? null : Long.valueOf(realisationIdIntegerField.getValue()),
+						sbAcTxnComponent == null ? null : Long.valueOf(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue()),
+						(realisationIdIntegerField == null || realisationIdIntegerField.getValue() == null) ? null : Long.valueOf(realisationIdIntegerField.getValue()),
 						amountComponent.getNetAmount(),
 						amountComponent.getReturnedPrincipalAmount(),
 						amountComponent.getInterestAmount(),
 						amountComponent.getTdsAmount(),
 						Date.valueOf(transactionDatePicker.getValue()),
-						lastRealisationCheckbox.getValue() == null || !lastRealisationCheckbox.getValue() ? false : true,
-						closureTypeDvSelect.getValue() == null? null : closureTypeDvSelect.getValue().getId(),
-						(taxGroupDvSelect == null || taxGroupDvSelect.getValue() == null)? null : taxGroupDvSelect.getValue().getId());
+						(lastRealisationCheckbox == null || lastRealisationCheckbox.getValue() == null || !lastRealisationCheckbox.getValue()) ? false : true,
+						(closureTypeDvSelect == null || closureTypeDvSelect.getValue() == null) ? null : closureTypeDvSelect.getValue().getId(),
+						(taxGroupDvSelect == null || taxGroupDvSelect.getValue() == null) ? null : taxGroupDvSelect.getValue().getId());
 				try {
 					moneyTransactionService.realisation(singleRealisationVO);
 					notification = Notification.show("Realistion Saved Successfully.");

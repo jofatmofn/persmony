@@ -63,8 +63,14 @@ public class MoneyTransactionService {
 		if (investmentTransaction.getStatus().getId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
 			throw new AppException("Transaction " + singleRealisationVO.getInvestmentTransactionId() + " no longer Pending ", null);
 		}
-		if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {	// TODO: Ability to realise an accrual transaction
-			throw new AppException("Realisation of an Accrual transaction cannot be done with this feature", null);
+		if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
+			investmentTransaction.setInterestAmount(singleRealisationVO.getInterestAmount());
+			investmentTransaction.setTdsAmount(singleRealisationVO.getTdsAmount());
+			investmentTransaction.setDueDate(singleRealisationVO.getTransactionDate());
+			investmentTransaction.setTaxGroup(Constants.domainValueCache.get(singleRealisationVO.getTaxGroupDvId()));
+			investmentTransaction.setStatus(Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_COMPLETED));
+			System.out.println("Accrual Realisation completed.");
+			return;
 		}
 
 		realisation = new Realisation(investmentTransaction,
@@ -133,8 +139,8 @@ public class MoneyTransactionService {
 			else {
 				throw new AppException("Unsupported Dynamic Receipt Periodicity " + investmentTransaction.getInvestment().getDynamicReceiptPeriodicity(), null);
 			}
-			System.out.println("singleRealisation completed.");
 		}
+		System.out.println("singleRealisation completed.");
 	}
 	
 	public void txnSingleRealisationWithBank(TxnSingleRealisationWithBankVO txnSingleRealisationWithBankVO) {

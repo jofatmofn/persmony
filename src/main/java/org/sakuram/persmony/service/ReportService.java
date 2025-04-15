@@ -962,10 +962,6 @@ public class ReportService {
 							"Pending for Realisation",
 							});
 				} else if (investmentTransaction.getDueDate().compareTo(fyEndDate) > 0) {
-					expectedPrincipal = 0;
-					expectedInterest = 0;
-					expectedTds = 0;
-					actualAmount = 0;
 					break;
 				} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
 					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {

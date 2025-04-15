@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter @Setter
 @AllArgsConstructor
 public class SingleRealisationVO {
-	long realisationTypeDvId;
+	Long realisationTypeDvId;
 	long investmentTransactionId;
 	Long savingsAccountTransactionId;
 	Long realisationId;
