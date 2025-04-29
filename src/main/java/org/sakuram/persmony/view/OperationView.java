@@ -1,11 +1,13 @@
 package org.sakuram.persmony.view;
 
+import java.io.PrintWriter;
 import java.sql.Date;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.service.MiscService;
@@ -27,6 +29,7 @@ import org.sakuram.persmony.valueobject.SingleRealisationVO;
 import org.sakuram.persmony.valueobject.TransferVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 import org.sakuram.persmony.valueobject.UpdateTaxDetailRequestVO;
+import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
@@ -1049,6 +1052,20 @@ public class OperationView extends Div {
 		formLayout.add(accrualsRealisationsGrid);
 		accrualsRealisationsGridLDV = accrualsRealisationsGrid.setItems(retrieveAccrualsRealisationsResponseVO.getDueRealisationVOList());
 		
+		// Acknowledgement: https://cookbook.vaadin.com/grid-csv-export
+		// TODO: To use CSVPrinter
+		formLayout.add(new DynamicFileDownloader("Download as CSV...", "tax_transactions.csv", out -> {
+			Stream<DueRealisationVO> dueRealisationVOStream = null;
+			dueRealisationVOStream = accrualsRealisationsGrid.getGenericDataView().getItems();
+
+			PrintWriter writer = new PrintWriter(out);
+			writer.println("investmentId,investor,productProvider,investmentIdWithProvider,productType,worth,investmentTransactionId,transactionType,taxGroup,dueDate,dueAmount,investmentTransactionInterestAmount,investmentTransactionTdsAmount,accrualTdsReference,investmentTransactionInAis,investmentTransactionForm26asBookingDate,realisationId,realisationDate,realisationAmount,realisationInterestAmount,realisationTdsAmount,realisationTdsReference,realisationInAis,realisationForm26asBookingDate");
+			dueRealisationVOStream.forEach(dueRealisationVO -> {
+				writer.println(dueRealisationVO.toString());
+			});
+			writer.close();
+		}));
+
 		childFormLayout = new FormLayout();
 		childFormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		formLayout.add(childFormLayout);

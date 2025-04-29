@@ -38,6 +38,34 @@ public class DueRealisationVO {
 	Boolean realisationInAis;
 	Date realisationForm26asBookingDate;
 	
+	public String toString() {
+		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+				investmentId,
+				investor,
+				productProvider,
+				investmentIdWithProvider,
+				productType,
+				worth,
+				investmentTransactionId,
+				transactionType,
+				taxGroup,
+				dueDate,
+				dueAmount,
+				investmentTransactionInterestAmount,
+				investmentTransactionTdsAmount,
+				accrualTdsReference,
+				investmentTransactionInAis,
+				investmentTransactionForm26asBookingDate,
+				realisationId,
+				realisationDate,
+				realisationAmount,
+				realisationInterestAmount,
+				realisationTdsAmount,
+				realisationTdsReference,
+				realisationInAis,
+				realisationForm26asBookingDate
+				);
+	}
 	public DueRealisationVO(Object[] record) {
 		int colPos = 0;
 		investmentId = ((BigInteger) record[colPos++]).longValue();

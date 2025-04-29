@@ -28,7 +28,7 @@ public class Isin {
 	private String securityName;
 
 	@ManyToOne
-	@JoinColumn(name="security_type", nullable=false)
+	@JoinColumn(name="security_type_fk", nullable=false)
 	private DomainValue securityType;	// Maps to Transaction Category
 	
 }

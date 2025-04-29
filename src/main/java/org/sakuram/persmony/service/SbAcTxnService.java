@@ -410,7 +410,7 @@ public class SbAcTxnService {
 							Constants.NON_SATC_ID,
 							new IdValueVO(isinAction.getIsin().getSecurityType()),
 							new IdValueVO(null,
-									isinAction.getActionType().getValue() +
+									isinAction.getAction().getActionType().getValue() +
 									"/" + isinAction.getIsin().getIsin()),
 							'B',
 							amount));
@@ -420,12 +420,23 @@ public class SbAcTxnService {
 		for (ContractEq contractEq : savingsAccountTransaction.getContractEqList()) {
 			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 					Constants.NON_SATC_ID,
-					new IdValueVO(contractEq.getIsinAction().getIsin().getSecurityType()),
-					new IdValueVO(null,
-							contractEq.getIsinAction().getActionType().getValue() +
-							"/" + contractEq.getIsinAction().getIsin().getIsin()),
+					new IdValueVO(null, "Security Contract Equivalent"),
+					new IdValueVO(null, String.valueOf(contractEq.getId())),
 					'A',
-					contractEq.getIsinAction().getQuantity() * contractEq.getPricePerUnit() + contractEq.getStampDuty()));
+					contractEq.getNetAmount()));
+			for (IsinAction isinAction : contractEq.getIsinActionList()) {
+				if (isinAction.getIsin().getSecurityType().getId() != Constants.DVID_TRANSACTION_CATEGORY_DTI &&
+						isinAction.getPricePerUnit() != null) {
+					sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+							Constants.NON_SATC_ID,
+							new IdValueVO(isinAction.getIsin().getSecurityType()),
+							new IdValueVO(null,
+									isinAction.getAction().getActionType().getValue() +
+									"/" + isinAction.getIsin().getIsin()),
+							'B',
+							isinAction.getQuantity() * isinAction.getPricePerUnit()));
+				}
+			}
 		}
 
 		return sbAcTxnCategoryVOList;

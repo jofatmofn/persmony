@@ -105,7 +105,8 @@
     "@vaadin/virtual-list": "23.2.2",
     "construct-style-sheets-polyfill": "3.1.0",
     "date-fns": "2.28.0",
-    "lit": "2.3.0"
+    "lit": "2.3.0",
+    "lumo-css-framework": "3.0.11"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "3.1.0",
@@ -226,7 +227,8 @@
       "@vaadin/virtual-list": "23.2.2",
       "construct-style-sheets-polyfill": "3.1.0",
       "date-fns": "2.28.0",
-      "lit": "2.3.0"
+      "lit": "2.3.0",
+      "lumo-css-framework": "3.0.11"
     },
     "devDependencies": {
       "@rollup/plugin-replace": "3.1.0",
@@ -243,7 +245,7 @@
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0"
     },
-    "hash": "28583dd28232623547d13f9e0be06e9bb501c7eb96733fec2586e9a27ab3b37a"
+    "hash": "09daca4877ddc6724492d8212cf236e35bdbcbddafd6e1ff0512a0a2635d26f0"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -348,6 +350,7 @@
     "construct-style-sheets-polyfill": "$construct-style-sheets-polyfill",
     "lit": "$lit",
     "@polymer/polymer": "$@polymer/polymer",
-    "date-fns": "$date-fns"
+    "date-fns": "$date-fns",
+    "lumo-css-framework": "$lumo-css-framework"
   }
 }

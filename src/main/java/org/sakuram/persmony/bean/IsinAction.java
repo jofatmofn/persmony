@@ -12,9 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
-import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -47,8 +45,8 @@ public class IsinAction {
 	@JoinColumn(name="contract_fk", nullable=true)
 	private Contract contract;
 	// For an ISIN action, either contract OR contractEq is applicable
-    @OneToOne(mappedBy="isinAction", cascade=CascadeType.ALL)
-    @PrimaryKeyJoinColumn
+	@ManyToOne
+	@JoinColumn(name="contract_eq_fk", nullable=true)
 	private ContractEq contractEq;
 	
 	@ManyToOne
@@ -62,12 +60,12 @@ public class IsinAction {
 	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
 	private Double quantity;
 
-	@ManyToOne
-	@JoinColumn(name="action_type_fk", nullable=false)
-	private DomainValue actionType;
+	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double pricePerUnit;
 	
-	@Column(name="is_internal", nullable=false)
-	private boolean isInternal;
+	@ManyToOne
+	@JoinColumn(name="action_fk", nullable=false)
+	private Action action;
 	
 	@ManyToOne
 	@JoinColumn(name="investment_fk", nullable=true)	// Applicable to Debt instruments

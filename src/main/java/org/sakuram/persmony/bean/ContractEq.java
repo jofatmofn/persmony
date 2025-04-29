@@ -3,14 +3,16 @@ package org.sakuram.persmony.bean;
 import java.sql.Date;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
-import javax.persistence.MapsId;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,17 +27,15 @@ import lombok.Setter;
 @Table(name="contract_eq")
 public class ContractEq {
 
-    @Id
-    @Column(name="isin_action_fk")
-    private long id;
+	@Id
+	@SequenceGenerator(name="contract_eq_seq_generator",sequenceName="contract_eq_seq", allocationSize=1)
+	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="contract_eq_seq_generator")
+	@Column(name="id", nullable=false)
+	private long id;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name="isin_action_fk")
-    private IsinAction isinAction;
-    
-	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)	// Applicable to Share IPO and MF
-	private Double pricePerUnit;
+	@JsonIgnore
+	@OneToMany(mappedBy="contractEq", cascade=CascadeType.ALL)
+	private List<IsinAction> isinActionList;
 	
 	@Column(name="stamp_duty", nullable=true, columnDefinition="NUMERIC", precision=6, scale=3)	// Applicable to MF
 	private Double stampDuty;

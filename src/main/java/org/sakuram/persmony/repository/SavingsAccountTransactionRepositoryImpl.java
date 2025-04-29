@@ -110,7 +110,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 				mainQueryStringBuffer.append("JOIN isin ON IA.isin_fk = isin.isin ");
 				mainQueryStringBuffer.append("WHERE CJSAT.savings_account_transaction_fk = SAT.id ");
 				if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
-					mainQueryStringBuffer.append("AND isin.security_type = ");
+					mainQueryStringBuffer.append("AND isin.security_type_fk = ");
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
 					mainQueryStringBuffer.append(" ");
 				}
@@ -120,12 +120,12 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 				}
 				mainQueryStringBuffer.append(") ");
 
-				mainQueryStringBuffer.append("OR EXISTS(SELECT 1 FROM contract_eq CE JOIN contract_eq_join_sb_ac_txn CEJSAT ON CE.isin_action_fk = CEJSAT.contract_eq_fk ");
-				mainQueryStringBuffer.append("JOIN isin_action IA ON IA.id = CE.isin_action_fk ");
+				mainQueryStringBuffer.append("OR EXISTS(SELECT 1 FROM contract_eq CE JOIN contract_eq_join_sb_ac_txn CEJSAT ON CE.id = CEJSAT.contract_eq_fk ");
+				mainQueryStringBuffer.append("JOIN isin_action IA ON IA.contract_eq_fk = CE.id ");
 				mainQueryStringBuffer.append("JOIN isin ON IA.isin_fk = isin.isin ");
 				mainQueryStringBuffer.append("WHERE CEJSAT.savings_account_transaction_fk = SAT.id ");
 				if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null) {
-					mainQueryStringBuffer.append("AND isin.security_type = ");
+					mainQueryStringBuffer.append("AND isin.security_type_fk = ");
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
 					mainQueryStringBuffer.append(" ");
 				}
