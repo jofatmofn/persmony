@@ -14,7 +14,7 @@ public class Constants {
 
 	public static final DateFormat ANSI_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	public static final double EPSILON = 0.0000000009D;
-	public static final double TOLERATED_DIFFERENCE_AMOUNT = 10D;	// No specific reason for this value
+	public static final double TOLERATED_DIFFERENCE_AMOUNT = 20D;	// No specific reason for this value
 	
 	public static final String CATEGORY_INVESTOR = "Invstr";
 	public static final String CATEGORY_PRIMARY_INVESTOR = "PrimaryInvestor";
@@ -77,11 +77,16 @@ public class Constants {
 	public static final long DVID_TRANSACTION_CATEGORY_ON_BEHALF_GIFT = 312;
 	public static final long DVID_TRANSACTION_CATEGORY_INCOME_TAX = 216;
 	public static final long DVID_TRANSACTION_CATEGORY_NONE = 303;
+	public static final long DVID_TRANSACTION_CATEGORY_IGNORE = 315;
 	public static final long DVID_BOOKING_CREDIT = 222;
 	public static final long DVID_BOOKING_DEBIT = 223;
 	public static final long DVID_EMPTY_SELECT = -1L;
 	public static final long DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST = 199;
+	public static final long DVID_ISIN_ACTION_MATCH_REASON_DOUBLE_ENTRY = 342;
+	public static final long DVID_ISIN_ACTION_MATCH_REASON_FIFO = 343;
 
+	public static final long ACTION_ID_GIFT_OR_TRANSFER = 5;
+	
 	public static final int FLAG_POSITION_ACCOUNT_TYPE = 0;
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;
 	public static final int FLAG_POSITION_ACCOUNT_ID = 2;

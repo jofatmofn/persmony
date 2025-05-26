@@ -146,12 +146,21 @@ public class UtilFuncs {
 		String criterionValue;
 		
 		stringBuffer = new StringBuffer(127);
-		criterionValue = searchCriterionVO.getValuesCSV().toLowerCase();
+		if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.EMPTY.name()) {
+			stringBuffer.append("(");
+			stringBuffer.append(searchCriterionVO.getFieldName());
+			stringBuffer.append("= '' OR ");
+			stringBuffer.append(searchCriterionVO.getFieldName());
+			stringBuffer.append(" IS NULL) ");
+			return stringBuffer;
+		}
 		
+		criterionValue = searchCriterionVO.getValuesCSV().toLowerCase();
+
 		stringBuffer.append("LOWER(");
 		stringBuffer.append(searchCriterionVO.getFieldName());
 		stringBuffer.append(") ");
-		if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.EQ.name()) {
+		if (searchCriterionVO.getOperator().equals(FieldSpecVO.TxtOperator.EQ.name())) {
 			stringBuffer.append("= ");
 			stringBuffer.append("'");
 			stringBuffer.append(criterionValue);

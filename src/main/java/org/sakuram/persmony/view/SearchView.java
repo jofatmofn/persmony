@@ -1,9 +1,11 @@
 package org.sakuram.persmony.view;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
@@ -18,6 +20,7 @@ import org.sakuram.persmony.valueobject.InvestmentVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SearchCriterionVO;
+import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
@@ -76,6 +79,19 @@ public class SearchView extends Div {
 			column.setResizable(true);
 		}
 		add(investmentsGrid);
+		
+		add(new DynamicFileDownloader("Download as CSV...", "investments.csv", out -> {
+			Stream<InvestmentVO> investmentVOStream = null;
+			investmentVOStream = investmentsGrid.getGenericDataView().getItems();
+
+			PrintWriter writer = new PrintWriter(out);
+			writer.println("investmentId,investor,productProvider,providerBranch,investmentIdWithProvider,investorIdWithProvider,productType,productName,productIdOfProvider,rateOfInterest,dematAccount,units,worth,cleanPrice,accruedInterest,charges,taxability,isAccrualApplicable,investmentStartDate,investmentEndDate,dynamicReceiptPeriodicity,previousInvestment,newInvestmentReason,closed,closureDate,closureType");
+			investmentVOStream.forEach(investmentVO -> {
+				writer.println(investmentVO.toString());
+			});
+			writer.close();
+		}));
+
 		
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addButton.setDisableOnClick(true);
@@ -245,6 +261,17 @@ public class SearchView extends Div {
 				}
 				verticalLayout.add("Realisations");
 				verticalLayout.add(realisationGrid);
+				verticalLayout.add(new DynamicFileDownloader("Download as CSV...", "realisations.csv", out -> {
+					Stream<RealisationVO> realisationVOStream = null;
+					realisationVOStream = realisationGrid.getGenericDataView().getItems();
+
+					PrintWriter writer = new PrintWriter(out);
+					writer.println("realisationId,investmentTransactionId,realisationDate,realisationType,amount,returnedPrincipalAmount,interestAmount,tdsAmount,tdsReference,Referred SAT/Realisation");
+					realisationVOStream.forEach(realisationVO -> {
+						writer.println(realisationVO.toString());
+					});
+					writer.close();
+				}));
 				
 				savingsAccountTransactionGrid = new Grid<>(SavingsAccountTransactionVO.class);
 				savingsAccountTransactionGrid.setColumns("savingsAccountTransactionId", "bankAccountOrInvestor.value", "transactionDate", "amount");

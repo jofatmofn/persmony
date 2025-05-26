@@ -10,6 +10,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
+import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 import org.sakuram.persmony.valueobject.SearchCriterionVO;
 
@@ -66,7 +67,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getToAmount());
 			mainQueryStringBuffer.append(" ");
 		}
-		if (sbAcTxnCriteriaVO.getNarration() != null) {
+		if (sbAcTxnCriteriaVO.getNarration() != null || sbAcTxnCriteriaVO.getNarrationOperator() != null && sbAcTxnCriteriaVO.getNarrationOperator().equals(FieldSpecVO.TxtOperator.EMPTY.name())) {
 			mainQueryStringBuffer.append("AND ");
 			mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SAT.narration", sbAcTxnCriteriaVO.getNarrationOperator(), sbAcTxnCriteriaVO.getNarration())));
 		}
@@ -114,7 +115,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
 					mainQueryStringBuffer.append(" ");
 				}
-				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
+				if (sbAcTxnCriteriaVO.getEndAccountReference() != null || sbAcTxnCriteriaVO.getEndAccountReferenceOperator() != null && sbAcTxnCriteriaVO.getEndAccountReferenceOperator().equals(FieldSpecVO.TxtOperator.EMPTY.name())) {
 					mainQueryStringBuffer.append("AND ");
 					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("isin.isin", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
 				}
@@ -129,7 +130,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
 					mainQueryStringBuffer.append(" ");
 				}
-				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
+				if (sbAcTxnCriteriaVO.getEndAccountReference() != null || sbAcTxnCriteriaVO.getEndAccountReferenceOperator() != null && sbAcTxnCriteriaVO.getEndAccountReferenceOperator().equals(FieldSpecVO.TxtOperator.EMPTY.name())) {
 					mainQueryStringBuffer.append("AND ");
 					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("isin.isin", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
 				}
@@ -142,7 +143,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
 					mainQueryStringBuffer.append(" ");
 				}
-				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
+				if (sbAcTxnCriteriaVO.getEndAccountReference() != null || sbAcTxnCriteriaVO.getEndAccountReferenceOperator() != null && sbAcTxnCriteriaVO.getEndAccountReferenceOperator().equals(FieldSpecVO.TxtOperator.EMPTY.name())) {
 					mainQueryStringBuffer.append("AND ");
 					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SATC.end_account_reference", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
 				}

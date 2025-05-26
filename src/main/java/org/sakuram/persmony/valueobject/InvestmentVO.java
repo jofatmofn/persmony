@@ -37,6 +37,37 @@ public class InvestmentVO {
 	private Character dynamicReceiptPeriodicity;	
 	private String providerBranch;
 	
+	public String toString() {
+		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+				investmentId,
+				investor,
+				productProvider,
+				providerBranch,
+				investmentIdWithProvider,
+				investorIdWithProvider,
+				productType,
+				productName,
+				productIdOfProvider,
+				rateOfInterest,
+				dematAccount,
+				units,
+				worth,
+				cleanPrice,
+				accruedInterest,
+				charges,
+				taxability,
+				isAccrualApplicable,
+				investmentStartDate,
+				investmentEndDate,
+				dynamicReceiptPeriodicity,
+				previousInvestment,
+				newInvestmentReason,
+				isClosed,
+				closureDate,
+				closureType
+				);
+	}
+	
 	public InvestmentVO(Object[] columns) {
 		int colPos = 0;
 		this.investor = (String) columns[colPos++];

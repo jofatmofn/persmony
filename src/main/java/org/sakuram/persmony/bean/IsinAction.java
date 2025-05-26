@@ -10,6 +10,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
@@ -35,7 +37,7 @@ public class IsinAction {
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name="isin_fk", nullable=true)
+	@JoinColumn(name="isin_fk", nullable=false)
 	private Isin isin;
 	
 	@Column(name="settlement_date", nullable=false)	// Better to be in Contract, however there can be trans(ISIN) actions without Contract
@@ -50,7 +52,7 @@ public class IsinAction {
 	private ContractEq contractEq;
 	
 	@ManyToOne
-	@JoinColumn(name="demat_account_fk", nullable=true)
+	@JoinColumn(name="demat_account_fk", nullable=false)
 	private DomainValue dematAccount;
 	
 	@ManyToOne
@@ -67,6 +69,9 @@ public class IsinAction {
 	@JoinColumn(name="action_fk", nullable=false)
 	private Action action;
 	
+	@Column(name="is_internal", nullable=false)
+	private boolean isInternal;
+
 	@ManyToOne
 	@JoinColumn(name="investment_fk", nullable=true)	// Applicable to Debt instruments
 	private Investment investment;
@@ -75,5 +80,15 @@ public class IsinAction {
 	@OneToMany(mappedBy="isinAction", cascade=CascadeType.ALL)
 	@OrderBy("tradeDate")
 	private List<Trade> tradeList;
+
+    @ManyToMany
+    @JoinTable(name="isin_action_match",
+    	joinColumns= @JoinColumn(name="from_isin_action_fk"),
+    	inverseJoinColumns= @JoinColumn(name="to_isin_action_fk")
+    )
+    private List<IsinAction> toIsinActionList;
+    
+    @ManyToMany(mappedBy="toIsinActionList")
+    private List<IsinAction> fromIsinActionList;
 
 }

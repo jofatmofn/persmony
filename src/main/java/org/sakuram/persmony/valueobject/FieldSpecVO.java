@@ -30,7 +30,8 @@ public class FieldSpecVO {
 		NE,
 		STARTS,
 		ENDS,
-		CONTAINS
+		CONTAINS,
+		EMPTY
 	}
 	String label;
 	DataType dataType;
@@ -46,4 +47,6 @@ public class FieldSpecVO {
 	public static List<String> getSeqOperatorList() {
 		return Stream.of(SeqOperator.values()).map(Enum::name).collect(Collectors.toList());
 	}
+	
+	public static int SEQ_TEXT_OPERATOR_EMPTY = 6;
 }

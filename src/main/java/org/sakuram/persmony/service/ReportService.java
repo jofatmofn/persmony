@@ -429,7 +429,7 @@ public class ReportService {
 		// DTI transactions
 		for (Realisation realisation : realisationRepository.findByRealisationDateBetweenOrderByRealisationDateAscSavingsAccountTransactionIdAsc(
 				periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate())) {
-			if (realisation.getRealisationType().getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
+			if (realisation.getRealisationType().getId() != Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 				continue;
 			}
 			
@@ -440,7 +440,7 @@ public class ReportService {
 						"Investment", null,
 						realisation.getSavingsAccountTransaction().getBooking().getValue(), realisation.getAmount(), "O-", realisation.getAmount()});
 			} else if (realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
-				if (realisation.getReturnedPrincipalAmount() == null && realisation.getInterestAmount() == null && realisation.getTdsAmount() != null) {
+				if (realisation.getReturnedPrincipalAmount() == null && realisation.getInterestAmount() == null && realisation.getTdsAmount() == null && realisation.getAmount() != null) {
 					incomeAmount += realisation.getAmount();
 					recordList.add(new Object[] {"DTI", realisation.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(), realisation.getSavingsAccountTransaction().getId(), realisation.getId(),
 							"Approx. Interest", null,
@@ -919,7 +919,9 @@ public class ReportService {
 		List<Object[]> recordList;
 		java.sql.Date fyStartDate, fyEndDate;
 		double expectedPrincipal, expectedInterest, expectedTds, actualAmount;
-		InvestmentTransaction lastInvestmentTransaction;
+		boolean isProcessingComplete, isStartAccumulating;
+		InvestmentTransaction investmentTransaction;
+		List<InvestmentTransaction> investmentTransactionList;
 
 		reportList = new ArrayList<List<Object[]>>(1);
 		recordList = new ArrayList<Object[]>();
@@ -946,12 +948,19 @@ public class ReportService {
 			}
 
 			expectedPrincipal = 0;
-			expectedInterest = 0;
+			expectedInterest = (investment.getAccruedInterest() != null && investment.getAccruedInterest() > 0 ? investment.getAccruedInterest() : 0);
 			expectedTds = 0;
 			actualAmount = 0;
-			lastInvestmentTransaction = null;
-
-			for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
+			
+			isProcessingComplete = true;
+			isStartAccumulating = false;
+			investmentTransactionList = investment.getInvestmentTransactionList();
+			for (int ind = investmentTransactionList.size() - 1; ind >= 0; ind--) {
+				investmentTransaction = investmentTransactionList.get(ind);
+				
+				if (investmentTransaction.getDueDate().compareTo(fyEndDate) > 0) {
+					continue;
+				}
 
 				if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING &&
 						investmentTransaction.getDueDate().compareTo(fyStartDate) >= 0 &&
@@ -961,50 +970,34 @@ public class ReportService {
 							investmentTransaction.getDueDate(),
 							"Pending for Realisation",
 							});
-				} else if (investmentTransaction.getDueDate().compareTo(fyEndDate) > 0) {
-					break;
+					isProcessingComplete = false;
+					break; // Report no more issue for this investment
 				} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
-					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
-						if (lastInvestmentTransaction != null &&
-								lastInvestmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
-							if (Math.abs(actualAmount - expectedPrincipal - expectedInterest + expectedTds) > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
-								recordList.add(new Object[] {investment.getId(), lastInvestmentTransaction.getId(), null,
-										lastInvestmentTransaction.getTransactionType().getValue(),
-										lastInvestmentTransaction.getDueDate(),
-										"Incomplete Data",
-										expectedPrincipal,
-										expectedInterest,
-										expectedTds,
-										actualAmount});
-							}
-							expectedPrincipal = 0;
-							expectedInterest = 0;
-							expectedTds = 0;
-						}
-						actualAmount = 0;
+					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL && isStartAccumulating) {
 						expectedPrincipal += ObjectUtils.defaultIfNull(investmentTransaction.getReturnedPrincipalAmount(), 0D);
 						expectedInterest += ObjectUtils.defaultIfNull(investmentTransaction.getInterestAmount(), 0D);
 						expectedTds += ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0D).doubleValue();
-						lastInvestmentTransaction = investmentTransaction;
 					} else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+						isStartAccumulating = true;
 						for (Realisation realisation : investmentTransaction.getRealisationList()) {
+							if (realisation.getReturnedPrincipalAmount() == null && realisation.getInterestAmount() == null && realisation.getTdsAmount() == null &&
+									realisation.getRealisationDate().compareTo(fyStartDate) >= 0) {
+								recordList.add(new Object[] {investment.getId(), investmentTransaction.getId(), realisation.getId(), null, null,
+										"No break-up for Realisation",
+										realisation.getAmount()});
+								isProcessingComplete = false;
+							}
 							expectedPrincipal += ObjectUtils.defaultIfNull(realisation.getReturnedPrincipalAmount(), 0D);
 							expectedInterest += ObjectUtils.defaultIfNull(realisation.getInterestAmount(), 0D);
 							expectedTds += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0D).doubleValue();
 							actualAmount += ObjectUtils.defaultIfNull(realisation.getAmount(), 0D);
 						}
-						lastInvestmentTransaction = investmentTransaction;
 					}
 				}
 			}
 
-			if (lastInvestmentTransaction != null &&
-					lastInvestmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED &&
-					lastInvestmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT &&
-					Math.abs(actualAmount - expectedPrincipal - expectedInterest + expectedTds) > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
-				recordList.add(new Object[] {investment.getId(), lastInvestmentTransaction.getId(), null,
-						lastInvestmentTransaction.getTransactionType().getValue(),
-						lastInvestmentTransaction.getDueDate(),
+			if (isProcessingComplete && Math.abs(actualAmount - expectedPrincipal - expectedInterest + expectedTds) > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
+				recordList.add(new Object[] {investment.getId(), null, null, null, null,
 						"Incomplete Data",
 						expectedPrincipal,
 						expectedInterest,

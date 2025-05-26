@@ -20,4 +20,19 @@ public class RealisationVO {
 	Double interestAmount;
 	Double tdsAmount;
 	String tdsReference;
+	
+	public String toString() {
+		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+				realisationId,
+				investmentTransactionId,
+				realisationDate,
+				realisationType,
+				amount,
+				returnedPrincipalAmount,
+				interestAmount,
+				tdsAmount,
+				tdsReference,
+				savingsAccountTransactionId == null ? referredRealisationId : savingsAccountTransactionId
+				);
+	}
 }
