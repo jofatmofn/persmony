@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.SearchCriterionVO;
 
@@ -34,7 +35,6 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 		String queryString;
 		boolean isFirstTime;
 		FieldSpecVO fieldSpecVO;
-		String valuesArr[];
 		
 		isFirstTime = true;
 		mainQueryStringBuffer = new StringBuffer();
@@ -84,89 +84,9 @@ public class InvestmentRepositoryImpl implements InvestmentRepositoryCustom {
 				stringBuffer.append(searchCriterionVO.getFieldName());
 				stringBuffer.append(" ");
 			} else if (fieldSpecVO.getIsSequencable() != null && fieldSpecVO.getIsSequencable()) {	// Date or Numbers
-				if (searchCriterionVO.getOperator() == null) {
-					throw new AppException("Operator not specified for " + searchCriterionVO.getFieldName(), null);
-				}
-				stringBuffer.append(searchCriterionVO.getFieldName());
-				stringBuffer.append(" ");
-				if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.BETWEEN.name()) {
-					valuesArr = searchCriterionVO.getValuesCSV().split("\\s*,\\s*");
-					if (valuesArr.length != 2) {
-						throw new AppException("With BETWEEN as Operator, two values are to be specified for " + searchCriterionVO.getFieldName() + ". Current Input: " + searchCriterionVO.getValuesCSV() + "; Count: " + valuesArr.length, null);	
-					}
-					if (fieldSpecVO.getDataType() == FieldSpecVO.DataType.DATE) {
-						valuesArr[0] = "'" + valuesArr[0] + "'";
-						valuesArr[1] = "'" + valuesArr[1] + "'";
-					} else {
-						try {
-							Double.valueOf(valuesArr[0]);
-							Double.valueOf(valuesArr[1]);
-						} catch (NumberFormatException e) {
-							throw new AppException("Numeric value expected for " + searchCriterionVO.getFieldName(), null);
-						}
-					}
-					stringBuffer.append("BETWEEN ");
-					stringBuffer.append(valuesArr[0]);
-					stringBuffer.append(" AND ");
-					stringBuffer.append(valuesArr[1]);
-					continue;
-				} else {
-					if (fieldSpecVO.getDataType() == FieldSpecVO.DataType.OTHERS) {
-						try {
-							Double.valueOf(searchCriterionVO.getValuesCSV());
-						} catch (NumberFormatException e) {
-							throw new AppException("Numeric value expected for " + searchCriterionVO.getFieldName(), null);
-						}
-					}
-					if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.EQ.name()) {
-						stringBuffer.append("= ");
-					} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.NE.name()) {
-						stringBuffer.append("<> ");
-					} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.LT.name()) {
-						stringBuffer.append("< ");
-					} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.LE.name()) {
-						stringBuffer.append("<= ");
-					} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.GT.name()) {
-						stringBuffer.append("> ");
-					} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.GE.name()) {
-						stringBuffer.append(">= ");
-					}
-					if (fieldSpecVO.getDataType() == FieldSpecVO.DataType.DATE) {
-						stringBuffer.append("'");
-						stringBuffer.append(searchCriterionVO.getValuesCSV());
-						stringBuffer.append("' ");
-					} else {
-						stringBuffer.append(searchCriterionVO.getValuesCSV());
-						stringBuffer.append(" ");
-					}
-				}
+				stringBuffer.append(UtilFuncs.sqlWhereClauseSequencable(searchCriterionVO, fieldSpecVO.getDataType() == FieldSpecVO.DataType.DATE));
 			} else if (fieldSpecVO.getIsFreeText() != null && fieldSpecVO.getIsFreeText()) {
-				stringBuffer.append("LOWER(");
-				stringBuffer.append(searchCriterionVO.getFieldName());
-				stringBuffer.append(") ");
-				if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.EQ.name()) {
-					stringBuffer.append("= ");
-					stringBuffer.append("'");
-					stringBuffer.append(searchCriterionVO.getValuesCSV());
-					stringBuffer.append("' ");
-				} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.NE.name()) {
-					stringBuffer.append("<> ");
-					stringBuffer.append("'");
-					stringBuffer.append(searchCriterionVO.getValuesCSV());
-					stringBuffer.append("' ");
-				} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.STARTS.name()) {
-					stringBuffer.append("LIKE '");
-					stringBuffer.append(searchCriterionVO.getValuesCSV());
-					stringBuffer.append("%' ");
-				} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.ENDS.name()) {
-					stringBuffer.append("LIKE '%");
-					stringBuffer.append(searchCriterionVO.getValuesCSV());
-					stringBuffer.append("' ");
-				} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.CONTAINS.name()) {
-					stringBuffer.append("LIKE '%");
-					stringBuffer.append(searchCriterionVO.getValuesCSV());
-					stringBuffer.append("%' ");
-				}
+				stringBuffer.append(UtilFuncs.sqlWhereClauseText(searchCriterionVO));
 			} else if (fieldSpecVO.getIsDvSelect() != null && fieldSpecVO.getIsDvSelect()) {
 				stringBuffer.append("LOWER(");
 				switch(fieldSpecVO.getDvCategory()) {

@@ -146,44 +146,135 @@ public class UtilFuncs {
 		String criterionValue;
 		
 		stringBuffer = new StringBuffer(127);
-		if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.EMPTY.name()) {
-			stringBuffer.append("(");
-			stringBuffer.append(searchCriterionVO.getFieldName());
-			stringBuffer.append("= '' OR ");
-			stringBuffer.append(searchCriterionVO.getFieldName());
-			stringBuffer.append(" IS NULL) ");
+		if (sqlNullHandling(searchCriterionVO, stringBuffer)) {
 			return stringBuffer;
 		}
 		
-		criterionValue = searchCriterionVO.getValuesCSV().toLowerCase();
-
 		stringBuffer.append("LOWER(");
 		stringBuffer.append(searchCriterionVO.getFieldName());
 		stringBuffer.append(") ");
+		
+		criterionValue = searchCriterionVO.getValuesCSV().toLowerCase();
 		if (searchCriterionVO.getOperator().equals(FieldSpecVO.TxtOperator.EQ.name())) {
 			stringBuffer.append("= ");
 			stringBuffer.append("'");
 			stringBuffer.append(criterionValue);
-			stringBuffer.append("' ");
+			stringBuffer.append("'");
 		} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.NE.name()) {
 			stringBuffer.append("<> ");
 			stringBuffer.append("'");
 			stringBuffer.append(criterionValue);
-			stringBuffer.append("' ");
+			stringBuffer.append("'");
 		} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.STARTS.name()) {
 			stringBuffer.append("LIKE '");
 			stringBuffer.append(criterionValue);
-			stringBuffer.append("%' ");
+			stringBuffer.append("%'");
 		} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.ENDS.name()) {
 			stringBuffer.append("LIKE '%");
 			stringBuffer.append(criterionValue);
-			stringBuffer.append("' ");
+			stringBuffer.append("'");
 		} else if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.CONTAINS.name()) {
 			stringBuffer.append("LIKE '%");
 			stringBuffer.append(criterionValue);
-			stringBuffer.append("%' ");
+			stringBuffer.append("%'");
 		}
+		stringBuffer.append(") "); // Opened by sqlNullHandling
 		return stringBuffer;
+	}
+	
+	public static StringBuffer sqlWhereClauseSequencable(SearchCriterionVO searchCriterionVO, boolean isDate) {
+		StringBuffer stringBuffer;
+		String valuesArr[];
+		
+		if (searchCriterionVO.getOperator() == null) {
+			throw new AppException("Operator not specified for " + searchCriterionVO.getFieldName(), null);
+		}
+		stringBuffer = new StringBuffer(127);
+		if (sqlNullHandling(searchCriterionVO, stringBuffer)) {
+			return stringBuffer;
+		}
+		
+		stringBuffer.append(searchCriterionVO.getFieldName());
+		stringBuffer.append(" ");
+		if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.BETWEEN.name()) {
+			valuesArr = searchCriterionVO.getValuesCSV().split("\\s*,\\s*");
+			if (valuesArr.length != 2) {
+				throw new AppException("With BETWEEN as Operator, two values are to be specified for " + searchCriterionVO.getFieldName() + ". Current Input: " + searchCriterionVO.getValuesCSV() + "; Count: " + valuesArr.length, null);	
+			}
+			if (isDate) {
+				valuesArr[0] = "'" + valuesArr[0] + "'";
+				valuesArr[1] = "'" + valuesArr[1] + "'";
+			} else {
+				try {
+					Double.valueOf(valuesArr[0]);
+					Double.valueOf(valuesArr[1]);
+				} catch (NumberFormatException e) {
+					throw new AppException("Numeric value expected for " + searchCriterionVO.getFieldName(), null);
+				}
+			}
+			stringBuffer.append("BETWEEN ");
+			stringBuffer.append(valuesArr[0]);
+			stringBuffer.append(" AND ");
+			stringBuffer.append(valuesArr[1]);
+		} else {
+			if (!isDate) {
+				try {
+					Double.valueOf(searchCriterionVO.getValuesCSV());
+				} catch (NumberFormatException e) {
+					throw new AppException("Numeric value expected for " + searchCriterionVO.getFieldName(), null);
+				}
+			}
+			if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.EQ.name()) {
+				stringBuffer.append("= ");
+			} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.NE.name()) {
+				stringBuffer.append("<> ");
+			} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.LT.name()) {
+				stringBuffer.append("< ");
+			} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.LE.name()) {
+				stringBuffer.append("<= ");
+			} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.GT.name()) {
+				stringBuffer.append("> ");
+			} else if (searchCriterionVO.getOperator() == FieldSpecVO.SeqOperator.GE.name()) {
+				stringBuffer.append(">= ");
+			}
+			if (isDate) {
+				stringBuffer.append("'");
+				stringBuffer.append(searchCriterionVO.getValuesCSV());
+				stringBuffer.append("' ");
+			} else {
+				stringBuffer.append(searchCriterionVO.getValuesCSV());
+				stringBuffer.append(" ");
+			}
+		}
+		stringBuffer.append(") "); // Opened by sqlNullHandling
+		return stringBuffer;
+	}
+
+	private static boolean sqlNullHandling(SearchCriterionVO searchCriterionVO, StringBuffer stringBuffer) {
+		// May be Redundant when the value can never be null
+		
+		if (searchCriterionVO.getValuesCSV() == null) {
+			stringBuffer.append(searchCriterionVO.getFieldName());
+			stringBuffer.append(" IS ");
+			if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.NE.name()) {
+				stringBuffer.append("NOT ");
+			}
+			stringBuffer.append("NULL ");
+			return true;
+		}
+		
+		stringBuffer.append("("); // This has to be closed by the Caller
+		if (searchCriterionVO.getOperator() == FieldSpecVO.TxtOperator.NE.name()) { // Include this for all NOT conditions
+			stringBuffer.append(searchCriterionVO.getFieldName());
+			stringBuffer.append(" IS NULL OR ");
+		}
+		stringBuffer.append(searchCriterionVO.getFieldName());
+		stringBuffer.append(" IS NOT NULL AND ");
+		return false;
+	}
+	
+	public static boolean toFormQueryForNullableField(String operator, String value) {
+		return (value != null || operator != null && (operator.equals(FieldSpecVO.TxtOperator.EQ.name()) || operator.equals(FieldSpecVO.TxtOperator.NE.name())));
 	}
 	
     public static void main(String[] args){

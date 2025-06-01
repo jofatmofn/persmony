@@ -30,8 +30,7 @@ public class FieldSpecVO {
 		NE,
 		STARTS,
 		ENDS,
-		CONTAINS,
-		EMPTY
+		CONTAINS
 	}
 	String label;
 	DataType dataType;

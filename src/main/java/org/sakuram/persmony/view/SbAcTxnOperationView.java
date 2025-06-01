@@ -412,7 +412,7 @@ public class SbAcTxnOperationView extends Div {
 		formLayout.addFormItem(hLayout, "Narration");
 		hLayout.add(narrationOperatorSelect, narrationTextField);
 		narrationOperatorSelect.addValueChangeListener(event -> {
-			if (narrationOperatorSelect.getValue() == null || narrationOperatorSelect.getValue().getId() == FieldSpecVO.SEQ_TEXT_OPERATOR_EMPTY) {
+			if (narrationOperatorSelect.getValue() == null) {
 				narrationTextField.setValue("");
 			}
 		});
@@ -425,8 +425,8 @@ public class SbAcTxnOperationView extends Div {
 		bookingRadioButtonGroup.setValue("Both");
 		formLayout.addFormItem(bookingRadioButtonGroup, "Booking");
 		
-		transactionCategoryDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_TRANSACTION_CATEGORY, null, true, true);
-		transactionCategoryDvSelect.getListDataView().addItem(new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()));
+		transactionCategoryDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_TRANSACTION_CATEGORY + "+" + Constants.CATEGORY_TRANSACTION_CATEGORY_2, null, true, true);
+		// transactionCategoryDvSelect.getListDataView().addItem(new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()));
 		formLayout.addFormItem(transactionCategoryDvSelect, "Transaction Category");
 		
 		endAccountReferenceOperatorSelect = ViewFuncs.newSelect(FieldSpecVO.getTxtOperatorList(), "Operator", true, false);
@@ -435,7 +435,7 @@ public class SbAcTxnOperationView extends Div {
 		formLayout.addFormItem(hLayout, "End Account Reference");
 		hLayout.add(endAccountReferenceOperatorSelect, endAccountReferenceTextField);
 		endAccountReferenceOperatorSelect.addValueChangeListener(event -> {
-			if (endAccountReferenceOperatorSelect.getValue() == null || endAccountReferenceOperatorSelect.getValue().getId() == FieldSpecVO.SEQ_TEXT_OPERATOR_EMPTY) {
+			if (endAccountReferenceOperatorSelect.getValue() == null) {
 				endAccountReferenceTextField.setValue("");
 			}
 		});
@@ -476,11 +476,11 @@ public class SbAcTxnOperationView extends Div {
 					ViewFuncs.showError("From Amount cannot be greater than the To Amount");
 					return;
 				}
-				if (!narrationTextField.isEmpty() && (narrationOperatorSelect.getValue() == null || narrationOperatorSelect.getValue().getId() == FieldSpecVO.SEQ_TEXT_OPERATOR_EMPTY)) {
+				if (!narrationTextField.isEmpty() && narrationOperatorSelect.getValue() == null) {
 					ViewFuncs.showError("Narration: Non-matching Operator and Value");
 					return;
 				}
-				if (narrationTextField.isEmpty() && narrationOperatorSelect.getValue() != null && narrationOperatorSelect.getValue().getId() != FieldSpecVO.SEQ_TEXT_OPERATOR_EMPTY) {
+				if (narrationTextField.isEmpty() && narrationOperatorSelect.getValue() != null && narrationOperatorSelect.getValue().getId() != FieldSpecVO.TxtOperator.EQ.ordinal() && narrationOperatorSelect.getValue().getId() != FieldSpecVO.TxtOperator.NE.ordinal()) {
 					ViewFuncs.showError("Specify Value for Narration");
 					return;
 				}
@@ -488,12 +488,12 @@ public class SbAcTxnOperationView extends Div {
 					ViewFuncs.showError("End Account Reference can be specified only when Transaction Category is not 'Empty'");
 					return;
 				}
-				if (!endAccountReferenceTextField.isEmpty() && (endAccountReferenceOperatorSelect.getValue() == null || endAccountReferenceOperatorSelect.getValue().getId() == FieldSpecVO.SEQ_TEXT_OPERATOR_EMPTY)) {
+				if (!endAccountReferenceTextField.isEmpty() && endAccountReferenceOperatorSelect.getValue() == null) {
 					ViewFuncs.showError("End Account Reference: Non-matching Operator and Value");
 					return;
 				}
-				if (endAccountReferenceTextField.isEmpty() && endAccountReferenceOperatorSelect.getValue() != null && endAccountReferenceOperatorSelect.getValue().getId() != FieldSpecVO.SEQ_TEXT_OPERATOR_EMPTY) {
-					ViewFuncs.showError("Specify Value for End Account Reference");
+				if (endAccountReferenceTextField.isEmpty() && endAccountReferenceOperatorSelect.getValue() != null && endAccountReferenceOperatorSelect.getValue().getId() != FieldSpecVO.TxtOperator.EQ.ordinal() && endAccountReferenceOperatorSelect.getValue().getId() != FieldSpecVO.TxtOperator.NE.ordinal()) {
+					ViewFuncs.showError("Specify Value for End Account Reference " + endAccountReferenceOperatorSelect.getValue().getId());
 					return;
 				}
 				

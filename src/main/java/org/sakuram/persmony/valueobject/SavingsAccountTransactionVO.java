@@ -30,11 +30,12 @@ public class SavingsAccountTransactionVO {
 	IdValueVO costCenter;
 	IdValueVO voucherType;
 
-	public SavingsAccountTransactionVO(long savingsAccountTransactionId, String bankAccountOrInvestor, Date transactionDate, Double amount) {
+	public SavingsAccountTransactionVO(long savingsAccountTransactionId, String bankAccountOrInvestor, Date transactionDate, Double amount, String booking) {
 		this.savingsAccountTransactionId = savingsAccountTransactionId;
 		this.bankAccountOrInvestor = new IdValueVO(null, bankAccountOrInvestor);
 		this.transactionDate = transactionDate;
 		this.amount = amount;
+		this.booking = new IdValueVO(null, booking);
 	}
 	
 	public SavingsAccountTransactionVO(Object[] columns) {

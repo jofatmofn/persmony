@@ -274,7 +274,7 @@ public class SearchView extends Div {
 				}));
 				
 				savingsAccountTransactionGrid = new Grid<>(SavingsAccountTransactionVO.class);
-				savingsAccountTransactionGrid.setColumns("savingsAccountTransactionId", "bankAccountOrInvestor.value", "transactionDate", "amount");
+				savingsAccountTransactionGrid.setColumns("savingsAccountTransactionId", "bankAccountOrInvestor.value", "transactionDate", "amount", "booking.value");
 				for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionGrid.getColumns()) {
 					column.setResizable(true);
 				}

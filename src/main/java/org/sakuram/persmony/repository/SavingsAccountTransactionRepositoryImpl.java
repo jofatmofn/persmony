@@ -10,7 +10,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
-import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 import org.sakuram.persmony.valueobject.SearchCriterionVO;
 
@@ -23,6 +22,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
     	Query query;
     	StringBuffer mainQueryStringBuffer;
 		String queryString;
+		boolean toFormQueryForEar;
 		
 		mainQueryStringBuffer = new StringBuffer();
 		
@@ -67,7 +67,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getToAmount());
 			mainQueryStringBuffer.append(" ");
 		}
-		if (sbAcTxnCriteriaVO.getNarration() != null || sbAcTxnCriteriaVO.getNarrationOperator() != null && sbAcTxnCriteriaVO.getNarrationOperator().equals(FieldSpecVO.TxtOperator.EMPTY.name())) {
+		if (UtilFuncs.toFormQueryForNullableField(sbAcTxnCriteriaVO.getNarrationOperator(), sbAcTxnCriteriaVO.getNarration())) {
 			mainQueryStringBuffer.append("AND ");
 			mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SAT.narration", sbAcTxnCriteriaVO.getNarrationOperator(), sbAcTxnCriteriaVO.getNarration())));
 		}
@@ -91,22 +91,25 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append("WHERE CJSAT.savings_account_transaction_fk = SAT.id) ");
 			mainQueryStringBuffer.append("AND NOT EXISTS(SELECT 1 FROM contract_eq_join_sb_ac_txn CEJSAT ");
 			mainQueryStringBuffer.append("WHERE CEJSAT.savings_account_transaction_fk = SAT.id) ");
-		} else if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null || sbAcTxnCriteriaVO.getEndAccountReference() != null) {
-			if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null && sbAcTxnCriteriaVO.getTransactionCategoryDvId() == Constants.DVID_TRANSACTION_CATEGORY_DTI) {
-				mainQueryStringBuffer.append("AND EXISTS(SELECT 1 FROM realisation R JOIN investment_transaction IT ON R.investment_transaction_fk = IT.id ");
-				mainQueryStringBuffer.append("WHERE R.savings_account_transaction_fk = SAT.id ");
-				if (sbAcTxnCriteriaVO.getEndAccountReference() != null) {
-					if (NumberUtils.isDigits(sbAcTxnCriteriaVO.getEndAccountReference())) {
-						mainQueryStringBuffer.append("AND IT.investment_fk = ");
-						mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getEndAccountReference());
-						mainQueryStringBuffer.append(" ");
-					} else {
-						mainQueryStringBuffer.append("AND false ");
-					}
+		} else if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() != null || sbAcTxnCriteriaVO.getEndAccountReferenceOperator() != null) {
+			toFormQueryForEar = UtilFuncs.toFormQueryForNullableField(sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference());
+			mainQueryStringBuffer.append("AND (");
+			
+			mainQueryStringBuffer.append("EXISTS(SELECT 1 FROM realisation R JOIN investment_transaction IT ON R.investment_transaction_fk = IT.id ");
+			mainQueryStringBuffer.append("WHERE R.savings_account_transaction_fk = SAT.id ");
+			if (toFormQueryForEar) {
+				if (NumberUtils.isDigits(sbAcTxnCriteriaVO.getEndAccountReference())) {
+					mainQueryStringBuffer.append("AND IT.investment_fk = ");
+					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getEndAccountReference());
+					mainQueryStringBuffer.append(" ");
+				} else {
+					mainQueryStringBuffer.append("AND false ");
 				}
-				mainQueryStringBuffer.append(") ");
-			} else {
-				mainQueryStringBuffer.append("AND (EXISTS(SELECT 1 FROM contract C JOIN contract_join_sb_ac_txn CJSAT ON C.id = CJSAT.contract_fk ");
+			}
+			mainQueryStringBuffer.append(") ");
+			
+			if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() == null || sbAcTxnCriteriaVO.getTransactionCategoryDvId() != Constants.DVID_TRANSACTION_CATEGORY_DTI) {
+				mainQueryStringBuffer.append("OR EXISTS(SELECT 1 FROM contract C JOIN contract_join_sb_ac_txn CJSAT ON C.id = CJSAT.contract_fk ");
 				mainQueryStringBuffer.append("JOIN isin_action IA ON IA.contract_fk = C.id ");
 				mainQueryStringBuffer.append("JOIN isin ON IA.isin_fk = isin.isin ");
 				mainQueryStringBuffer.append("WHERE CJSAT.savings_account_transaction_fk = SAT.id ");
@@ -115,7 +118,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
 					mainQueryStringBuffer.append(" ");
 				}
-				if (sbAcTxnCriteriaVO.getEndAccountReference() != null || sbAcTxnCriteriaVO.getEndAccountReferenceOperator() != null && sbAcTxnCriteriaVO.getEndAccountReferenceOperator().equals(FieldSpecVO.TxtOperator.EMPTY.name())) {
+				if (toFormQueryForEar) {
 					mainQueryStringBuffer.append("AND ");
 					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("isin.isin", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
 				}
@@ -130,7 +133,7 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
 					mainQueryStringBuffer.append(" ");
 				}
-				if (sbAcTxnCriteriaVO.getEndAccountReference() != null || sbAcTxnCriteriaVO.getEndAccountReferenceOperator() != null && sbAcTxnCriteriaVO.getEndAccountReferenceOperator().equals(FieldSpecVO.TxtOperator.EMPTY.name())) {
+				if (toFormQueryForEar) {
 					mainQueryStringBuffer.append("AND ");
 					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("isin.isin", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
 				}
@@ -143,12 +146,13 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getTransactionCategoryDvId());
 					mainQueryStringBuffer.append(" ");
 				}
-				if (sbAcTxnCriteriaVO.getEndAccountReference() != null || sbAcTxnCriteriaVO.getEndAccountReferenceOperator() != null && sbAcTxnCriteriaVO.getEndAccountReferenceOperator().equals(FieldSpecVO.TxtOperator.EMPTY.name())) {
+				if (toFormQueryForEar) {
 					mainQueryStringBuffer.append("AND ");
 					mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SATC.end_account_reference", sbAcTxnCriteriaVO.getEndAccountReferenceOperator(), sbAcTxnCriteriaVO.getEndAccountReference())));
 				}
-				mainQueryStringBuffer.append(")) ");
+				mainQueryStringBuffer.append(") ");
 			}
+			mainQueryStringBuffer.append(") ");
 		}
 		
 		mainQueryStringBuffer.append("ORDER BY SAT.transaction_date, SAT.id ");

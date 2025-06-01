@@ -7,7 +7,10 @@ import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.IdValueVO;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.select.Select;
@@ -28,12 +31,12 @@ public class ViewFuncs {
     public static Select<IdValueVO> newDvSelect(MiscService miscService, String dvCategory, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
     	Select<IdValueVO> selectDv;
     	selectDv = new Select<IdValueVO>();
-    	createSelect(selectDv, miscService.fetchDvsOfCategory(dvCategory), label, isNoSelectionAllowed, isNullAValue);
+    	configureSelect(selectDv, miscService.fetchDvsOfCategory(dvCategory), label, isNoSelectionAllowed, isNullAValue);
     	return selectDv;
     }
     
     public static void newDvSelect(Select<IdValueVO> selectDv, MiscService miscService, String dvCategory, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
-    	createSelect(selectDv, miscService.fetchDvsOfCategory(dvCategory), label, isNoSelectionAllowed, isNullAValue);
+    	configureSelect(selectDv, miscService.fetchDvsOfCategory(dvCategory), label, isNoSelectionAllowed, isNullAValue);
     }
     
     public static Select<IdValueVO> newSelect(List<String> valueList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
@@ -44,10 +47,10 @@ public class ViewFuncs {
     	idValueVOList = new ArrayList<IdValueVO>(valueList.size());
     	seqNo = 0;
     	for (String value : valueList) {
-    		idValueVOList.add(new IdValueVO(++seqNo, value));
+    		idValueVOList.add(new IdValueVO(seqNo++, value));
     	}
     	selectDv = new Select<IdValueVO>();
-    	createSelect(selectDv, idValueVOList, label, isNoSelectionAllowed, isNullAValue);
+    	configureSelect(selectDv, idValueVOList, label, isNoSelectionAllowed, isNullAValue);
     	return selectDv;
     }
     
@@ -69,12 +72,16 @@ public class ViewFuncs {
     	return triStateRBG;
     }
 
-    private static void createSelect(Select<IdValueVO> dvSelect, List<IdValueVO> idValueVOList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
+    private static void configureSelect(Select<IdValueVO> dvSelect, List<IdValueVO> idValueVOList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
+    	// Following special values have to go to the end, so that the ordinal value from enums are not impacted
 		if (isNullAValue) {
-			idValueVOList.add(0, new IdValueVO(Constants.DVID_EMPTY_SELECT, "Empty"));
+			idValueVOList.add(new IdValueVO(Constants.DVID_EMPTY_SELECT, "Empty"));
+		}
+		if (isNoSelectionAllowed) {
+			idValueVOList.add(null); // This is the IdValueVO corresponding to "No Selection"; .getListDataView().addItem() cannot be used after this.
 		}
 		dvSelect.setItemLabelGenerator(idValueVO -> {
-			if (isNoSelectionAllowed && idValueVO == null) {	// Required if no selection is allowed
+			if (isNoSelectionAllowed && idValueVO == null) {
 				return "No Selection";
 			}
 			return idValueVO.getValue();

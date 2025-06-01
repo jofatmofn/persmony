@@ -16,6 +16,8 @@ import org.sakuram.persmony.repository.IsinActionRepository;
 import org.sakuram.persmony.repository.IsinRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.valueobject.IsinCriteriaVO;
+import org.sakuram.persmony.valueobject.IsinVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -161,6 +163,18 @@ public class DebtEquityMutualService {
 				}
 			}
 		}
+	}
+	
+	public List<IsinVO> searchSecurities(IsinCriteriaVO isinCriteriaVO) {
+		List<Object[]> isinList;
+		List<IsinVO> isinVOList;
+		
+		isinList = isinRepository.searchIsins(isinCriteriaVO);
+		isinVOList = new ArrayList<IsinVO>(isinList.size());
+		for(Object[] columns : isinList) {
+			isinVOList.add(new IsinVO(columns));
+		}
+		return isinVOList;
 	}
 	
 	public void determineOneTimeNpsMatch() {

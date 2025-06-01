@@ -32,11 +32,13 @@ public class Constants {
 	public static final String CATEGORY_BRANCH = "Branch";
 	public static final String CATEGORY_TAX_GROUP = "TaxGrp";
 	public static final String CATEGORY_TRANSACTION_CATEGORY = "TxnCat";
+	public static final String CATEGORY_TRANSACTION_CATEGORY_2 = "TxnCat2";
 	public static final String CATEGORY_TRANSACTION_CODE = "TxnCod";
 	public static final String CATEGORY_COST_CENTER = "CstCntr";
 	public static final String CATEGORY_VOUCHER_TYPE = "VchrTyp";
 	public static final String CATEGORY_NONE = "None";
 	public static final String CATEGORY_BOOKING = "Booking";
+	public static final String CATEGORY_SECURITY_TYPE = "ScrtTyp";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
@@ -84,6 +86,9 @@ public class Constants {
 	public static final long DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST = 199;
 	public static final long DVID_ISIN_ACTION_MATCH_REASON_DOUBLE_ENTRY = 342;
 	public static final long DVID_ISIN_ACTION_MATCH_REASON_FIFO = 343;
+	public static final long DVID_SECURITY_TYPE_EQUITY_SHARE = 344;
+	public static final long DVID_SECURITY_TYPE_MUTUAL_FUND = 345;
+	public static final long DVID_SECURITY_TYPE_DEBT_INSTRUMENT = 346;
 
 	public static final long ACTION_ID_GIFT_OR_TRANSFER = 5;
 	

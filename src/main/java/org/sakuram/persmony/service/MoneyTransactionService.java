@@ -553,7 +553,8 @@ public class MoneyTransactionService {
     						realisation.getSavingsAccountTransaction().getId(),
     						realisation.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(),
     						realisation.getSavingsAccountTransaction().getTransactionDate(),
-    						realisation.getSavingsAccountTransaction().getAmount()
+    						realisation.getSavingsAccountTransaction().getAmount(),
+    						realisation.getSavingsAccountTransaction().getBooking().getValue()
     						));
     			}
     		}

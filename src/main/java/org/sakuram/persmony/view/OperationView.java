@@ -108,7 +108,6 @@ public class OperationView extends Div {
 		operationSelect.setItemLabelGenerator(operationItem -> {
 			return operationItem.getValue();
 		});
-		operationSelect.setLabel("Operation");
 		operationSelect.setPlaceholder("Select Operation");
 		operationSelect.setId("PersmonyOperation");
 		operationSelect.addValueChangeListener(event -> {
@@ -150,7 +149,7 @@ public class OperationView extends Div {
 			}
         });
 
-		selectSpan.add(operationSelect);
+		selectSpan.add(new Span("Operation"), operationSelect);
 		add(selectSpan);
 		add(formLayout);
 	}
@@ -958,13 +957,15 @@ public class OperationView extends Div {
 		// UI Elements
 		hLayout = new HorizontalLayout();
 		parentFormLayout.addFormItem(hLayout, "Search Criteria");
-
+		
 		financialYearStartIntegerField = new IntegerField();
 		financialYearStartIntegerField.setLabel("FY Start Year");
 		hLayout.add(financialYearStartIntegerField);
-		investorDvSelect = newDvSelect("Investor", Constants.CATEGORY_PRIMARY_INVESTOR, true);
+		investorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_PRIMARY_INVESTOR, null, true, false);
+		investorDvSelect.setLabel("Investor");
 		hLayout.add(investorDvSelect);
-		productProviderDvSelect = newDvSelect("Provider", Constants.CATEGORY_PARTY, true);
+		productProviderDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_PARTY, null, true, false);
+		productProviderDvSelect.setLabel("Provider");
 		hLayout.add(productProviderDvSelect);
 		
 		inForm26asRBG = ViewFuncs.newTriStateRBG();
@@ -1095,7 +1096,7 @@ public class OperationView extends Div {
 		id = selectedDueRealisationVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? selectedDueRealisationVO.getInvestmentTransactionId() : selectedDueRealisationVO.getRealisationId();
 		// UI Elements
 		label1 = new Label();
-		formLayout.addFormItem(label1, "Tax Details of");
+		// formLayout.addFormItem(label1, "Tax Details of");
 		label1.getElement().setProperty("innerHTML", "<b>" + selectedDueRealisationVO.getTransactionType()
 				+ "</b> id <b>"
 				+ id
@@ -1103,22 +1104,18 @@ public class OperationView extends Div {
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Amount");
-		interestNumberField = new NumberField("Interest");
-		hLayout.add(interestNumberField);
-		tdsNumberField = new NumberField("TDS");
-		hLayout.add(tdsNumberField);
-		accountedDatePicker = new DatePicker("Accounted Date");
-		hLayout.add(accountedDatePicker);
+		interestNumberField = new NumberField();
+		tdsNumberField = new NumberField();
+		accountedDatePicker = new DatePicker();
+		hLayout.add(new Span("Interest"), interestNumberField, new Span("TDS"), tdsNumberField, new Span("Accounted Date"), accountedDatePicker);
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Tax Detail");
-		form26asBookingDatePicker = new DatePicker("Form 26AS Booking Date");
-		hLayout.add(form26asBookingDatePicker);
-		form16aCertificateTextField = new TextField("Form 16A Certificate");
-		hLayout.add(form16aCertificateTextField);
-		inAisCheckbox = new Checkbox("In AIS");
+		form26asBookingDatePicker = new DatePicker();
+		form16aCertificateTextField = new TextField();
+		inAisCheckbox = new Checkbox();
 		inAisCheckbox.setValue(false);
-		hLayout.add(inAisCheckbox);
+		hLayout.add(new Span("Form 26AS Booking Date"), form26asBookingDatePicker, new Span("Form 16A Certificate"), form16aCertificateTextField, new Span("In AIS"), inAisCheckbox);
     	if (selectedDueRealisationVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
     		if (selectedDueRealisationVO.getInvestmentTransactionInterestAmount() != null) {
     			interestNumberField.setValue(selectedDueRealisationVO.getInvestmentTransactionInterestAmount());
