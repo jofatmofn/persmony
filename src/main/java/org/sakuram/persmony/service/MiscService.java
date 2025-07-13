@@ -56,21 +56,21 @@ public class MiscService {
     }
     
     public List<IdValueVO> fetchDvsOfCategory(String category) {
-    	return fetchDvsOfCategory(category, true);
+    	return fetchDvsOfCategory(category, true, true);
     }
     
-    public List<IdValueVO> fetchDvsOfCategory(String category, boolean enhanced) {
+    public List<IdValueVO> fetchDvsOfCategory(String category, boolean enhanced, boolean isOpenOnly) {
     	List<IdValueVO> idValueVOList;
     	
     	idValueVOList = new ArrayList<IdValueVO>();
     	for (String oneCategory : category.split("\\+")) {
-    		idValueVOList.addAll(fetchDvsOfOneCategory(oneCategory, enhanced));
+    		idValueVOList.addAll(fetchDvsOfOneCategory(oneCategory, enhanced, isOpenOnly));
     	}
     	
     	return idValueVOList;
     }
     
-    public List<IdValueVO> fetchDvsOfOneCategory(String category, boolean enhanced) {
+    private List<IdValueVO> fetchDvsOfOneCategory(String category, boolean enhanced, boolean isOpenOnly) {
     	List<IdValueVO> idValueVOList;
     	DomainValue domainValue;
     	
@@ -106,7 +106,7 @@ public class MiscService {
 		    			labelSB.append(label);
 		    			labelSB.append("::");
 		    			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(domainValue);
-		    			if (!dvFlagsAccountVO.isOpen())
+		    			if (isOpenOnly && !dvFlagsAccountVO.isOpen())
 		    				continue;
 		    			investorDv = Constants.domainValueCache.get(dvFlagsAccountVO.getInvestorDvId());
 		    			dvFlagsInvestorVO = (DvFlagsInvestorVO) DomainValueFlags.getDvFlagsVO(investorDv);

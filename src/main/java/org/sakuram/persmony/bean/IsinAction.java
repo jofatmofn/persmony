@@ -43,6 +43,9 @@ public class IsinAction {
 	@Column(name="settlement_date", nullable=false)	// Better to be in Contract, however there can be trans(ISIN) actions without Contract
 	private Date settlementDate;
 	
+	@Column(name="settlement_sequence", nullable=true)	// Within the same date, action
+	private Short settlementSequence;
+	
 	@ManyToOne
 	@JoinColumn(name="contract_fk", nullable=true)
 	private Contract contract;
@@ -66,8 +69,12 @@ public class IsinAction {
 	private Double pricePerUnit;
 	
 	@ManyToOne
-	@JoinColumn(name="action_fk", nullable=false)
+	@JoinColumn(name="action_fk", nullable=true) // When more than one isinAction for a given action
 	private Action action;
+	
+	@ManyToOne
+	@JoinColumn(name="action_type_fk", nullable=true) // When action is not applicable
+	private DomainValue actionType;
 	
 	@Column(name="is_internal", nullable=false)
 	private boolean isInternal;

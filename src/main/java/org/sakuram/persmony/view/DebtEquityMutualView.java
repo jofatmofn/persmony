@@ -4,6 +4,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.sakuram.persmony.service.DebtEquityMutualService;
@@ -12,20 +13,25 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
+import org.sakuram.persmony.valueobject.IsinActionVO;
 import org.sakuram.persmony.valueobject.IsinCriteriaVO;
 import org.sakuram.persmony.valueobject.IsinVO;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
+import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -53,6 +59,7 @@ public class DebtEquityMutualView extends Div {
 
 			{
 				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Search Security"));
+				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "Test WIP"));
 			}
 		};
 		selectSpan = new Span();
@@ -75,6 +82,8 @@ public class DebtEquityMutualView extends Div {
 	            case 1:
 	            	handleSearchSecurity(formLayout);
 	            	break;
+	            case 2:
+	            	break;
 	            }
 			} catch (Exception e) {
 				ViewFuncs.showError("System Error!!! Contact Support.");
@@ -95,6 +104,8 @@ public class DebtEquityMutualView extends Div {
 		HorizontalLayout hLayout;
 		Button fetchButton;
 		Grid<IsinVO> isinsGrid;
+		GridContextMenu<IsinVO> isinsGridContextMenu;
+		Grid<IsinActionVO> isinActionsGrid;
 		
 		isinOperatorSelect = ViewFuncs.newSelect(FieldSpecVO.getTxtOperatorList(), "Operator", true, false);
 		isinTextField = new TextField("Value");
@@ -143,11 +154,19 @@ public class DebtEquityMutualView extends Div {
 			column.setResizable(true);
 		}
 		formLayout.add(isinsGrid);
+		formLayout.add(new Label(" "));
+		
+		isinActionsGrid = new Grid<>(IsinActionVO.class);
+		isinActionsGrid.setColumns("settlementDate", "isin", "securityName", "isinActionId", "actionType", "quantity", "bookingType", "dematAccount");
+		for (Column<IsinActionVO> column : isinActionsGrid.getColumns()) {
+			column.setResizable(true);
+		}
+		formLayout.add(isinActionsGrid);
 		
 		// On click of Fetch
 		fetchButton.addClickListener(event -> {
 			IsinCriteriaVO isinCriteriaVO;
-			List<IsinVO> recordList = null;
+			List<IsinVO> isinVOList = null;
 			Notification notification;
 
 			try {
@@ -188,10 +207,11 @@ public class DebtEquityMutualView extends Div {
 						securityTypeDvSelect.getValue() == null ? null : securityTypeDvSelect.getValue().getId()
 						);
 				try {
-					recordList = debtEquityMutualService.searchSecurities(isinCriteriaVO);
-					notification = Notification.show("No. of ISINs fetched: " + recordList.size());
+					isinVOList = debtEquityMutualService.searchSecurities(isinCriteriaVO);
+					notification = Notification.show("No. of ISINs fetched: " + isinVOList.size());
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-					isinsGrid.setItems(recordList);
+					isinsGrid.setItems(isinVOList);
+					isinActionsGrid.setItems(new ArrayList<IsinActionVO>());
 				} catch (Exception e) {
 					ViewFuncs.showError(UtilFuncs.messageFromException(e));
 					return;
@@ -200,5 +220,47 @@ public class DebtEquityMutualView extends Div {
 				fetchButton.setEnabled(true);
 			}
 		});
+		
+		isinsGridContextMenu = isinsGrid.addContextMenu();
+		isinsGridContextMenu.addItem("History", event -> {
+			Optional<IsinVO> isinVO;
+			
+			isinVO = event.getItem();
+			if (isinVO.isPresent()) {
+				try {
+				        Dialog dialog;
+						Select<IdValueVO> dematAccountDvSelect;
+						Button proceedButton;
+				        
+				        dialog = new Dialog();
+				        dialog.setModal(true); // Non-modal popover effect
+				        dialog.setDraggable(true);
+				        dialog.setCloseOnOutsideClick(true);
+						dialog.setHeaderTitle("Demat Account");
+				        
+				        dematAccountDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), "Demat Account", true, false);
+
+				        proceedButton = new Button("Proceed", e -> {
+							List<IsinActionVO> isinActionVOList = null;
+							Notification notification;
+							
+				            dialog.close();
+							isinActionVOList = debtEquityMutualService.fetchIsinActions(isinVO.get().getIsin(), new java.sql.Date(new java.util.Date().getTime()), dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId());
+							notification = Notification.show("No. of ISIN Actions fetched: " + isinActionVOList.size());
+							notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+							isinActionsGrid.setItems(isinActionVOList);
+				        });
+
+				        dialog.add(new VerticalLayout(dematAccountDvSelect, proceedButton));
+				        dialog.open();
+
+				} catch (Exception e) {
+					ViewFuncs.showError("System Error!!! Contact Support.");
+					e.printStackTrace();
+					return;
+				}
+			}
+		});
+		
 	}
 }

@@ -7,10 +7,7 @@ import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.IdValueVO;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.select.Select;
@@ -37,6 +34,13 @@ public class ViewFuncs {
     
     public static void newDvSelect(Select<IdValueVO> selectDv, MiscService miscService, String dvCategory, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
     	configureSelect(selectDv, miscService.fetchDvsOfCategory(dvCategory), label, isNoSelectionAllowed, isNullAValue);
+    }
+    
+    public static Select<IdValueVO> newDvSelect(List<IdValueVO> idValueVOList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
+    	Select<IdValueVO> selectDv;
+    	selectDv = new Select<IdValueVO>();
+    	configureSelect(selectDv, idValueVOList, label, isNoSelectionAllowed, isNullAValue);
+    	return selectDv;
     }
     
     public static Select<IdValueVO> newSelect(List<String> valueList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {

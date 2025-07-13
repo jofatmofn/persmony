@@ -97,7 +97,9 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			
 			mainQueryStringBuffer.append("EXISTS(SELECT 1 FROM realisation R JOIN investment_transaction IT ON R.investment_transaction_fk = IT.id ");
 			mainQueryStringBuffer.append("WHERE R.savings_account_transaction_fk = SAT.id ");
-			if (toFormQueryForEar) {
+			if (sbAcTxnCriteriaVO.getTransactionCategoryDvId() == null || sbAcTxnCriteriaVO.getTransactionCategoryDvId() != Constants.DVID_TRANSACTION_CATEGORY_DTI) {
+				mainQueryStringBuffer.append("AND false ");
+			} else if (toFormQueryForEar) {
 				if (NumberUtils.isDigits(sbAcTxnCriteriaVO.getEndAccountReference())) {
 					mainQueryStringBuffer.append("AND IT.investment_fk = ");
 					mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getEndAccountReference());

@@ -163,7 +163,7 @@ public class SearchView extends Div {
 				operatorSelect.setItems(Arrays.stream(FieldSpecVO.TxtOperator.values()).map(Enum::name).toArray(String[]::new));
 			} else if (fieldSpecVO.getIsDvSelect() != null && fieldSpecVO.getIsDvSelect()) {
 				valueDvSelect = new Select<String>();
-				idValueVOList = miscService.fetchDvsOfCategory(fieldSpecVO.getDvCategory(), false);
+				idValueVOList = miscService.fetchDvsOfCategory(fieldSpecVO.getDvCategory(), false, true);
 				valueDvSelect.setItems(idValueVOList.stream().map(IdValueVO::getValue).collect(Collectors.toList()));
 				valueDvSelect.setPlaceholder("Select " + fieldSpecVO.getLabel());
 				addCloseHandler(valueDvSelect, criterionEditor);
