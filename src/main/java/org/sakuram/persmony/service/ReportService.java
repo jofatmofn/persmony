@@ -543,6 +543,7 @@ public class ReportService {
 		final int TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST = ++tInd;
 		final int TABLE_IND_OS_IT_REFUND_INTEREST = ++tInd;
 		final int TABLE_IND_OS_OTHER_INTEREST = ++tInd;
+		final int TABLE_IND_OS_OTHER_INCOME = ++tInd;
 		final int TABLE_IND_VI_A_INVESTMENT = ++tInd;
 		final int TABLE_IND_80G = ++tInd;
 		final int TABLE_IND_EI_INTEREST = ++tInd;
@@ -598,6 +599,10 @@ public class ReportService {
 			
 			if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SALARY) {
 				reportTableList.get(TABLE_IND_SALARY_SALARY).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INTERNSHIP) {
+				reportTableList.get(TABLE_IND_OS_OTHER_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
 						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EMPLOYMENT_TDS) {
@@ -868,6 +873,12 @@ public class ReportService {
 		recordList.add(new Object[1]);
 		recordList.add(new Object[1]);
 
+		recordList.add(new Object[] {"", "Other Income"});
+		recordList.add(new Object[] {"", "", "Date", "Provider", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_OS_OTHER_INCOME));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+		
 		recordList.add(new Object[] {"SCHEDULE VI-A"});
 		recordList.add(new Object[1]);
 
