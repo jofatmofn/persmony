@@ -56,6 +56,9 @@ public class Constants {
 	public static final long DVID_REALISATION_TYPE_ANOTHER_REALISATION = 103;
 	public static final long DVID_TRANSACTION_CATEGORY_OTHERS = 221;
 	public static final long DVID_TRANSACTION_CATEGORY_DTI = 231;
+	public static final long DVID_TRANSACTION_CATEGORY_SALARY = 215;
+	public static final long DVID_TRANSACTION_CATEGORY_TAX_INCOME = 216;
+	public static final long DVID_TRANSACTION_CATEGORY_EMPLOYMENT_TDS = 347;
 	public static final long DVID_TRANSACTION_CATEGORY_PROPERTY_RENT = 219;
 	public static final long DVID_TRANSACTION_CATEGORY_TAX_RENTAL_INCOME = 282;
 	public static final long DVID_TRANSACTION_CATEGORY_TAX_PROPERTY = 281;

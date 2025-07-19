@@ -5,6 +5,8 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.util.Objects;
 
+import org.sakuram.persmony.util.Constants;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,8 +40,14 @@ public class DueRealisationVO {
 	Boolean realisationInAis;
 	Date realisationForm26asBookingDate;
 	
+	transient Double interestAmount;
+	transient Double tdsAmount;
+	transient String tdsReference;
+	transient Boolean inAis;
+	transient Date form26asBookingDate;	
+	
 	public String toString() {
-		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
 				investmentId,
 				investor,
 				productProvider,
@@ -51,19 +59,14 @@ public class DueRealisationVO {
 				taxGroup,
 				dueDate,
 				dueAmount,
-				investmentTransactionInterestAmount,
-				investmentTransactionTdsAmount,
-				accrualTdsReference,
-				investmentTransactionInAis,
-				investmentTransactionForm26asBookingDate,
 				realisationId,
 				realisationDate,
 				realisationAmount,
-				realisationInterestAmount,
-				realisationTdsAmount,
-				realisationTdsReference,
-				realisationInAis,
-				realisationForm26asBookingDate
+				getInterestAmount(),
+				getTdsAmount(),
+				getTdsReference(),
+				getInAis(),
+				getForm26asBookingDate()
 				);
 	}
 	public DueRealisationVO(Object[] record) {
@@ -109,4 +112,19 @@ public class DueRealisationVO {
 		return investmentTransactionId == other.investmentTransactionId && Objects.equals(realisationId, other.realisationId);
 	}
 
+	public Double getInterestAmount() {
+		return transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? investmentTransactionInterestAmount : realisationInterestAmount;
+	}
+	public Double getTdsAmount() {
+		return transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? investmentTransactionTdsAmount : realisationTdsAmount;
+	}
+	public String getTdsReference() {
+		return transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? accrualTdsReference : realisationTdsReference;
+	}
+	public Boolean getInAis() {
+		return transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? investmentTransactionInAis : realisationInAis;
+	}
+	public Date getForm26asBookingDate() {
+		return transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? investmentTransactionForm26asBookingDate : realisationForm26asBookingDate;
+	}
 }

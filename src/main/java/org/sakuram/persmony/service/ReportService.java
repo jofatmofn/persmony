@@ -15,11 +15,13 @@ import org.javatuples.Triplet;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
+import org.sakuram.persmony.bean.Isin;
 import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.bean.SavingsAccountTransaction;
 import org.sakuram.persmony.bean.SbAcTxnCategory;
 import org.sakuram.persmony.repository.InvestmentRepository;
 import org.sakuram.persmony.repository.InvestmentTransactionRepository;
+import org.sakuram.persmony.repository.IsinRepository;
 import org.sakuram.persmony.repository.RealisationRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
 import org.sakuram.persmony.util.AppException;
@@ -50,7 +52,9 @@ public class ReportService {
 	SbAcTxnCategoryRepository sbAcTxnCategoryRepository;
 	@Autowired
 	RealisationRepository realisationRepository;
-
+	@Autowired
+	IsinRepository isinRepository;
+	
 	final Integer CRITERION_INVESTOR = 1;
 	final Integer CRITERION_IS_CLOSED = 2;
 	final Integer CRITERION_TRANSACTION_TYPE = 3;
@@ -521,28 +525,31 @@ public class ReportService {
 		List<Object[]> recordList;
 		List<List<Object[]>> reportTableList;
 		Object[] previousReportRow;
-		java.sql.Date fyStartDate, fyEndDate, realisationDate;
+		java.sql.Date fyStartDate, fyEndDate;
 		DvFlagsVO dvFlagsVO;
 		DvFlagsAccountVO dvFlagsAccountVO;
 		DomainValue investorDomainValue;
 		SavingsAccountTransaction savingsAccountTransaction;
 		List<List<Object[]>> accrualDetailsForInvestor;
 
-		final int TABLE_IND_HP_RENT = 0;
-		final int TABLE_IND_HP_TAX_RENTAL_INCOME = 1;
-		final int TABLE_IND_HP_TAX_PROPERTY_WATER = 2;
-		final int TABLE_IND_OS_DIVIDEND = 3;
-		final int TABLE_IND_OS_SB_INTEREST = 4;
-		final int TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST = 5;
-		final int TABLE_IND_OS_IT_REFUND_INTEREST = 6;
-		final int TABLE_IND_OS_OTHER_INTEREST = 7;
-		final int TABLE_IND_VI_A_INVESTMENT = 8;
-		final int TABLE_IND_80G = 9;
-		final int TABLE_IND_EI_INTEREST = 10;
-		final int TABLE_IND_EI_OTHER = 11;
-		final int TABLE_IND_TAX_PAYMENT_ADV_SA = 12;
-		final int TABLE_IND_80D_HEALTH_INSURANCE = 13;
-		final int NO_OF_TABLES = 14;
+		int tInd = -1;
+		final int TABLE_IND_SALARY_SALARY = ++tInd;
+		final int TABLE_IND_SALARY_EMPLOYMENT_TDS = ++tInd;
+		final int TABLE_IND_HP_RENT = ++tInd;
+		final int TABLE_IND_HP_TAX_RENTAL_INCOME = ++tInd;
+		final int TABLE_IND_HP_TAX_PROPERTY_WATER = ++tInd;
+		final int TABLE_IND_OS_DIVIDEND = ++tInd;
+		final int TABLE_IND_OS_SB_INTEREST = ++tInd;
+		final int TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST = ++tInd;
+		final int TABLE_IND_OS_IT_REFUND_INTEREST = ++tInd;
+		final int TABLE_IND_OS_OTHER_INTEREST = ++tInd;
+		final int TABLE_IND_VI_A_INVESTMENT = ++tInd;
+		final int TABLE_IND_80G = ++tInd;
+		final int TABLE_IND_EI_INTEREST = ++tInd;
+		final int TABLE_IND_EI_OTHER = ++tInd;
+		final int TABLE_IND_TAX_PAYMENT_ADV_SA = ++tInd;
+		final int TABLE_IND_80D_HEALTH_INSURANCE = ++tInd;
+		final int NO_OF_TABLES = ++tInd;
 
 		reportList = new ArrayList<List<Object[]>>(1);
 		recordList = new ArrayList<Object[]>();
@@ -558,14 +565,18 @@ public class ReportService {
 		// TODO: What-if the date and FY as per the provider don't match?
 
 		for (SbAcTxnCategory sbAcTxnCategory : sbAcTxnCategoryRepository.findBySavingsAccountTransactionTransactionDateBetweenOrderBySavingsAccountTransactionTransactionDateAscSavingsAccountTransactionIdAsc(
-				java.sql.Date.valueOf(fyStartDate.toLocalDate().minusDays(10)),
-				java.sql.Date.valueOf(fyEndDate.toLocalDate().plusDays(10)))) {
-			// To use value date, if available, 10 days on each side
+				java.sql.Date.valueOf(fyStartDate.toLocalDate().minusDays(30)),
+				java.sql.Date.valueOf(fyEndDate.toLocalDate().plusDays(30)))) {
+			// To use value date, if available, 30 days on each side
 			
 			savingsAccountTransaction = sbAcTxnCategory.getSavingsAccountTransaction();
 
-			if (ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).before(fyStartDate) ||
-					ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).after(fyEndDate)) {
+			if (sbAcTxnCategory.getAssessmentYear() == null) {
+				if (ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).before(fyStartDate) ||
+						ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).after(fyEndDate)) {
+					continue;
+				}
+			} else  if (sbAcTxnCategory.getAssessmentYear() != incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1){
 				continue;
 			}
 			
@@ -584,8 +595,16 @@ public class ReportService {
 					!sbAcTxnCategory.getEndAccountReference().equals(String.valueOf(incomeTaxFilingDetailsRequestVO.getInvestorDvId())))) {
 				continue;
 			}
-
-			if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_PROPERTY_RENT) {
+			
+			if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SALARY) {
+				reportTableList.get(TABLE_IND_SALARY_SALARY).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EMPLOYMENT_TDS) {
+				reportTableList.get(TABLE_IND_SALARY_EMPLOYMENT_TDS).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_PROPERTY_RENT) {
 				reportTableList.get(TABLE_IND_HP_RENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
 						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
@@ -607,12 +626,12 @@ public class ReportService {
 					previousReportRow = new Object[] {"", "", "", "", "", ""};
 				}
 				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
-						previousReportRow[3].equals(sbAcTxnCategory.getEndAccountReference()) &&
+						previousReportRow[3].equals(expandIsin(sbAcTxnCategory.getEndAccountReference())) &&
 						previousReportRow[4].equals("")) {
 					previousReportRow[4] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
 				} else {
 					reportTableList.get(TABLE_IND_OS_DIVIDEND).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-							sbAcTxnCategory.getEndAccountReference(),
+							expandIsin(sbAcTxnCategory.getEndAccountReference()),
 							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND_TDS ||
@@ -623,12 +642,12 @@ public class ReportService {
 					previousReportRow = new Object[] {"", "", "", "", "", ""};
 				}
 				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
-						previousReportRow[3].equals(sbAcTxnCategory.getEndAccountReference()) &&
+						previousReportRow[3].equals(expandIsin(sbAcTxnCategory.getEndAccountReference())) &&
 						previousReportRow[5].equals("")) {
 					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
 				} else {
 					reportTableList.get(TABLE_IND_OS_DIVIDEND).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-							sbAcTxnCategory.getEndAccountReference(), "",
+							expandIsin(sbAcTxnCategory.getEndAccountReference()), "",
 							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SB_INTEREST &&
@@ -733,7 +752,7 @@ public class ReportService {
 					savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
 					sbAcTxnCategory.getEndAccountReference().equals(String.valueOf(incomeTaxFilingDetailsRequestVO.getInvestorDvId())))) {
 				reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-						"Gift Received – 56(2)(vi)(a)", "", sbAcTxnCategory.getAmount(), ""});
+						"Gift Received – 56(2)(x)", "", sbAcTxnCategory.getAmount(), ""});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INCOME_TAX) {
 				reportTableList.get(TABLE_IND_TAX_PAYMENT_ADV_SA).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
@@ -745,27 +764,20 @@ public class ReportService {
 		}
 
 		for (Realisation realisation : realisationRepository.retrieveRealisationsForIt(fyStartDate, fyEndDate, incomeTaxFilingDetailsRequestVO.getInvestorDvId())) {
-			realisationDate = ObjectUtils.defaultIfNull(realisation.getAccountedRealisationDate(), realisation.getRealisationDate());
-
 			if (realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
+				int tableInd;
 				if (realisation.getInvestmentTransaction().getTaxGroup() != null && Constants.DVID_TAX_GROUP_EXEMPTED_LIST.contains(realisation.getInvestmentTransaction().getTaxGroup().getId())) {
-					reportTableList.get(TABLE_IND_EI_INTEREST).add(new Object[] {"", "", realisationDate,
-							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
-							formAccountNo(realisation.getInvestmentTransaction().getInvestment()),
-							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount())
-							});
+					tableInd = TABLE_IND_EI_INTEREST;
 				} else if (realisation.getInvestmentTransaction().getTaxGroup() != null && Constants.DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST == realisation.getInvestmentTransaction().getTaxGroup().getId()) {
-					reportTableList.get(TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST).add(new Object[] {"", "", realisationDate,
-							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
-							formAccountNo(realisation.getInvestmentTransaction().getInvestment()),
-							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount()),
-							realisation.getTdsAmount()
-							});
+					tableInd = TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST;
 				} else {
-					reportTableList.get(TABLE_IND_OS_OTHER_INTEREST).add(new Object[] {"", "", realisationDate,
+					tableInd = TABLE_IND_OS_OTHER_INTEREST;
+				}
+				if (ObjectUtils.defaultIfNull(realisation.getInterestAmount(),0).doubleValue() > 0 || ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0).doubleValue() > 0) {
+					reportTableList.get(tableInd).add(new Object[] {"", "", ObjectUtils.defaultIfNull(realisation.getAccountedRealisationDate(), realisation.getRealisationDate()),
 							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
 							formAccountNo(realisation.getInvestmentTransaction().getInvestment()),
-							ObjectUtils.defaultIfNull(realisation.getInterestAmount(), realisation.getAmount()),
+							realisation.getInterestAmount(),
 							realisation.getTdsAmount()
 							});
 				}
@@ -780,6 +792,17 @@ public class ReportService {
 		recordList.add(new Object[1]);
 		
 		recordList.add(new Object[] {"SCHEDULE SALARY"});
+		recordList.add(new Object[1]);
+		
+		recordList.add(new Object[] {"", "Salary"});
+		recordList.add(new Object[] {"", "", "Date", "Employer", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_SALARY_SALARY));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+		
+		recordList.add(new Object[] {"", "Employment TDS"});
+		recordList.add(new Object[] {"", "", "Date", "Employer", "Amount"});
+		recordList.addAll(reportTableList.get(TABLE_IND_SALARY_EMPLOYMENT_TDS));
 		recordList.add(new Object[1]);
 		recordList.add(new Object[1]);
 
@@ -1116,5 +1139,11 @@ public class ReportService {
 	private String formAccountNo(Investment investment) {
 		return investment.getId() + "/" +
 				ObjectUtils.defaultIfNull(investment.getInvestmentIdWithProvider(), "");
+	}
+	
+	private String expandIsin(String isinStr) {
+		Isin isin = isinRepository.findById(isinStr).
+				orElseThrow(() -> new AppException("Missing ISIN " + isinStr, null));
+		return isinStr + "/" + isin.getSecurityName();
 	}
 }

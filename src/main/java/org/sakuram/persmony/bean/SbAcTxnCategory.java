@@ -43,6 +43,9 @@ public class SbAcTxnCategory {
 	@Column(name="amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double amount;
 
+	@Column(name="assessment_year", nullable=true, columnDefinition="NUMERIC", precision=4, scale=0)
+	private Short assessmentYear;
+
 	public SbAcTxnCategory(SavingsAccountTransaction savingsAccountTransaction, DomainValue transactionCategory, String endAccountReference, Character groupId, Double amount) {
 		this.savingsAccountTransaction = savingsAccountTransaction;
 		this.transactionCategory = transactionCategory;

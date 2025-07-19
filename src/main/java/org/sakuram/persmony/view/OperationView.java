@@ -1046,7 +1046,7 @@ public class OperationView extends Div {
 		FormLayout childFormLayout;
 		
 		accrualsRealisationsGrid = new Grid<>(DueRealisationVO.class);
-		accrualsRealisationsGrid.setColumns("investmentId", "investor", "productProvider", "investmentIdWithProvider", "productType", "worth", "investmentTransactionId", "transactionType", "taxGroup", "dueDate", "dueAmount", "investmentTransactionInterestAmount", "investmentTransactionTdsAmount", "accrualTdsReference", "investmentTransactionInAis", "investmentTransactionForm26asBookingDate", "realisationId", "realisationDate", "realisationAmount", "realisationInterestAmount", "realisationTdsAmount", "realisationTdsReference", "realisationInAis", "realisationForm26asBookingDate");
+		accrualsRealisationsGrid.setColumns("investmentId", "investor", "productProvider", "investmentIdWithProvider", "productType", "worth", "investmentTransactionId", "transactionType", "taxGroup", "dueDate", "dueAmount", "realisationId", "realisationDate", "realisationAmount", "interestAmount", "tdsAmount", "tdsReference", "inAis", "form26asBookingDate");
 		for (Column<DueRealisationVO> column : accrualsRealisationsGrid.getColumns()) {
 			column.setResizable(true);
 		}
@@ -1060,7 +1060,7 @@ public class OperationView extends Div {
 			dueRealisationVOStream = accrualsRealisationsGrid.getGenericDataView().getItems();
 
 			PrintWriter writer = new PrintWriter(out);
-			writer.println("investmentId,investor,productProvider,investmentIdWithProvider,productType,worth,investmentTransactionId,transactionType,taxGroup,dueDate,dueAmount,investmentTransactionInterestAmount,investmentTransactionTdsAmount,accrualTdsReference,investmentTransactionInAis,investmentTransactionForm26asBookingDate,realisationId,realisationDate,realisationAmount,realisationInterestAmount,realisationTdsAmount,realisationTdsReference,realisationInAis,realisationForm26asBookingDate");
+			writer.println("investmentId,investor,productProvider,investmentIdWithProvider,productType,worth,investmentTransactionId,transactionType,taxGroup,dueDate,dueAmount,realisationId,realisationDate,realisationAmount,interestAmount,tdsAmount,tdsReference,inAis,form26asBookingDate");
 			dueRealisationVOStream.forEach(dueRealisationVO -> {
 				writer.println(dueRealisationVO.toString());
 			});
