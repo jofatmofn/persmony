@@ -38,6 +38,10 @@ public class IsinActionMatch {
 	@JoinColumn(name="to_isin_action_fk", nullable=false)
 	private IsinAction toIsinAction;
 	
+	@ManyToOne
+	@JoinColumn(name="to_trade_fk", nullable=true)
+	private Trade toTrade;
+	
 	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
 	private Double quantity;
 

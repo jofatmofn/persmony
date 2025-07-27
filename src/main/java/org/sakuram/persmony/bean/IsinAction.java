@@ -10,8 +10,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
@@ -88,14 +86,12 @@ public class IsinAction {
 	@OrderBy("tradeDate")
 	private List<Trade> tradeList;
 
-    @ManyToMany
-    @JoinTable(name="isin_action_match",
-    	joinColumns= @JoinColumn(name="from_isin_action_fk"),
-    	inverseJoinColumns= @JoinColumn(name="to_isin_action_fk")
-    )
-    private List<IsinAction> toIsinActionList;
+	@JsonIgnore
+    @OneToMany(mappedBy="fromIsinAction")
+    private List<IsinActionMatch> toIsinActionMatchList;
     
-    @ManyToMany(mappedBy="toIsinActionList")
-    private List<IsinAction> fromIsinActionList;
+	@JsonIgnore
+    @OneToMany(mappedBy="toIsinAction")
+    private List<IsinActionMatch> fromIsinActionMatchList;
 
 }

@@ -157,10 +157,6 @@ public class DebtEquityMutualView extends Div {
 		formLayout.add(new Label(" "));
 		
 		isinActionsGrid = new Grid<>(IsinActionVO.class);
-		isinActionsGrid.setColumns("settlementDate", "isin", "securityName", "isinActionId", "actionType", "quantity", "bookingType", "dematAccount");
-		for (Column<IsinActionVO> column : isinActionsGrid.getColumns()) {
-			column.setResizable(true);
-		}
 		formLayout.add(isinActionsGrid);
 		
 		// On click of Fetch
@@ -245,15 +241,43 @@ public class DebtEquityMutualView extends Div {
 							Notification notification;
 							
 				            dialog.close();
-							isinActionVOList = debtEquityMutualService.fetchIsinActions(isinVO.get().getIsin(), new java.sql.Date(new java.util.Date().getTime()), dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId());
+							isinActionVOList = debtEquityMutualService.fetchIsinActions(isinVO.get().getIsin(), new java.sql.Date(new java.util.Date().getTime()), dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true);
 							notification = Notification.show("No. of ISIN Actions fetched: " + isinActionVOList.size());
 							notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+							isinActionsGrid.setColumns("settlementDate", "isin", "securityName", "isinActionId", "tradeId", "actionType", "bookingType", "dematAccount", "transactionQuantity");
+							for (Column<IsinActionVO> column : isinActionsGrid.getColumns()) {
+								column.setResizable(true);
+							}
 							isinActionsGrid.setItems(isinActionVOList);
 				        });
 
 				        dialog.add(new VerticalLayout(dematAccountDvSelect, proceedButton));
 				        dialog.open();
 
+				} catch (Exception e) {
+					ViewFuncs.showError("System Error!!! Contact Support.");
+					e.printStackTrace();
+					return;
+				}
+			}
+		});
+		isinsGridContextMenu.addItem("Balances", event -> {
+			Optional<IsinVO> isinVO;
+			
+			isinVO = event.getItem();
+			if (isinVO.isPresent()) {
+				try {
+					List<IsinActionVO> isinActionVOList = null;
+					Notification notification;
+					
+					isinActionVOList = debtEquityMutualService.determineBalancesMultiple(isinVO.get().getIsin(), new java.sql.Date(new java.util.Date().getTime()), null);
+					notification = Notification.show("No. of ISIN Actions with Balances: " + isinActionVOList.size());
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					isinActionsGrid.setColumns("settlementDate", "isin", "securityName", "isinActionId", "tradeId", "actionType", "bookingType", "dematAccount", "balance", "ppuBalance");
+					for (Column<IsinActionVO> column : isinActionsGrid.getColumns()) {
+						column.setResizable(true);
+					}
+					isinActionsGrid.setItems(isinActionVOList);
 				} catch (Exception e) {
 					ViewFuncs.showError("System Error!!! Contact Support.");
 					e.printStackTrace();
