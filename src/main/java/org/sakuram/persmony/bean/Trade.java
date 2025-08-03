@@ -28,8 +28,8 @@ public class Trade {
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name="isin_action_fk", nullable=false)
-	private IsinAction isinAction;
+	@JoinColumn(name="isin_action_part_fk", nullable=false)
+	private IsinActionPart isinActionPart;
 	
 	@Column(name="order_date", nullable=false)
 	private Date orderDate;
@@ -48,12 +48,6 @@ public class Trade {
 	
 	@Column(name="trade_no", length=31, nullable=false)
 	private String tradeNo;
-	
-	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
-	private Double quantity;
-
-	@Column(name="price_per_unit", nullable=false, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double pricePerUnit;
 	
 	@Column(name="brokerage_per_unit", nullable=false, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double brokeragePerUnit;

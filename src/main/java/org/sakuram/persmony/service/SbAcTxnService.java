@@ -22,6 +22,7 @@ import org.sakuram.persmony.bean.Trade;
 import org.sakuram.persmony.repository.RealisationRepository;
 import org.sakuram.persmony.repository.SavingsAccountTransactionRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
+import org.sakuram.persmony.repository.TradeRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.DomainValueFlags;
@@ -45,7 +46,9 @@ public class SbAcTxnService {
 	SbAcTxnCategoryRepository sbAcTxnCategoryRepository;
 	@Autowired
 	RealisationRepository realisationRepository;
-	
+	@Autowired
+	TradeRepository tradeRepository;
+		
 	public SbAcTxnImportStatsVO importSavingsAccountTransactions(long bankAccountDvId, MultipartFile multipartFile) throws IOException, ParseException {
     	List<String> cellContentList;
     	String transactionDateStr, valueDateStr, reference, narration, transactionId, utrNumber, remitterBranch, transactionTime;
@@ -403,14 +406,14 @@ public class SbAcTxnService {
 			for (IsinAction isinAction : contract.getIsinActionList()) {
 				if (isinAction.getIsin().getSecurityType().getId() != Constants.DVID_TRANSACTION_CATEGORY_DTI) {
 					amount = 0;
-					for (Trade trade : isinAction.getTradeList()) {
-						amount += trade.getQuantity() * (trade.getPricePerUnit() + trade.getBrokeragePerUnit());
+					for (Trade trade : tradeRepository.findByIsinActionPart_IsinAction(isinAction)) {
+						amount += trade.getIsinActionPart().getQuantity() * (trade.getIsinActionPart().getPricePerUnit() + trade.getBrokeragePerUnit());
 					}
 					sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 							Constants.NON_SATC_ID,
 							new IdValueVO(isinAction.getIsin().getSecurityType()),
 							new IdValueVO(null,
-									isinAction.getAction().getActionType().getValue() +
+									isinAction.getEffectiveActionType().getValue() +
 									"/" + isinAction.getIsin().getIsin()),
 							'B',
 							amount));
@@ -425,16 +428,15 @@ public class SbAcTxnService {
 					'A',
 					contractEq.getNetAmount()));
 			for (IsinAction isinAction : contractEq.getIsinActionList()) {
-				if (isinAction.getIsin().getSecurityType().getId() != Constants.DVID_TRANSACTION_CATEGORY_DTI &&
-						isinAction.getPricePerUnit() != null) {
+				if (isinAction.getIsin().getSecurityType().getId() != Constants.DVID_TRANSACTION_CATEGORY_DTI) {
 					sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 							Constants.NON_SATC_ID,
 							new IdValueVO(isinAction.getIsin().getSecurityType()),
 							new IdValueVO(null,
-									isinAction.getAction().getActionType().getValue() +
+									isinAction.getEffectiveActionType().getValue() +
 									"/" + isinAction.getIsin().getIsin()),
 							'B',
-							isinAction.getQuantity() * isinAction.getPricePerUnit()));
+							isinAction.getBasePrice()));
 				}
 			}
 		}

@@ -21,6 +21,7 @@ import org.sakuram.persmony.bean.Trade;
 import org.sakuram.persmony.repository.IsinActionMatchRepository;
 import org.sakuram.persmony.repository.IsinActionRepository;
 import org.sakuram.persmony.repository.IsinRepository;
+import org.sakuram.persmony.repository.TradeRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.IsinActionVO;
@@ -44,6 +45,9 @@ public class DebtEquityMutualService {
 	
 	@Autowired
 	IsinActionRepository isinActionRepository;
+	
+	@Autowired
+	TradeRepository tradeRepository;
 	
 	@Autowired
 	IsinActionMatchRepository isinActionMatchRepository;
@@ -207,20 +211,21 @@ public class DebtEquityMutualService {
 					iA.getIsin().getSecurityName(),
 					iA.getId(),
 					null,	// TODO: Replace with Trade id, applicable only for BUY in Secondary market
-					(iA.getAction() == null ? iA.getActionType().getValue() : iA.getAction().getActionType().getValue()),
+					iA.getEffectiveActionType().getValue(),
 					iA.getQuantity(),
 					null,
 					null,
 					iA.getQuantityBooking().getValue(),
 					iA.getDematAccount().getValue()
 					);
-			if (iA.getTradeList() == null || iA.getTradeList().size() == 0 || !isTradeLevel) {
+			List<Trade> tradeList = tradeRepository.findByIsinActionPart_IsinAction(iA);
+			if (tradeList == null || tradeList.size() == 0 || !isTradeLevel) {
 				isinActionVOList.add(isinActionVO);
 			} else {
-				for (Trade trade : iA.getTradeList()) {
+				for (Trade trade : tradeList) {
 					isinActionVOList.add(isinActionVO.toBuilder()
 							.tradeId(trade.getId())
-							.transactionQuantity(trade.getQuantity())
+							.transactionQuantity(trade.getIsinActionPart().getQuantity())
 							.build());
 				}
 			}
@@ -257,10 +262,12 @@ public class DebtEquityMutualService {
 	private List<BalanceQuantityVO> determineBalancesSingle(IsinAction fromIsinAction) {
 		List<BalanceQuantityVO> balanceQuantityVOList;
 		BalanceQuantityVO balanceQuantityVO;
+		List<Trade> tradeList;
 		
 		System.out.println("DetermineBalances: " + fromIsinAction.getId());
 		balanceQuantityVOList = new ArrayList<BalanceQuantityVO>();
-		if (fromIsinAction.getTradeList() == null || fromIsinAction.getTradeList().size() == 0) {
+		tradeList = tradeRepository.findByIsinActionPart_IsinAction(fromIsinAction);
+		if (tradeList == null || tradeList.size() == 0) {
 			balanceQuantityVO = new BalanceQuantityVO(fromIsinAction.getId(), null);
 			balanceQuantityVOList.add(balanceQuantityVO);
 			balanceQuantityVO.setBalanceQuantity(fromIsinAction.getQuantity());
@@ -277,11 +284,11 @@ public class DebtEquityMutualService {
 				}
 			}
 		} else {
-			for (Trade trade : fromIsinAction.getTradeList()) {
+			for (Trade trade : tradeList) {
 				balanceQuantityVO = new BalanceQuantityVO(fromIsinAction.getId(), trade.getId());
 				balanceQuantityVOList.add(balanceQuantityVO);
-				balanceQuantityVO.setBalanceQuantity(trade.getQuantity());
-				balanceQuantityVO.setPpuBalanceQuantity(trade.getQuantity());
+				balanceQuantityVO.setBalanceQuantity(trade.getIsinActionPart().getQuantity());
+				balanceQuantityVO.setPpuBalanceQuantity(trade.getIsinActionPart().getQuantity());
 				System.out.println("Trade: " + trade.getId());
 				for(IsinActionMatch isinActionMatch : Optional.ofNullable(fromIsinAction.getToIsinActionMatchList())
 						.orElse(Collections.emptyList())) {

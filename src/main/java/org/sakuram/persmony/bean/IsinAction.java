@@ -1,7 +1,9 @@
 package org.sakuram.persmony.bean;
 
 import java.sql.Date;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -12,7 +14,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -60,12 +61,6 @@ public class IsinAction {
 	@JoinColumn(name="quantity_booking_fk", nullable=false)
 	private DomainValue quantityBooking;
 	
-	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
-	private Double quantity;
-
-	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double pricePerUnit;
-	
 	@ManyToOne
 	@JoinColumn(name="action_fk", nullable=true) // When more than one isinAction for a given action
 	private Action action;
@@ -83,8 +78,7 @@ public class IsinAction {
 	
 	@JsonIgnore
 	@OneToMany(mappedBy="isinAction", cascade=CascadeType.ALL)
-	@OrderBy("tradeDate")
-	private List<Trade> tradeList;
+	private List<IsinActionPart> isinActionPartList;
 
 	@JsonIgnore
     @OneToMany(mappedBy="fromIsinAction")
@@ -93,5 +87,29 @@ public class IsinAction {
 	@JsonIgnore
     @OneToMany(mappedBy="toIsinAction")
     private List<IsinActionMatch> fromIsinActionMatchList;
+
+	public double getQuantity() {
+	    return Optional.ofNullable(isinActionPartList)
+                .orElse(Collections.emptyList())
+                .stream()
+                .mapToDouble(isinActionPart -> isinActionPart.getQuantity())
+                .sum();
+	}
+
+	public double getBasePrice() {
+	    return Optional.ofNullable(isinActionPartList)
+                .orElse(Collections.emptyList())
+                .stream()
+                .mapToDouble(isinActionPart -> isinActionPart.getQuantity() * Optional.ofNullable(isinActionPart.getPricePerUnit()).orElse(0D))
+                .sum();
+	}
+	
+	public DomainValue getEffectiveActionType() {
+		if (action == null) {
+			return actionType;
+		} else {
+			return action.getActionType();
+		}
+	}
 
 }
