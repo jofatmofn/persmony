@@ -38,7 +38,7 @@ public class InvestmentVO {
 	private String providerBranch;
 	
 	public String toString() {
-		return String.format("%s,%s,%s,\"%s\",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+		return String.format("%s,%s,%s,\"%s\",%s,%s,%s,\"%s\",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
 				investmentId,
 				investor,
 				productProvider,

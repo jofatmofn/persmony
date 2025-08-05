@@ -17,9 +17,9 @@ public interface RealisationRepository extends JpaRepository<Realisation, Long>,
 			+ " LEFT OUTER JOIN investment_transaction IT ON R.investment_transaction_fk = IT.id"
 			+ "	LEFT OUTER JOIN investment I ON IT.investment_fk = I.id"
 			+ "	WHERE COALESCE(R.accounted_realisation_date,R.realisation_date) BETWEEN :#{#fromDate} AND :#{#toDate}"
-			+ " AND I.investor_fk = :#{#investorId}"
+			+ " AND I.investor_fk IN (:#{#investorId})"
 			+ " ORDER BY COALESCE(R.accounted_realisation_date,R.realisation_date)")
-	public List<Realisation> retrieveRealisationsForIt(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") Long investorId);
+	public List<Realisation> retrieveRealisationsForIt(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") long[] investorId);
 	
 	List<Realisation> findByRealisationDateBetweenOrderByRealisationDateAscSavingsAccountTransactionIdAsc(Date fromDate, Date toDate);
 }

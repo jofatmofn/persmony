@@ -768,7 +768,7 @@ public class ReportService {
 			}
 		}
 
-		for (Realisation realisation : realisationRepository.retrieveRealisationsForIt(fyStartDate, fyEndDate, incomeTaxFilingDetailsRequestVO.getInvestorDvId())) {
+		for (Realisation realisation : realisationRepository.retrieveRealisationsForIt(fyStartDate, fyEndDate, Constants.PRIMARY_TO_INVESTOR_LIST_MAP.get(incomeTaxFilingDetailsRequestVO.getInvestorDvId()))) {
 			if (realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
 				int tableInd;
 				if (realisation.getInvestmentTransaction().getTaxGroup() != null && Constants.DVID_TAX_GROUP_EXEMPTED_LIST.contains(realisation.getInvestmentTransaction().getTaxGroup().getId())) {
@@ -1069,7 +1069,7 @@ public class ReportService {
 		for (Investment investment : investmentRepository.retrieveInvestmentActiveWithinPeriod(fyStartDate, fyEndDate)) {
 			// Additional Filters not used in DB, now applied in Java
 
-			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
+			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyEndDate)) {
 				continue;
 			}
 
