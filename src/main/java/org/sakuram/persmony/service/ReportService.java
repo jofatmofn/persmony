@@ -542,6 +542,7 @@ public class ReportService {
 		final int TABLE_IND_OS_SB_INTEREST = ++tInd;
 		final int TABLE_IND_OS_BANK_PO_DEPOSIT_INTEREST = ++tInd;
 		final int TABLE_IND_OS_IT_REFUND_INTEREST = ++tInd;
+		final int TABLE_IND_OS_EQUITY_INCOME = ++tInd;
 		final int TABLE_IND_OS_OTHER_INTEREST = ++tInd;
 		final int TABLE_IND_OS_OTHER_INCOME = ++tInd;
 		final int TABLE_IND_VI_A_INVESTMENT = ++tInd;
@@ -572,12 +573,12 @@ public class ReportService {
 			
 			savingsAccountTransaction = sbAcTxnCategory.getSavingsAccountTransaction();
 
-			if (sbAcTxnCategory.getAssessmentYear() == null) {
+			if (sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax() == null || sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax().getAssessmentYear() == null) {
 				if (ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).before(fyStartDate) ||
 						ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).after(fyEndDate)) {
 					continue;
 				}
-			} else  if (sbAcTxnCategory.getAssessmentYear() != incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1){
+			} else  if (sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax().getAssessmentYear() != incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1){
 				continue;
 			}
 			
@@ -696,6 +697,40 @@ public class ReportService {
 							Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(), "",
 							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 				}
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_INTEREST) {
+				if (reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).size() > 0) {
+					previousReportRow = reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).get(reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).size() - 1);
+				} else {
+					previousReportRow = new Object[] {"", "", "", "", "", ""};
+				}
+				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
+						previousReportRow[3].equals(sbAcTxnCategory.getEndAccountReference()) &&
+						previousReportRow[4].equals("")) {
+					previousReportRow[4] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
+				} else {
+					reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+							sbAcTxnCategory.getEndAccountReference(),
+							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+				}
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_INTEREST_TDS) {
+				if (reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).size() > 0) {
+					previousReportRow = reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).get(reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).size() - 1);
+				} else {
+					previousReportRow = new Object[] {"", "", "", "", "", ""};
+				}
+				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
+						previousReportRow[3].equals(sbAcTxnCategory.getEndAccountReference()) &&
+						previousReportRow[5].equals("")) {
+					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
+				} else {
+					reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+							sbAcTxnCategory.getEndAccountReference(), "",
+							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+				}
+			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_OTHER_INCOME) {
+				/* reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
+						sbAcTxnCategory.getEndAccountReference(),
+						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""}); */
 			} else if (dvFlagsAccountVO != null && dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_PPF)) {
 				reportTableList.get(TABLE_IND_VI_A_INVESTMENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						"PPF – 80C",
@@ -753,7 +788,8 @@ public class ReportService {
 				}
 			} else if ((sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_GIFT ||
 					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_ON_BEHALF_GIFT) &&
-					(savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ||
+					(savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT &&
+					Constants.INVESTOR_TO_PRIMARY_MAP.get(investorDomainValue.getId()) == incomeTaxFilingDetailsRequestVO.getInvestorDvId() ||
 					savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
 					sbAcTxnCategory.getEndAccountReference().equals(String.valueOf(incomeTaxFilingDetailsRequestVO.getInvestorDvId())))) {
 				reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
@@ -862,6 +898,12 @@ public class ReportService {
 		recordList.add(new Object[] {"", "IT Refund Interest"});
 		recordList.add(new Object[] {"", "", "Date", "PAN", "Amount", "TDS"}); // PAN is not really required, it's used for programming convenience
 		recordList.addAll(reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST));
+		recordList.add(new Object[1]);
+		recordList.add(new Object[1]);
+
+		recordList.add(new Object[] {"", "Equity Interest"});
+		recordList.add(new Object[] {"", "", "Date", "ISIN", "Amount", "TDS"});
+		recordList.addAll(reportTableList.get(TABLE_IND_OS_EQUITY_INCOME));
 		recordList.add(new Object[1]);
 		recordList.add(new Object[1]);
 
@@ -1069,7 +1111,7 @@ public class ReportService {
 		for (Investment investment : investmentRepository.retrieveInvestmentActiveWithinPeriod(fyStartDate, fyEndDate)) {
 			// Additional Filters not used in DB, now applied in Java
 
-			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyEndDate)) {
+			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
 				continue;
 			}
 
@@ -1131,6 +1173,7 @@ public class ReportService {
 				}
 			}
 			if (investment.getIsAccrualApplicable() != null && investment.getIsAccrualApplicable() &&
+					(investment.getClosureDate() == null || investment.getClosureDate().compareTo(fyEndDate) >= 0) &&
 					investmentYearEndAccrual > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
 				anticipatedAccrualDetailsForInvestor.add(new Object[] {investment.getId(), null, null,
 						"Accrual",
