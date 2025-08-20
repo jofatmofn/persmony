@@ -4,15 +4,11 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
-import javax.persistence.criteria.Predicate;
 
 import org.sakuram.persmony.bean.Isin;
 import org.sakuram.persmony.bean.IsinAction;
@@ -28,7 +24,6 @@ import org.sakuram.persmony.valueobject.IsinActionVO;
 import org.sakuram.persmony.valueobject.IsinCriteriaVO;
 import org.sakuram.persmony.valueobject.IsinVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -152,57 +147,9 @@ public class DebtEquityMutualService {
 	public List<IsinActionVO> fetchIsinActions(String isinStr, Date priorToDate, Long dematAccount, boolean isTradeLevel) {
 		List<IsinAction> isinActionList;
 		List<IsinActionVO> isinActionVOList;
-		IsinAction isinAction;
-		Isin isin;
-		Set<Long> processedIsinActionIdSet;
-		int ind;
 		
-		isinActionList = new ArrayList<IsinAction>();
-		isin = isinRepository.findById(isinStr).
-				orElseThrow(() -> new AppException("Missing ISIN " + isinStr, null));
-		addIsinActionList(isinActionList, isinActionRepository.findByIsinOrderBySettlementDateAsc(isin), priorToDate, dematAccount);
-		
-		processedIsinActionIdSet = new HashSet<Long>();
-		ind = 0;
-		while (ind < isinActionList.size()) {
-			isinAction = isinActionList.get(ind);
+		isinActionList = isinActionRepository.findIsinIndependentIsinActions(isinStr, priorToDate, dematAccount);
 
-			if (!processedIsinActionIdSet.contains(isinAction.getId())) {
-				System.out.println("Now processing IA: " + isinAction.getId() + " with A: " + (isinAction.getAction() == null ? "" : isinAction.getAction().getId()));
-				// (1) To
-				addIsinActionList(isinActionList, Optional.ofNullable(isinAction.getToIsinActionMatchList())
-						.orElse(Collections.emptyList())
-						.stream()
-					    .map(IsinActionMatch::getToIsinAction)
-					    .collect(Collectors.toList()), priorToDate, dematAccount);
-				// (2) From
-				addIsinActionList(isinActionList, Optional.ofNullable(isinAction.getFromIsinActionMatchList())
-						.orElse(Collections.emptyList())
-						.stream()
-					    .map(IsinActionMatch::getFromIsinAction)
-					    .collect(Collectors.toList()), priorToDate, dematAccount);
-				// (3) Same action
-				if (isinAction.getAction() != null) {
-					long actionId = isinAction.getAction().getId();	// Declaration and assignment together so that it is effectively final for the lambda below
-					Specification<IsinAction> spec = (root, query, cb) -> {
-					    List<Predicate> predicates = new ArrayList<>();
-
-				        predicates.add(cb.equal(root.get("action").get("id"), actionId));
-					    predicates.add(cb.equal(root.get("isInternal"), false));
-
-					    return cb.and(predicates.toArray(new Predicate[0]));
-					};
-					addIsinActionList(isinActionList, isinActionRepository.findAll(spec), priorToDate, dematAccount);
-				}
-			}
-			processedIsinActionIdSet.add(isinAction.getId());
-			ind++;
-			// if (ind == 10) break;
-		}
-		Collections.sort(isinActionList,
-				Comparator.comparing(IsinAction::getSettlementDate)
-				.thenComparing(IsinAction::getSettlementSequence, Comparator.nullsLast(Comparator.naturalOrder()))
-				);
 		isinActionVOList = new ArrayList<IsinActionVO>(isinActionList.size());
 		for(IsinAction iA : isinActionList) {
 			IsinActionVO isinActionVO = new IsinActionVO(
@@ -305,19 +252,6 @@ public class DebtEquityMutualService {
 			}
 		}
 		return balanceQuantityVOList;
-	}
-	
-	private void addIsinActionList(List<IsinAction> targetList, List<IsinAction> sourceList, Date priorToDate, Long dematAccount) {		
-		if (sourceList != null) {
-			targetList.addAll(
-					sourceList.stream()
-					.filter(isinAction -> !targetList.contains(isinAction) &&
-							isinAction.getSettlementDate().before(priorToDate) && 
-							(dematAccount == null || isinAction.getDematAccount().getId() == dematAccount) &&
-							!isinAction.isInternal())
-					.collect(Collectors.toList())
-					);
-		}
 	}
 	
 	private void processTransfer(IsinAction toIsinAction, List<TransactionVO> transactionVOList) {

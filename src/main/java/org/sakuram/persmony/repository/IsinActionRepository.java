@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface IsinActionRepository extends JpaRepository<IsinAction, Long>, JpaSpecificationExecutor<IsinAction> {
+public interface IsinActionRepository extends JpaRepository<IsinAction, Long>, JpaSpecificationExecutor<IsinAction>, IsinActionRepositoryCustom {
 
 	@Query(nativeQuery=true, value=
 			"SELECT IA.* "

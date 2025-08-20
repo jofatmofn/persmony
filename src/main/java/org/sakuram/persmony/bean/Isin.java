@@ -30,5 +30,6 @@ public class Isin {
 	@ManyToOne
 	@JoinColumn(name="security_type_fk", nullable=false)
 	private DomainValue securityType;	// Maps to Transaction Category
-	
+
+	private Long stockId;	// TODO: FK to new Stock entity
 }
