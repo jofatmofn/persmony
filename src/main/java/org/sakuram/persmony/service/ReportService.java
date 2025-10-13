@@ -16,11 +16,17 @@ import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.bean.Isin;
+import org.sakuram.persmony.bean.IsinAction;
+import org.sakuram.persmony.bean.IsinActionMatch;
+import org.sakuram.persmony.bean.IsinActionPart;
 import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.bean.SavingsAccountTransaction;
 import org.sakuram.persmony.bean.SbAcTxnCategory;
 import org.sakuram.persmony.repository.InvestmentRepository;
 import org.sakuram.persmony.repository.InvestmentTransactionRepository;
+import org.sakuram.persmony.repository.IsinActionMatchRepository;
+import org.sakuram.persmony.repository.IsinActionPartRepository;
+import org.sakuram.persmony.repository.IsinActionRepository;
 import org.sakuram.persmony.repository.IsinRepository;
 import org.sakuram.persmony.repository.RealisationRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
@@ -54,6 +60,12 @@ public class ReportService {
 	RealisationRepository realisationRepository;
 	@Autowired
 	IsinRepository isinRepository;
+	@Autowired
+	IsinActionRepository isinActionRepository;
+	@Autowired
+	IsinActionMatchRepository isinActionMatchRepository;
+	@Autowired
+	IsinActionPartRepository isinActionPartRepository;
 	
 	final Integer CRITERION_INVESTOR = 1;
 	final Integer CRITERION_IS_CLOSED = 2;
@@ -1085,6 +1097,121 @@ public class ReportService {
 		recordList.addAll(fetchAccrualForFy(incomeTaxFilingDetailsRequestVO.getFyStartYear(), incomeTaxFilingDetailsRequestVO.getInvestorDvId()).getValue2());
 
 
+		return reportList;
+	}
+	
+	public List<List<Object[]>> isinReport() {
+		List<List<Object[]>> reportList;
+		List<Object[]> recordList;
+		List<Isin> isinList;
+		Long previousStockId = null;
+		
+		reportList = new ArrayList<List<Object[]>>(1);
+		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
+		
+		isinList = new ArrayList<Isin>();
+		for (Isin isin : isinRepository.findAllByOrderByStockId()) {
+			if (isin.getStockId() == null || (previousStockId != null && !isin.getStockId().equals(previousStockId))) {
+				if (isin.getStockId() == null) {
+					isinList.add(isin);
+				}
+				// ISIN Actions
+				recordList.add(new Object[]{"IAction Id", "Is Internal?", "ISIN", "Date", "Quantity", "Booking", "Action", "Action Type", "Contract", "Demat Account", "Price Per Unit", "Remarks"});
+				for (IsinAction isinAction : isinActionRepository.findByIsinInOrderBySettlementDateAscSettlementSequenceAsc(isinList)) {
+					recordList.add(new Object[] {
+							isinAction.getId(),
+							isinAction.isInternal(),
+							isinAction.getIsin().getIsin(),
+							Constants.ANSI_DATE_FORMAT.format(isinAction.getSettlementDate()),
+							isinAction.getQuantity(),
+							isinAction.getQuantityBooking().getValue(),
+							(isinAction.getAction() == null ? "" : isinAction.getAction().getId()),
+							(isinAction.getAction() == null ? isinAction.getActionType().getValue() : isinAction.getAction().getActionType().getValue()),
+							(isinAction.getContract() == null ? "" : isinAction.getContract().getContractNo()),
+							isinAction.getDematAccount().getValue(),
+							isinAction.getPricePerUnit(),
+							((java.util.function.Function<IsinAction, String>) (ia -> {
+								StringBuffer sb = new StringBuffer();
+								if (ia.getComputedQuantity() != ia.getQuantity()) {
+									sb.append("Quantity not matching between this IA ");
+									sb.append(ia.getQuantity());
+									sb.append(" and its corresponding IAPs ");
+									sb.append(ia.getComputedQuantity());
+									sb.append(", ");
+								}
+								if (ia.getInQuantity() != ia.getQuantity() && (ia.getQuantityBooking().getId() == Constants.DVID_BOOKING_DEBIT ||
+										ia.getEffectiveActionType().getId() == Constants.ACTION_ID_GIFT_OR_TRANSFER)) {	// Inaccurate, in case of intraday, a CREDIT may be followed by DEBIT
+									sb.append("Quantity not matching between this IA ");
+									sb.append(ia.getQuantity());
+									sb.append(" and its corresponding Incoming ");
+									sb.append(ia.getInQuantity());
+									sb.append(", ");
+								}
+								if (ia.getOutQuantity() > ia.getQuantity()) {
+									sb.append("Quantity not matching between this IA ");
+									sb.append(ia.getQuantity());
+									sb.append(" and its corresponding Outgoing ");
+									sb.append(ia.getOutQuantity());
+									sb.append(", ");
+								}
+								return sb.toString();
+							})).apply(isinAction),
+							});
+				}
+				recordList.add(new Object[] {});
+				
+				// Isin Action Matches
+				recordList.add(new Object[]{"Match Id", "From IAction Id", "From Trade Id", "To IAction Id", "To Trade Id", "Match Type", "Quantity", "Price Per Unit", "Remarks"});
+				for (IsinActionMatch isinActionMatch : isinActionMatchRepository.findByFromIsinActionIsinInOrToIsinActionIsinIn(isinList, isinList)) {
+					recordList.add(new Object[] {
+							isinActionMatch.getId(),
+							(isinActionMatch.getFromIsinAction() == null ? "" : isinActionMatch.getFromIsinAction().getId()),
+							(isinActionMatch.getFromTrade() == null ? "" : isinActionMatch.getFromTrade().getId()),
+							(isinActionMatch.getToIsinAction() == null ? "" : isinActionMatch.getToIsinAction().getId()),
+							(isinActionMatch.getToTrade() == null ? "" : isinActionMatch.getToTrade().getId()),
+							isinActionMatch.getMatchReason().getValue(),
+							isinActionMatch.getQuantity(),
+							isinActionMatch.getPricePerUnit(),
+							((java.util.function.Function<IsinActionMatch, String>) (iam -> {
+								StringBuffer sb = new StringBuffer();
+								if (iam.getFromIsinAction().getDematAccount().getId() != iam.getToIsinAction().getDematAccount().getId() &&
+										iam.getMatchReason().getId() != Constants.DVID_ISIN_ACTION_MATCH_REASON_OTHERS &&
+										iam.getFromIsinAction().getEffectiveActionType().getId() != Constants.ACTION_ID_GIFT_OR_TRANSFER &&
+										iam.getToIsinAction().getEffectiveActionType().getId() != Constants.ACTION_ID_GIFT_OR_TRANSFER) {
+									sb.append("FIFO across Demat Accounts - Match type may need to be changed to Price");
+								}
+								return sb.toString();
+							})).apply(isinActionMatch),
+					});
+				}
+				recordList.add(new Object[] {});
+				
+				// To Be Removed Isin Action Parts
+				recordList.add(new Object[]{"Part Id", "Action Id", "Quantity", "Price Per Unit", "Remarks"});
+				for (IsinActionPart isinActionPart : isinActionPartRepository.findByIsinActionIsinIn(isinList)) {
+					recordList.add(new Object[] {
+							isinActionPart.getId(),
+							isinActionPart.getIsinAction().getId(),
+							isinActionPart.getQuantity(),
+							isinActionPart.getPricePerUnit(),
+							((java.util.function.Function<IsinActionPart, String>) (iap -> {
+								StringBuffer sb = new StringBuffer();
+								return sb.toString();
+							})).apply(isinActionPart),
+					});
+				}
+				recordList.add(new Object[] {});
+				
+				isinList = new ArrayList<Isin>();
+				if (isin.getStockId() != null) {
+					isinList.add(isin);
+				}
+			} else {
+				isinList.add(isin);
+			}
+			previousStockId = isin.getStockId();
+		}
 		return reportList;
 	}
 

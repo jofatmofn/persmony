@@ -8,6 +8,8 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.IdValueVO;
 
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.select.Select;
@@ -81,9 +83,9 @@ public class ViewFuncs {
 		if (isNullAValue) {
 			idValueVOList.add(new IdValueVO(Constants.DVID_EMPTY_SELECT, "Empty"));
 		}
-		if (isNoSelectionAllowed) {
+		/* if (isNoSelectionAllowed) {
 			idValueVOList.add(null); // This is the IdValueVO corresponding to "No Selection"; .getListDataView().addItem() cannot be used after this.
-		}
+		} */
 		dvSelect.setItemLabelGenerator(idValueVO -> {
 			if (isNoSelectionAllowed && idValueVO == null) {
 				return "No Selection";
@@ -99,5 +101,19 @@ public class ViewFuncs {
 		if (isNoSelectionAllowed) {
 			dvSelect.setEmptySelectionCaption("No Selection");
 		}
+    }
+    
+    public static Hr newHorizontalLine() {
+		Hr horizontalLine;
+		horizontalLine = new Hr();
+		horizontalLine.setWidthFull();
+		horizontalLine.getStyle().set("background-color", "black");
+		return horizontalLine;
+    }
+    
+    public static Div newLine() {
+    	Div spacer = new Div();
+    	spacer.getStyle().set("grid-column", "1 / -1"); // span entire row
+    	return spacer;
     }
 }

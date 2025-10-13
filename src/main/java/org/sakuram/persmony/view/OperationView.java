@@ -610,10 +610,6 @@ public class OperationView extends Div {
 					showError("Investment Period: Invalid range of dates");
 					return;
 				}
-				if (paymentScheduleVOList == null || paymentScheduleVOList.isEmpty()) {
-					showError("Payment Schedule cannot be Empty");
-					return;
-				}
 				
 				// Back-end Call
 				investVO = new InvestVO(
@@ -627,7 +623,7 @@ public class OperationView extends Div {
 						dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(),
 						taxabilityDvSelect.getValue() == null ? null : taxabilityDvSelect.getValue().getId(),
 						(accrualApplicabilityRadioButtonGroup.getValue() == null || accrualApplicabilityRadioButtonGroup.getValue().equals("Not Known")) ? null : (accrualApplicabilityRadioButtonGroup.getValue().equals("Not Applicable") ? false : true),
-						(sbAcTxnComponent.getSbAcTxnIdIntegerField() == null ? null : Long.valueOf(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue())),
+						(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue() == null ? null : Long.valueOf(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue())),
 						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
 						unitsNumberField.getValue() == null ? null : (double)unitsNumberField.getValue().doubleValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),

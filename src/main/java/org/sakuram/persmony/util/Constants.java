@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
+import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 
 public class Constants {
 
@@ -39,6 +40,7 @@ public class Constants {
 	public static final String CATEGORY_NONE = "None";
 	public static final String CATEGORY_BOOKING = "Booking";
 	public static final String CATEGORY_SECURITY_TYPE = "ScrtTyp";
+	public static final String CATEGORY_SECURITY_ACTION = "ScrtAct";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
@@ -91,8 +93,9 @@ public class Constants {
 	public static final long DVID_BOOKING_DEBIT = 223;
 	public static final long DVID_EMPTY_SELECT = -1L;
 	public static final long DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST = 199;
-	public static final long DVID_ISIN_ACTION_MATCH_REASON_DOUBLE_ENTRY = 342;
+	public static final long DVID_ISIN_ACTION_MATCH_REASON_OTHERS = 342;
 	public static final long DVID_ISIN_ACTION_MATCH_REASON_FIFO = 343;
+	public static final long DVID_ISIN_ACTION_MATCH_REASON_PRICE = 350;
 	public static final long DVID_SECURITY_TYPE_EQUITY_SHARE = 344;
 	public static final long DVID_SECURITY_TYPE_MUTUAL_FUND = 345;
 	public static final long DVID_SECURITY_TYPE_DEBT_INSTRUMENT = 346;
@@ -223,6 +226,22 @@ public class Constants {
 			put("R.tds_amount", new FieldSpecVO("Realisation TDS Amount", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			put("R.savings_account_transaction_fk", new FieldSpecVO("SAT Id", FieldSpecVO.DataType.OTHERS, true, false, false, null));
 			// label, dataType, isSequencable, isFreeText, isDvSelect, dvCategory
+		}
+	};
+
+	public static final Map<Long, List<IsinActionSpecVO>> ISIN_ACTION_SPEC_MAP = new HashMap<Long, List<IsinActionSpecVO>>() {
+		private static final long serialVersionUID = 1L;
+
+		{
+			put(322L, Arrays.asList(new IsinActionSpecVO[] {
+					new IsinActionSpecVO("Sell", DVID_BOOKING_DEBIT, FlaggedEnum.fromFlag(IsinActionSpecVO.IAQuantityType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionSpecVO.IAFifoMappingType.class, "USER_CHOICE"), FlaggedEnum.fromFlag(IsinActionSpecVO.IALotCreationType.class, "TRADE")),
+					}
+			));
+			put(323L, Arrays.asList(new IsinActionSpecVO[] {
+					new IsinActionSpecVO("Sender", DVID_BOOKING_DEBIT, FlaggedEnum.fromFlag(IsinActionSpecVO.IAQuantityType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionSpecVO.IAFifoMappingType.class, "USER_CHOICE"), FlaggedEnum.fromFlag(IsinActionSpecVO.IALotCreationType.class, "NEW_DATE_WITH_NULL_PRICE")),
+					new IsinActionSpecVO("Receiver", DVID_BOOKING_CREDIT, FlaggedEnum.fromFlag(IsinActionSpecVO.IAQuantityType.class, "PREVIOUS_INPUT"), FlaggedEnum.fromFlag(IsinActionSpecVO.IAFifoMappingType.class, "NOT_APPLICABLE"), FlaggedEnum.fromFlag(IsinActionSpecVO.IALotCreationType.class, "PROPAGATION")),
+					}
+			));
 		}
 	};
 

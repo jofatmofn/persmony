@@ -53,7 +53,9 @@ public class ReportView extends VerticalLayout {
 				"Income Vs. Spend",
 				"Tax Liability",
 				"Details for Tax Filing",
-				"Readiness for Tax Filing");
+				"Readiness for Tax Filing",
+				"ISIN All Details"
+				);
 		reportSelect.setLabel("Report");
 		reportSelect.setPlaceholder("Select Report");
 		add(reportSelect);
@@ -126,6 +128,9 @@ public class ReportView extends VerticalLayout {
 					            	break;
 					            case "Open Investments":
 					            	reportList = reportService.investmentsWithPendingTransactions();
+					            	break;
+					            case "ISIN All Details":
+					            	reportList = reportService.isinReport();
 					            	break;
 					            case "Receipt Transactions":
 					            case "Period Summary":

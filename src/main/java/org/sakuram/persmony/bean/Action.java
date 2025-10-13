@@ -1,5 +1,7 @@
 package org.sakuram.persmony.bean;
 
+import java.sql.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -33,6 +35,9 @@ public class Action {
 	@ManyToOne
 	@JoinColumn(name="action_type_fk", nullable=false)
 	private DomainValue actionType;
+	
+	@Column(name="record_date", nullable=true)	// TODO: Nullable false
+	private Date recordDate;
 	
 	@Column(name="new_isto_old", length=8, nullable=true)
 	private String newIstoOld;

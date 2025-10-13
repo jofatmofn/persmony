@@ -17,6 +17,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.sakuram.persmony.util.Constants;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
@@ -57,6 +59,9 @@ public class IsinAction {
 	@JoinColumn(name="demat_account_fk", nullable=false)
 	private DomainValue dematAccount;
 	
+	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
+	private Double quantity;
+
 	@ManyToOne
 	@JoinColumn(name="quantity_booking_fk", nullable=false)
 	private DomainValue quantityBooking;
@@ -88,7 +93,10 @@ public class IsinAction {
     @OneToMany(mappedBy="toIsinAction")
     private List<IsinActionMatch> fromIsinActionMatchList;
 
-	public double getQuantity() {
+	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)	// TODO: Delete
+	private Double pricePerUnit;
+	
+	public double getComputedQuantity() {
 	    return Optional.ofNullable(isinActionPartList)
                 .orElse(Collections.emptyList())
                 .stream()
@@ -110,6 +118,30 @@ public class IsinAction {
 		} else {
 			return action.getActionType();
 		}
+	}
+
+	public double getInQuantity() {
+	    return Optional.ofNullable(fromIsinActionMatchList)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(isinActionMatch -> isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_FIFO &&
+                		isinActionMatch.getFromIsinAction().getDematAccount().getId() == this.getDematAccount().getId() ||
+                		isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_OTHERS &&
+                		isinActionMatch.getFromIsinAction().getDematAccount().getId() != this.getDematAccount().getId())	// TODO: There should not be a need for demat based criteria
+                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity())
+                .sum();
+	}
+	
+	public double getOutQuantity() {
+	    return Optional.ofNullable(toIsinActionMatchList)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(isinActionMatch -> isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_FIFO &&
+                		isinActionMatch.getToIsinAction().getDematAccount().getId() == this.getDematAccount().getId() ||
+                		isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_OTHERS &&
+                		isinActionMatch.getToIsinAction().getDematAccount().getId() != this.getDematAccount().getId())	// TODO: There should not be a need for demat based criteria
+                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity())
+                .sum();
 	}
 
 }

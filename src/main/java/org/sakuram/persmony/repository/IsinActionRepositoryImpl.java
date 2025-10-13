@@ -26,14 +26,17 @@ public class IsinActionRepositoryImpl implements IsinActionRepositoryCustom {
 
 		mainQueryStringBuffer.append("SELECT IA.* ");
 		mainQueryStringBuffer.append("FROM isin_action IA ");
-		mainQueryStringBuffer.append("WHERE IA.isin_fk IN ");
+		mainQueryStringBuffer.append("WHERE (LOWER(IA.isin_fk) = '");
+		mainQueryStringBuffer.append(isin.trim().toLowerCase());
+		mainQueryStringBuffer.append("' ");
+		mainQueryStringBuffer.append("OR IA.isin_fk IN ");
 		mainQueryStringBuffer.append("(SELECT I2.isin ");
 		mainQueryStringBuffer.append("FROM isin_action IA1 ");
 		mainQueryStringBuffer.append("JOIN isin I1 ON I1.isin = IA1.isin_fk ");
 		mainQueryStringBuffer.append("JOIN isin I2 ON I2.stock_id = I1.stock_id ");
-		mainQueryStringBuffer.append("WHERE IA1.isin_fk = '");
-		mainQueryStringBuffer.append(isin);
-		mainQueryStringBuffer.append("') ");
+		mainQueryStringBuffer.append("WHERE LOWER(IA1.isin_fk) = '");
+		mainQueryStringBuffer.append(isin.trim().toLowerCase());
+		mainQueryStringBuffer.append("')) ");
 		mainQueryStringBuffer.append("AND IA.settlement_date < '");
 		mainQueryStringBuffer.append(Constants.ANSI_DATE_FORMAT.format(sellDate));
 		mainQueryStringBuffer.append("' ");

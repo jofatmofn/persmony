@@ -42,9 +42,12 @@ public class IsinActionMatch {
 	@JoinColumn(name="to_trade_fk", nullable=true)
 	private Trade toTrade;
 	
-	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
+	@Column(name="quantity", nullable=true, columnDefinition="NUMERIC", precision=11, scale=5)
 	private Double quantity;
 
+	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	private Double pricePerUnit;
+	
 	@ManyToOne
 	@JoinColumn(name="match_reason_fk", nullable=false)
 	private DomainValue matchReason;

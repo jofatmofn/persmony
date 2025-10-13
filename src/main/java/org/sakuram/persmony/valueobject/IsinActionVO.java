@@ -7,11 +7,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder=true)
+@ToString
 public class IsinActionVO {
 	Date settlementDate;
 	String isin;
@@ -24,4 +26,5 @@ public class IsinActionVO {
 	Double ppuBalance;
 	String bookingType;
 	String dematAccount;
+	boolean isInternal;
 }

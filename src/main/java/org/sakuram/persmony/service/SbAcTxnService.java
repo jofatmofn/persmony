@@ -106,7 +106,7 @@ public class SbAcTxnService {
 						reference = cellContentList.get(4);
 					}
 					narration = cellContentList.get(5);
-					if (cellContentList.get(6).equals("0.0")) {
+					if (Double.parseDouble(cellContentList.get(6)) == 0D) {
 						amount = Double.parseDouble(cellContentList.get(7));
 						bookingDvId = Constants.DVID_BOOKING_CREDIT;
 					} else {
