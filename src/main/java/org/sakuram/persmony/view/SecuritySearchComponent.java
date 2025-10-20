@@ -12,6 +12,7 @@ import org.sakuram.persmony.valueobject.IsinVO;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -29,16 +30,21 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter(AccessLevel.NONE)
-public class SecuritySearchComponent {
-	HorizontalLayout layout;
-	TextField isinTextField;
+public class SecuritySearchComponent extends CustomField<String> {
+	private static final long serialVersionUID = 1L;
+	
+	private HorizontalLayout layout;
+	private TextField isinTextField;
+	@Getter(AccessLevel.NONE)
+	private Button searchButton;
 	
 	public SecuritySearchComponent(DebtEquityMutualService debtEquityMutualService, MiscService miscService) {
-		Button searchButton;
 		
 		layout = new HorizontalLayout();
-		isinTextField = new TextField("ISIN");
+		isinTextField = new TextField();
 		layout.add(isinTextField);
+		isinTextField.addValueChangeListener(e -> setModelValue(e.getValue(), true));
+		
 		searchButton = new Button("Search");
 		layout.add(searchButton);
 		searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -183,5 +189,21 @@ public class SecuritySearchComponent {
 			}
 				
 		});
+	}
+
+	@Override
+	protected String generateModelValue() {
+		return isinTextField.getValue();
+	}
+
+	@Override
+	protected void setPresentationValue(String newPresentationValue) {
+		isinTextField.setValue(newPresentationValue == null ? "" : newPresentationValue);
+	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		isinTextField.setEnabled(enabled);
+		searchButton.setEnabled(enabled);
 	}
 }

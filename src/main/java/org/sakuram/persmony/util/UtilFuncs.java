@@ -7,8 +7,11 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -277,6 +280,28 @@ public class UtilFuncs {
 		return (value != null || operator != null && (operator.equals(FieldSpecVO.TxtOperator.EQ.name()) || operator.equals(FieldSpecVO.TxtOperator.NE.name())));
 	}
 	
+    @SafeVarargs
+    public static <T> Iterable<T> combine(List<T>... lists) {
+        return () -> new Iterator<T>() {
+            int index = 0;
+            Iterator<T> current = lists.length > 0 ? lists[0].iterator() : Collections.emptyIterator();
+
+            @Override
+            public boolean hasNext() {
+                while (!current.hasNext() && index < lists.length - 1) {
+                    current = lists[++index].iterator();
+                }
+                return current.hasNext();
+            }
+
+            @Override
+            public T next() {
+                if (!hasNext()) throw new NoSuchElementException();
+                return current.next();
+            }
+        };
+    }
+    
     public static void main(String[] args){
     	for (ScheduleVO scheduleVO : parseScheduleData("[2022-2022] [3] [31] 725.00,[2030, 2031] [3] [31] 600.00")) {
     		System.out.print(scheduleVO.getDueDate());

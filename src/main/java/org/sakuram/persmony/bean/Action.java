@@ -39,8 +39,14 @@ public class Action {
 	@Column(name="record_date", nullable=true)	// TODO: Nullable false
 	private Date recordDate;
 	
-	@Column(name="new_isto_old", length=8, nullable=true)
+	@Column(name="new_isto_old", length=8, nullable=true)	// TODO: Delete
 	private String newIstoOld;
+
+	@Column(name="new_shares_per_old", nullable=true)
+	private Short newSharesPerOld;
+	
+	@Column(name="old_shares_base", nullable=true)
+	private Short oldSharesBase;
 	
 	@Column(name="fractional_entitlement_cash", nullable=true, columnDefinition="NUMERIC", precision=8, scale=3)
 	private Double fractionalEntitlementCash;

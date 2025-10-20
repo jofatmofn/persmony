@@ -102,6 +102,7 @@ public class Constants {
 	public static final long DVID_ISIN_ACTION_TYPE_GIFT_OR_TRANSFER = 323;
 
 	public static final long ACTION_ID_GIFT_OR_TRANSFER = 5;
+	public static final String ACTION_TYPE_GIFT_OR_TRANSFER_ENTRY_SPEC_NAME_RECEIVE = "Receive";
 	
 	public static final int FLAG_POSITION_ACCOUNT_TYPE = 0;
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;
@@ -229,22 +230,48 @@ public class Constants {
 		}
 	};
 
-	public static final Map<Long, List<IsinActionSpecVO>> ISIN_ACTION_SPEC_MAP = new HashMap<Long, List<IsinActionSpecVO>>() {
+	/* public static final Map<Long, IsinActionSpecVO> ISIN_ACTION_SPEC_MAP = new HashMap<Long, IsinActionSpecVO>() {
 		private static final long serialVersionUID = 1L;
 
 		{
-			put(322L, Arrays.asList(new IsinActionSpecVO[] {
-					new IsinActionSpecVO("Sell", DVID_BOOKING_DEBIT, FlaggedEnum.fromFlag(IsinActionSpecVO.IAQuantityType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionSpecVO.IAFifoMappingType.class, "USER_CHOICE"), FlaggedEnum.fromFlag(IsinActionSpecVO.IALotCreationType.class, "TRADE")),
+			put(322L, new IsinActionSpecVO(Arrays.asList(new IsinActionEntrySpecVO[] {	// Sell
+					new IsinActionEntrySpecVO("Sell", DVID_BOOKING_DEBIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "RECORD_DATE"), false, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "NULL"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "USER_CHOICE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "TRADE")),
 					}
-			));
-			put(323L, Arrays.asList(new IsinActionSpecVO[] {
-					new IsinActionSpecVO("Sender", DVID_BOOKING_DEBIT, FlaggedEnum.fromFlag(IsinActionSpecVO.IAQuantityType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionSpecVO.IAFifoMappingType.class, "USER_CHOICE"), FlaggedEnum.fromFlag(IsinActionSpecVO.IALotCreationType.class, "NEW_DATE_WITH_NULL_PRICE")),
-					new IsinActionSpecVO("Receiver", DVID_BOOKING_CREDIT, FlaggedEnum.fromFlag(IsinActionSpecVO.IAQuantityType.class, "PREVIOUS_INPUT"), FlaggedEnum.fromFlag(IsinActionSpecVO.IAFifoMappingType.class, "NOT_APPLICABLE"), FlaggedEnum.fromFlag(IsinActionSpecVO.IALotCreationType.class, "PROPAGATION")),
+			)));
+			put(323L, new IsinActionSpecVO(Arrays.asList(new IsinActionEntrySpecVO[] {	// Gift / Transfer
+					new IsinActionEntrySpecVO("Sender", DVID_BOOKING_DEBIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "RECORD_DATE"), false, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "NULL"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "USER_CHOICE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "NEW_DATE_WITH_NULL_PRICE")),
+					new IsinActionEntrySpecVO("Receiver", DVID_BOOKING_CREDIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "RECORD_DATE"), false, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "PREVIOUS_INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "NULL"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "NOT_APPLICABLE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "PROPAGATION")),
 					}
-			));
+			)));
+			put(324L, new IsinActionSpecVO(Arrays.asList(new IsinActionEntrySpecVO[] {	// Bonus Issue
+					new IsinActionEntrySpecVO("Bonus", DVID_BOOKING_CREDIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "OTHER_DATE"), true, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "ZERO"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "NOT_APPLICABLE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "PROPAGATION_WITH_ZERO_PRICE")),
+					}
+			)));
+			put(325L, new IsinActionSpecVO(Arrays.asList(new IsinActionEntrySpecVO[] {	// IPO
+					new IsinActionEntrySpecVO("IPO", DVID_BOOKING_CREDIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "RECORD_DATE"), false, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "NOT_APPLICABLE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "NEW_DATE_AND_PRICE")),
+					}
+			)));
+			put(326L, new IsinActionSpecVO(Arrays.asList(new IsinActionEntrySpecVO[] {	// Buy
+					new IsinActionEntrySpecVO("Buy", DVID_BOOKING_CREDIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "RECORD_DATE"), false, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "NOT_APPLICABLE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "TRADE")),
+					}
+			)));
+			put(327L, new IsinActionSpecVO(Arrays.asList(new IsinActionEntrySpecVO[] {	// Stock Split
+					new IsinActionEntrySpecVO("Split Out", DVID_BOOKING_DEBIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "OTHER_DATE"), false, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "FULL_BALANCE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "NULL"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "NOT_APPLICABLE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "NEW_DATE_AND_PRICE")),
+					new IsinActionEntrySpecVO("Split In", DVID_BOOKING_CREDIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "OTHER_DATE"), true, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "NULL"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "USER_CHOICE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "NEW_DATE_AND_PRICE")),
+					}
+			)));
+			put(329L, new IsinActionSpecVO(Arrays.asList(new IsinActionEntrySpecVO[] {	// Buyback
+					new IsinActionEntrySpecVO("Buyback", DVID_BOOKING_DEBIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "OTHER_DATE"), true, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "USER_CHOICE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "NEW_DATE_AND_PRICE")),
+					}
+			)));
+			put(335L, new IsinActionSpecVO(Arrays.asList(new IsinActionEntrySpecVO[] {	// Rights Issue
+					new IsinActionEntrySpecVO("Rights Issue", DVID_BOOKING_CREDIT, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinInputType.class, "ENTITLED_ISIN"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateInputType.class, "OTHER_DATE"), true, FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceInputType.class, "INPUT"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, "NOT_APPLICABLE"), FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, "NEW_DATE_AND_PRICE")),
+					}
+			)));
 		}
-	};
+	}; */
 
 	public static Map<Long, DomainValue> domainValueCache;
 	public static Map<String, List<Long>> categoryDvIdCache;
+	public static final Map<Long, IsinActionSpecVO> ISIN_ACTION_SPEC_MAP = new HashMap<Long, IsinActionSpecVO>();
 }

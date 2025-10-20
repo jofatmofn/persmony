@@ -1,11 +1,20 @@
 package org.sakuram.persmony.service;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.LongStream;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.InvestmentTransaction;
@@ -15,12 +24,15 @@ import org.sakuram.persmony.repository.InvestmentTransactionRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.DomainValueFlags;
+import org.sakuram.persmony.util.FlaggedEnum;
 import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
 import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
 import org.sakuram.persmony.valueobject.DvFlagsSbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestmentTransaction2VO;
+import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
+import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,6 +65,54 @@ public class MiscService {
     		}
     		categoryDvIdList.add(domainValue.getId());
     	}
+    	
+    	try (CSVParser csvParser = new CSVParser(new BufferedReader(new InputStreamReader(new FileInputStream(new File(getClass().getClassLoader().getResource("IA Spec.csv").toURI())), "UTF-8")), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+    		for (CSVRecord csvRecord : csvParser.getRecords()) {
+    	    	List<String> cellContentList;
+    	    	Long actionTypeDvId;
+    	    	List<IsinActionEntrySpecVO> isinActionEntrySpecVOList;
+    	    	IsinActionEntrySpecVO isinActionEntrySpecVO;
+    	    	int col;
+    	    	
+    	    	cellContentList = new ArrayList<String>();
+    			csvRecord.iterator().forEachRemaining(cellContentList::add);
+    			cellContentList.replaceAll(String::trim);
+    			actionTypeDvId = Long.valueOf(cellContentList.get(0));
+    			if (Constants.ISIN_ACTION_SPEC_MAP.containsKey(actionTypeDvId)) {
+    				isinActionEntrySpecVOList = Constants.ISIN_ACTION_SPEC_MAP.get(actionTypeDvId).getIsinActionEntrySpecVOList();
+    			} else {
+    				isinActionEntrySpecVOList = new ArrayList<IsinActionEntrySpecVO>();
+    				Constants.ISIN_ACTION_SPEC_MAP.put(actionTypeDvId, new IsinActionSpecVO(isinActionEntrySpecVOList));
+    			}
+    			col = 0;
+    			isinActionEntrySpecVO = new IsinActionEntrySpecVO(
+    					Long.valueOf(cellContentList.get(col++)),
+    					cellContentList.get(col++),
+    					Long.valueOf(cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinType.class, cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateType.class, cellContentList.get(col++)),
+    					Boolean.valueOf(cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityType.class, cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceType.class, cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotDateType.class, cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotQuantityType.class, cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotPriceType.class, cellContentList.get(col++))
+    					);
+    			isinActionEntrySpecVOList.add(isinActionEntrySpecVO);
+    			/* for (String cellContent: cellContentList) {
+    				System.out.print("<<" + cellContent + ">>");
+    			} */
+    		}
+    		
+    	}
+    	catch(IOException e) {
+    		throw new AppException("Error handling IA Spec CSV", e);
+    	} catch (URISyntaxException e1) {
+    		throw new AppException("Incorrect setup for IA Spec CSV", e1);
+		}
+
     }
     
     public List<IdValueVO> fetchDvsOfCategory(String category) {
