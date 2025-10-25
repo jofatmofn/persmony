@@ -17,7 +17,7 @@ public class RealIsinActionEntryVO {
 	Date settlementDate;
 	String isin;
 	Double quantity;
-	IdValueVO bookingType;
+	IdValueVO dematAccount;
 	Double pricePerUnit;
 	Short newSharesPerOld;
 	Short oldSharesBase;

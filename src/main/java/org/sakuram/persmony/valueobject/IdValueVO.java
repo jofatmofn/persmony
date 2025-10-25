@@ -7,9 +7,11 @@ import org.sakuram.persmony.bean.DomainValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter @Setter
 @AllArgsConstructor
+@ToString
 public class IdValueVO {
 	Long id;
 	String value;

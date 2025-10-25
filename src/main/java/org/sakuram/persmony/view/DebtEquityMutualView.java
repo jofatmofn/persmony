@@ -203,7 +203,7 @@ public class DebtEquityMutualView extends Div {
 				isinActionVOList = debtEquityMutualService.determineBalancesMultiple(securitySearchComponent.getIsinTextField().getValue(), new java.sql.Date(new java.util.Date().getTime()), null, true);
 				Notification.show("No. of ISIN Actions with Balances: " + isinActionVOList.size())
 					.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-				isinActionsGrid.setColumns("settlementDate", "isin", "securityName", "isinActionId", "tradeId", "actionType", "bookingType.value", "dematAccount", "balance", "ppuBalance");
+				isinActionsGrid.setColumns("settlementDate", "isin", "securityName", "isinActionId", "tradeId", "actionType", "bookingType.value", "dematAccount", "balance");
 				for (Column<IsinActionVO> column : isinActionsGrid.getColumns()) {
 					column.setResizable(true);
 				}
@@ -257,7 +257,7 @@ public class DebtEquityMutualView extends Div {
         	if (Constants.ISIN_ACTION_SPEC_MAP.containsKey(actionDvSelect.getValue().getId())) {
         		IsinActionSpecVO LocalIsinActionSpecVO = Constants.ISIN_ACTION_SPEC_MAP.get(actionDvSelect.getValue().getId());
         		isinActionSpecVO.getIsinActionEntrySpecVOList().addAll(LocalIsinActionSpecVO.getIsinActionEntrySpecVOList());
-				if (securitySearchComponent.getIsinTextField() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
+				if (securitySearchComponent.getIsinTextField().getValue() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
 						dematAccountDvSelect.getValue() != null &&
 						recordDateDatePicker.getValue() != null) {
 					isinActionCreateVO.setActionType(actionDvSelect.getValue());
@@ -271,7 +271,8 @@ public class DebtEquityMutualView extends Div {
         
 		ValueChangeListener<ValueChangeEvent<?>> fetchFifoMappingLogic = e -> {
 			fifoIAVOList.clear();
-			if (securitySearchComponent.getIsinTextField() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
+			System.out.println("fetchFifoMappingLogic TRIGGERED");
+			if (securitySearchComponent.getIsinTextField().getValue() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
 					dematAccountDvSelect.getValue() != null &&
 					recordDateDatePicker.getValue() != null) {
 				fifoIAVOList.addAll(debtEquityMutualService.determineBalancesMultiple(securitySearchComponent.getIsinTextField().getValue(), Date.valueOf(recordDateDatePicker.getValue()), dematAccountDvSelect.getValue().getId(), false));
@@ -412,8 +413,8 @@ public class DebtEquityMutualView extends Div {
 				// Validations
 				// ISIN should be present in the DB
 				// FIFO sum, trades sum should match with ISIN quantity
-				// debtEquityMutualService.createIsinActions(isinActionCreateVO);
 				System.out.println(isinActionCreateVO);
+				debtEquityMutualService.createIsinActions(isinActionCreateVO);
 				Notification.show("ISIN Actions created successfully.")
 					.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 			} catch (Exception e) {

@@ -24,5 +24,4 @@ public class IsinActionCreateVO {
 	List<TradeVO> tradeVOList;
 	List<AccountingIsinActionEntryVO> accountingIAEVOList;
 	
-	IdValueVO toDematAccount;
 }

@@ -14,8 +14,11 @@ import org.springframework.context.annotation.Scope;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 
@@ -27,102 +30,152 @@ import lombok.Getter;
 public class RealIsinActionEntryEditor extends FormLayout {
 	private static final long serialVersionUID = 1L;
 	
-	NumberField quantity, pricePerUnit;
-	DatePicker settlementDate;
+	NumberField quantityNumberField, pricePerUnitNumberField;
+	DatePicker settlementDateDatePicker;
 	SecuritySearchComponent securitySearchComponent;
-	RatioComponent ratioComponent;
-	Select<IdValueVO> toDematAccount;
+	IntegerField newSharesPerOldIntegerField, oldSharesBaseIntegerField;
+	Select<IdValueVO> dematAccountSelect;
+	TextField bookingTextField;
 
 	RealIsinActionEntryVO realIsinActionEntryVO;
 	
 	private final Binder<RealIsinActionEntryVO> binder = new Binder<>(RealIsinActionEntryVO.class);
 
-	public RealIsinActionEntryEditor(RealIsinActionEntryVO realisinActionEntryVO, InputArgs inputArgs) {
+	public RealIsinActionEntryEditor(RealIsinActionEntryVO realIsinActionEntryVO, InputArgs inputArgs) {
+		HorizontalLayout hLayout;
 		
 		setResponsiveSteps(new ResponsiveStep("0", 1));
-		this.realIsinActionEntryVO = realisinActionEntryVO;
+		this.realIsinActionEntryVO = realIsinActionEntryVO;
 		
-		IsinActionEntrySpecVO isinActionEntrySpecVO = realisinActionEntryVO.getIsinActionEntrySpecVO();
+		IsinActionEntrySpecVO isinActionEntrySpecVO = realIsinActionEntryVO.getIsinActionEntrySpecVO();
 		add(ViewFuncs.newHorizontalLine());
-		addFormItem(new Label(realisinActionEntryVO.getIsinActionEntrySpecVO().getEntrySpecName()), "Real Entry");
-		addFormItem(new Label((realisinActionEntryVO.getIsinActionEntrySpecVO().getBookingTypeDvId() == Constants.DVID_BOOKING_DEBIT ? "Debit" : "Credit")), "Booking");
+		addFormItem(new Label(realIsinActionEntryVO.getIsinActionEntrySpecVO().getEntrySpecName()), "Real Entry");
 		
-		settlementDate = new DatePicker();
-		ratioComponent = new RatioComponent();
-		quantity = new NumberField();
-		pricePerUnit = new NumberField();
-	    toDematAccount = ViewFuncs.newDvSelect(inputArgs.getMiscService().fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), null, false, false);
+		bookingTextField = new TextField();
+		settlementDateDatePicker = new DatePicker();
+		securitySearchComponent = new SecuritySearchComponent(inputArgs.getDebtEquityMutualService(), inputArgs.getMiscService());
+		newSharesPerOldIntegerField = new IntegerField();
+		oldSharesBaseIntegerField = new IntegerField();
+		quantityNumberField = new NumberField();
+		pricePerUnitNumberField = new NumberField();
+	    dematAccountSelect = ViewFuncs.newDvSelect(inputArgs.getMiscService().fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), null, false, false);
 	    
-		binder.forField(settlementDate)
-	    	.withConverter(
-		        localDate -> (localDate == null ? null : java.sql.Date.valueOf(localDate)), // convert to bean type
-		        sqlDate -> (sqlDate == null ? null : sqlDate.toLocalDate())                 // convert to field type
-		    )
-		    .bind("settlementDate");
-		binder.forField(securitySearchComponent)
-		binder.bindInstanceFields(this);
-		binder.setBean(realisinActionEntryVO);
-		
-		addFormItem(settlementDate, "Settlement Date");
-		if (realisinActionEntryVO.getIsinActionEntrySpecVO().getSettlementDateInputType() == IsinActionEntrySpecVO.IASettlementDateType.OTHER_DATE) {
-			settlementDate.setEnabled(true);
+	    addFormItem(bookingTextField, "Booking");
+	    bookingTextField.setEnabled(false);
+	    
+		addFormItem(settlementDateDatePicker, "Settlement Date");
+		if (realIsinActionEntryVO.getIsinActionEntrySpecVO().getSettlementDateInputType() == IsinActionEntrySpecVO.IASettlementDateType.OTHER_DATE) {
+			settlementDateDatePicker.setEnabled(true);
 		} else {
-			settlementDate.setEnabled(false);
-			// settlementDate.setValue(inputArgs.getRecordDate().toLocalDate());
-			realisinActionEntryVO.setSettlementDate(inputArgs.getRecordDate());
+			settlementDateDatePicker.setEnabled(false);
+			realIsinActionEntryVO.setSettlementDate(inputArgs.getRecordDate());
 		}
 		
-		securitySearchComponent = new SecuritySearchComponent(inputArgs.getDebtEquityMutualService(), inputArgs.getMiscService());
 		addFormItem(securitySearchComponent.getLayout(), "ISIN");
 		if (isinActionEntrySpecVO.getIsinInputType() == IsinActionEntrySpecVO.IAIsinType.OTHER_ISIN) {
 			securitySearchComponent.setEnabled(true);
 		} else {
 			securitySearchComponent.setEnabled(false);
-			// securitySearchComponent.getIsinTextField().setValue(inputArgs.getEntitledIsin());
-			realisinActionEntryVO.setIsin(inputArgs.getEntitledIsin());
+			realIsinActionEntryVO.setIsin(inputArgs.getEntitledIsin());
 		}
 
-		addFormItem(ratioComponent.getLayout(), "Ratio (New:Old)");
-		if (isinActionEntrySpecVO.isFactorOfExistingQuantity()) {
-			ratioComponent.setEnabled(true);
-		} else {
-			ratioComponent.setEnabled(false);
-		}
+		newSharesPerOldIntegerField.setMin(1);
+		newSharesPerOldIntegerField.setMax(100);
+		newSharesPerOldIntegerField.setEnabled(isinActionEntrySpecVO.isFactorOfExistingQuantity());
+		oldSharesBaseIntegerField.setMin(1);
+		oldSharesBaseIntegerField.setMax(100);
+		oldSharesBaseIntegerField.setEnabled(isinActionEntrySpecVO.isFactorOfExistingQuantity());
+		hLayout = new HorizontalLayout();
+		hLayout.add(newSharesPerOldIntegerField, new Label(":"), oldSharesBaseIntegerField);
+		addFormItem(hLayout, "Ratio (New:Old)");
 		
-		addFormItem(quantity, "Quantity");
-		quantity.setEnabled(false);
-		quantity.addValueChangeListener(event -> {
-			inputArgs.getQuantityAR().set(quantity.getValue());
+		addFormItem(quantityNumberField, "Quantity");
+		quantityNumberField.setEnabled(false);
+		quantityNumberField.addValueChangeListener(event -> {
+			inputArgs.getQuantityAR().set(quantityNumberField.getValue());
 		});
 		switch(isinActionEntrySpecVO.getQuantityInputType()) {
 		case INPUT:
-			quantity.setEnabled(true);
+			quantityNumberField.setEnabled(true);
 			break;
 		case BALANCE:
-			quantity.setValue(inputArgs.getBalance());
+			realIsinActionEntryVO.setQuantity(inputArgs.getBalance());
 			break;
 		case PREVIOUS_INPUT:
-			quantity.setValue(inputArgs.getQuantityAR().get());
+			realIsinActionEntryVO.setQuantity(inputArgs.getQuantityAR().get());
 			break;
 		case ZERO:
-			quantity.setValue(0D);
+			realIsinActionEntryVO.setQuantity(0D);
 			break;
 		}
 		
-		addFormItem(pricePerUnit, "Price Per Unit");
-		if (isinActionEntrySpecVO.getPriceInputType() == IsinActionEntrySpecVO.IAPriceType.INPUT) {
-			pricePerUnit.setEnabled(true);
-		} else {
-			pricePerUnit.setEnabled(false);
+		addFormItem(pricePerUnitNumberField, "Price Per Unit");
+		pricePerUnitNumberField.setEnabled(false);
+		switch(isinActionEntrySpecVO.getPriceInputType()) {
+		case INPUT:
+			pricePerUnitNumberField.setEnabled(true);
+			break;
+		case NULL:
+		case FACTOR:
+			realIsinActionEntryVO.setPricePerUnit(null);
+			break;
+		case ZERO:
+			realIsinActionEntryVO.setPricePerUnit(0D);
+			break;
 		}
 		
-	    toDematAccount.setValue(inputArgs.getDematAccount());
+		realIsinActionEntryVO.setDematAccount(inputArgs.getDematAccount());
+		dematAccountSelect.setEnabled(false);
+        addFormItem(dematAccountSelect, "Demat Account");
 	    // Beware: Special Logic outside configuration
 	    if (isinActionEntrySpecVO.getActionDvId() == Constants.DVID_ISIN_ACTION_TYPE_GIFT_OR_TRANSFER &&
 	    		isinActionEntrySpecVO.getEntrySpecName().equals(Constants.ACTION_TYPE_GIFT_OR_TRANSFER_ENTRY_SPEC_NAME_RECEIVE)) {
-	        addFormItem(toDematAccount, "To Demat Account");
+			dematAccountSelect.setEnabled(true);
 	    }
 	    
+		binder.forField(bookingTextField)
+		    .withConverter(
+		        fieldValue -> null,
+		        beanValue -> (beanValue != null && (Long) beanValue == Constants.DVID_BOOKING_DEBIT ? "Debit" : "Credit")
+		    )
+		    .bind(
+		        bean -> bean.getIsinActionEntrySpecVO().getBookingTypeDvId(),
+		        (bean, fieldVal) -> {}
+		    );
+		binder.forField(settlementDateDatePicker)
+	    	.withConverter(
+		        fieldValue -> (fieldValue == null ? null : java.sql.Date.valueOf(fieldValue)),
+		        beanValue -> (beanValue == null ? null : beanValue.toLocalDate())
+		    )
+		    .bind("settlementDate");
+		binder.forField(securitySearchComponent)
+	    	.withConverter(
+	    			fieldValue -> fieldValue == null ? null : fieldValue.toUpperCase(),
+	    			beanValue -> beanValue
+		    )
+			.bind("isin");
+		binder.forField(newSharesPerOldIntegerField)
+	    	.withConverter(
+	    			fieldValue -> fieldValue == null ? null : fieldValue.shortValue(),
+	    			beanValue -> beanValue == null ? null : (int)beanValue
+		    )
+		    .bind("newSharesPerOld");
+		binder.forField(oldSharesBaseIntegerField)
+	    	.withConverter(
+	    			fieldValue -> fieldValue == null ? null : fieldValue.shortValue(),
+	    			beanValue -> beanValue == null ? null : (int)beanValue
+		    )
+		    .bind("oldSharesBase");
+		binder.forField(quantityNumberField)	// Such binder.forField for individual fields can be avoided by naming the bean property and UI field the same
+			.bind("quantity");
+		binder.forField(pricePerUnitNumberField)
+			.bind("pricePerUnit");
+		binder.forField(dematAccountSelect)
+			.bind("dematAccount");
+	
+		// binder.bindInstanceFields(this);
+		binder.setBean(realIsinActionEntryVO);
+		
 	}
 	
     /* public void setRealIsinActionEntryVO(RealIsinActionEntryVO isinActionEntryVO) {

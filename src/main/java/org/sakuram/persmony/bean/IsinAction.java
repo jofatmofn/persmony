@@ -14,6 +14,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -59,7 +60,7 @@ public class IsinAction {
 	@JoinColumn(name="demat_account_fk", nullable=false)
 	private DomainValue dematAccount;
 	
-	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
+	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)	// TODO: Delete
 	private Double quantity;
 
 	@ManyToOne
@@ -83,6 +84,7 @@ public class IsinAction {
 	
 	@JsonIgnore
 	@OneToMany(mappedBy="isinAction", cascade=CascadeType.ALL)
+	@OrderBy("acquisitionDate")
 	private List<IsinActionPart> isinActionPartList;
 
 	@JsonIgnore

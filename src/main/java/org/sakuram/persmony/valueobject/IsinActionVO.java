@@ -23,9 +23,9 @@ public class IsinActionVO {
 	String actionType;
 	Double transactionQuantity;
 	Double balance;
-	Double ppuBalance;
+	Date acquisitionDate;
 	Double pricePerUnit;
 	IdValueVO bookingType;
-	String dematAccount;
+	IdValueVO dematAccount;
 	boolean isInternal;
 }

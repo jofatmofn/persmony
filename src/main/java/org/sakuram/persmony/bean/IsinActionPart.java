@@ -2,6 +2,7 @@ package org.sakuram.persmony.bean;
 
 import java.sql.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,8 +10,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +36,7 @@ public class IsinActionPart {
 	@JoinColumn(name="isin_action_fk", nullable=false)
 	private IsinAction isinAction;
 	
-	@Column(name="acquisition_date", nullable=true)	// TODO: nullable=false
+	@Column(name="acquisition_date", nullable=false)
 	private Date acquisitionDate;
 	
 	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
@@ -41,4 +45,8 @@ public class IsinActionPart {
 	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private Double pricePerUnit;
 	
+	@JsonIgnore
+	@OneToOne(mappedBy="isinActionPart", cascade=CascadeType.ALL)
+	private Trade trade;
+
 }

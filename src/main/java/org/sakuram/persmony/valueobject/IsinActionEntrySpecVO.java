@@ -5,9 +5,11 @@ import org.sakuram.persmony.util.FlaggedEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter @Setter
 @AllArgsConstructor
+@ToString
 public class IsinActionEntrySpecVO {
 	// TODO Replace all ENUMs with BOOLEAN when there are just two values
 

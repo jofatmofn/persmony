@@ -7,7 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -27,7 +27,7 @@ public class Trade {
 	@Column(name="id", nullable=false)
 	private long id;
 
-	@ManyToOne
+	@OneToOne
 	@JoinColumn(name="isin_action_part_fk", nullable=false)
 	private IsinActionPart isinActionPart;
 	
