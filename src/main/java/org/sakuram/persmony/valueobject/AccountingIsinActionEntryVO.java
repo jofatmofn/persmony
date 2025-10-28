@@ -17,4 +17,12 @@ public class AccountingIsinActionEntryVO {
 	String isin;
 	Double transactionQuantity;
 	IdValueVO bookingType;
+	
+	// For cloning during .addAll to beforeChange backup list
+	public AccountingIsinActionEntryVO(AccountingIsinActionEntryVO accountingIsinActionEntryVO) {
+		this.settlementDate = accountingIsinActionEntryVO.settlementDate;
+		this.isin = accountingIsinActionEntryVO.isin;
+		this.transactionQuantity = accountingIsinActionEntryVO.transactionQuantity;
+		this.bookingType = accountingIsinActionEntryVO.bookingType;
+	}
 }

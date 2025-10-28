@@ -91,9 +91,9 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		
 		addFormItem(quantityNumberField, "Quantity");
 		quantityNumberField.setEnabled(false);
-		quantityNumberField.addValueChangeListener(event -> {
+		/* quantityNumberField.addValueChangeListener(event -> {
 			inputArgs.getQuantityAR().set(quantityNumberField.getValue());
-		});
+		}); */
 		switch(isinActionEntrySpecVO.getQuantityInputType()) {
 		case INPUT:
 			quantityNumberField.setEnabled(true);
@@ -102,7 +102,6 @@ public class RealIsinActionEntryEditor extends FormLayout {
 			realIsinActionEntryVO.setQuantity(inputArgs.getBalance());
 			break;
 		case PREVIOUS_INPUT:
-			realIsinActionEntryVO.setQuantity(inputArgs.getQuantityAR().get());
 			break;
 		case ZERO:
 			realIsinActionEntryVO.setQuantity(0D);
@@ -113,7 +112,9 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		pricePerUnitNumberField.setEnabled(false);
 		switch(isinActionEntrySpecVO.getPriceInputType()) {
 		case INPUT:
-			pricePerUnitNumberField.setEnabled(true);
+			if (!inputArgs.isTradeApplicable) {
+				pricePerUnitNumberField.setEnabled(true);
+			}
 			break;
 		case NULL:
 		case FACTOR:
@@ -194,6 +195,18 @@ public class RealIsinActionEntryEditor extends FormLayout {
         binder.writeBeanIfValid(isinActionEntryVO);
     }
 
+    public Double getQuantity() {
+    	return quantityNumberField.getValue();
+    }
+    
+    public NumberField getQuantityNumberField() {
+    	return quantityNumberField;
+    }
+    
+    public void setQuantityNumberField(Double quantity) {
+    	quantityNumberField.setValue(quantity);
+    }
+    
     @Getter
 	@AllArgsConstructor
     public static class InputArgs {
@@ -202,6 +215,7 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		Date recordDate;
 		AtomicReference<Double> quantityAR;
 		Double balance;
+		boolean isTradeApplicable;
 		DebtEquityMutualService debtEquityMutualService;
 		MiscService miscService;
 	}

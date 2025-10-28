@@ -1,0 +1,34 @@
+package org.sakuram.persmony.valueobject;
+
+import java.sql.Date;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder(toBuilder=true)
+@ToString
+public class LotVO {
+	IsinActionVO isinActionVO;
+	Long tradeId;
+	Double transactionQuantity;
+	Double balance;
+	Date acquisitionDate;
+	Double pricePerUnit;
+	
+	// For cloning during .addAll to beforeChange backup list
+	public LotVO(LotVO lotVO) {
+		this.isinActionVO = lotVO.isinActionVO; // This is still a reference, not a copy. As isinActionVO is read-only, this is fine.
+		this.tradeId = lotVO.tradeId;
+		this.transactionQuantity = lotVO.transactionQuantity;
+		this.balance = lotVO.balance;
+		this.acquisitionDate = lotVO.acquisitionDate;
+		this.pricePerUnit = lotVO.pricePerUnit;
+	}
+}

@@ -17,7 +17,7 @@ import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.IsinActionCreateVO;
 import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
-import org.sakuram.persmony.valueobject.IsinActionVO;
+import org.sakuram.persmony.valueobject.LotVO;
 import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.TradeVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +29,7 @@ import com.vaadin.flow.component.HasValue.ValueChangeEvent;
 import com.vaadin.flow.component.HasValue.ValueChangeListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -130,7 +131,7 @@ public class DebtEquityMutualView extends Div {
 	private void handleSearchSecurity(FormLayout formLayout) {
 		HorizontalLayout hLayout;
 		Button historyButton, balancesButton;
-		Grid<IsinActionVO> isinActionsGrid;
+		Grid<LotVO> lotsGrid;
 		SecuritySearchComponent securitySearchComponent;
 		
 		securitySearchComponent = new SecuritySearchComponent(debtEquityMutualService, miscService);
@@ -148,8 +149,8 @@ public class DebtEquityMutualView extends Div {
 		balancesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		balancesButton.setDisableOnClick(true);
 		
-		isinActionsGrid = new Grid<>(IsinActionVO.class);
-		formLayout.add(isinActionsGrid);
+		lotsGrid = new Grid<>(LotVO.class);
+		formLayout.add(lotsGrid);
 		
 		historyButton.addClickListener(event -> {
 			try {
@@ -169,17 +170,17 @@ public class DebtEquityMutualView extends Div {
 		        dematAccountDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), "Demat Account", true, false);
 
 		        proceedButton = new Button("Proceed", e -> {
-					List<IsinActionVO> isinActionVOList = null;
+					List<LotVO> lotVOList = null;
 					
 		            dialog.close();
-					isinActionVOList = debtEquityMutualService.fetchIsinActions(securitySearchComponent.getIsinTextField().getValue(), new java.sql.Date(new java.util.Date().getTime()), dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, true);
-					Notification.show("No. of ISIN Actions fetched: " + isinActionVOList.size())
+					lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), new java.sql.Date(new java.util.Date().getTime()), dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "S");
+					Notification.show("No. of Lots fetched: " + lotVOList.size())
 						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-					isinActionsGrid.setColumns("internal", "settlementDate", "isin", "securityName", "isinActionId", "tradeId", "actionType", "bookingType.value", "dematAccount", "transactionQuantity");
-					for (Column<IsinActionVO> column : isinActionsGrid.getColumns()) {
+					lotsGrid.setColumns("isinActionVO.internal", "isinActionVO.settlementDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "tradeId", "isinActionVO.actionType.value", "isinActionVO.bookingType.value", "isinActionVO.dematAccount.value", "transactionQuantity");
+					for (Column<LotVO> column : lotsGrid.getColumns()) {
 						column.setResizable(true);
 					}
-					isinActionsGrid.setItems(isinActionVOList);
+					lotsGrid.setItems(lotVOList);
 		        });
 
 		        dialog.add(new VerticalLayout(dematAccountDvSelect, proceedButton));
@@ -195,19 +196,43 @@ public class DebtEquityMutualView extends Div {
 		});
 		balancesButton.addClickListener(event -> {
 			try {
-				List<IsinActionVO> isinActionVOList = null;
-				
+		        Dialog dialog;
+				Select<IdValueVO> dematAccountDvSelect;
+				Button proceedButton;
+		        
 				if (securitySearchComponent.getIsinTextField() == null || securitySearchComponent.getIsinTextField().isEmpty()) {
 					return;
 				}
-				isinActionVOList = debtEquityMutualService.determineBalancesMultiple(securitySearchComponent.getIsinTextField().getValue(), new java.sql.Date(new java.util.Date().getTime()), null, true);
-				Notification.show("No. of ISIN Actions with Balances: " + isinActionVOList.size())
-					.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-				isinActionsGrid.setColumns("settlementDate", "isin", "securityName", "isinActionId", "tradeId", "actionType", "bookingType.value", "dematAccount", "balance");
-				for (Column<IsinActionVO> column : isinActionsGrid.getColumns()) {
-					column.setResizable(true);
-				}
-				isinActionsGrid.setItems(isinActionVOList);
+		        dialog = new Dialog();
+		        dialog.setModal(true); // Non-modal popover effect
+		        dialog.setDraggable(true);
+		        dialog.setCloseOnOutsideClick(true);
+				dialog.setHeaderTitle("Demat Account");
+		        
+		        dematAccountDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), "Demat Account", true, false);
+
+		        proceedButton = new Button("Proceed", e -> {
+					List<LotVO> lotVOList = null;
+					
+		            dialog.close();
+					lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), new java.sql.Date(new java.util.Date().getTime()), dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "A")
+							.stream()
+							.filter(lotVO -> lotVO.getIsinActionVO().getBookingType().getId() == Constants.DVID_BOOKING_CREDIT)
+							.collect(Collectors.toList());
+					Notification.show("No. of Credit Lots: " + lotVOList.size())
+						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					lotsGrid.setColumns("isinActionVO.settlementDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "tradeId", "isinActionVO.actionType.value", "isinActionVO.dematAccount.value", "transactionQuantity", "balance");
+					lotsGrid.getColumnByKey("isinActionVO.actionType.value").setHeader("Action");
+					lotsGrid.getColumnByKey("isinActionVO.dematAccount.value").setHeader("Demat A/c");
+
+					for (Column<LotVO> column : lotsGrid.getColumns()) {
+						column.setResizable(true);
+					}
+					lotsGrid.setItems(lotVOList);
+		        });
+
+		        dialog.add(new VerticalLayout(dematAccountDvSelect, proceedButton));
+		        dialog.open();
 			} catch (Exception e) {
 				ViewFuncs.showError("System Error!!! Contact Support.");
 				e.printStackTrace();
@@ -218,12 +243,12 @@ public class DebtEquityMutualView extends Div {
 		});
 		
 	}
-	
+
 	private void handleCreateIsinActions(FormLayout parentFormLayout) {
 		SecuritySearchComponent securitySearchComponent;
 		Select<IdValueVO> dematAccountDvSelect, actionDvSelect;
 		DatePicker recordDateDatePicker;
-		List<IsinActionVO> fifoIAVOList;
+		List<LotVO> fifoLotVOList;
 		IsinActionCreateVO isinActionCreateVO;
 		IsinActionSpecVO isinActionSpecVO;
 		
@@ -236,8 +261,8 @@ public class DebtEquityMutualView extends Div {
 
 		isinActionSpecVO = new IsinActionSpecVO(new ArrayList<IsinActionEntrySpecVO>());
 		isinActionCreateVO = new IsinActionCreateVO();
-		fifoIAVOList = new ArrayList<IsinActionVO>();
-		isinActionCreateVO.setFifoIAVOList(fifoIAVOList);
+		fifoLotVOList = new ArrayList<LotVO>();
+		isinActionCreateVO.setFifoLotVOList(fifoLotVOList);
 
 		securitySearchComponent = new SecuritySearchComponent(debtEquityMutualService, miscService);
 		parentFormLayout.addFormItem(securitySearchComponent.getLayout(), "Entitled ISIN");
@@ -255,8 +280,8 @@ public class DebtEquityMutualView extends Div {
         	childFormLayout.remove(childFormLayout.getChildren().collect(Collectors.toList()));
         	isinActionSpecVO.getIsinActionEntrySpecVOList().clear();
         	if (Constants.ISIN_ACTION_SPEC_MAP.containsKey(actionDvSelect.getValue().getId())) {
-        		IsinActionSpecVO LocalIsinActionSpecVO = Constants.ISIN_ACTION_SPEC_MAP.get(actionDvSelect.getValue().getId());
-        		isinActionSpecVO.getIsinActionEntrySpecVOList().addAll(LocalIsinActionSpecVO.getIsinActionEntrySpecVOList());
+        		IsinActionSpecVO localIsinActionSpecVO = Constants.ISIN_ACTION_SPEC_MAP.get(actionDvSelect.getValue().getId());
+        		isinActionSpecVO.getIsinActionEntrySpecVOList().addAll(localIsinActionSpecVO.getIsinActionEntrySpecVOList());
 				if (securitySearchComponent.getIsinTextField().getValue() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
 						dematAccountDvSelect.getValue() != null &&
 						recordDateDatePicker.getValue() != null) {
@@ -270,12 +295,15 @@ public class DebtEquityMutualView extends Div {
         });
         
 		ValueChangeListener<ValueChangeEvent<?>> fetchFifoMappingLogic = e -> {
-			fifoIAVOList.clear();
-			System.out.println("fetchFifoMappingLogic TRIGGERED");
+			fifoLotVOList.clear();
 			if (securitySearchComponent.getIsinTextField().getValue() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
 					dematAccountDvSelect.getValue() != null &&
 					recordDateDatePicker.getValue() != null) {
-				fifoIAVOList.addAll(debtEquityMutualService.determineBalancesMultiple(securitySearchComponent.getIsinTextField().getValue(), Date.valueOf(recordDateDatePicker.getValue()), dematAccountDvSelect.getValue().getId(), false));
+				fifoLotVOList.addAll(debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), Date.valueOf(recordDateDatePicker.getValue()), dematAccountDvSelect.getValue().getId(), false, "A")
+						.stream()
+						.filter(lotVO -> lotVO.getBalance() != null && lotVO.getBalance() > 0)
+						.collect(Collectors.toList())
+					);
 				isinActionCreateVO.setActionType(actionDvSelect.getValue());
 				isinActionCreateVO.setEntitledIsin(securitySearchComponent.getIsinTextField().getValue());
 				isinActionCreateVO.setDematAccount(dematAccountDvSelect.getValue());
@@ -292,6 +320,7 @@ public class DebtEquityMutualView extends Div {
 	private void handleCreateIsinActions2(FormLayout childFormLayout, IsinActionSpecVO isinActionSpecVO, IsinActionCreateVO isinActionCreateVO) {
 		HorizontalLayout buttonsHorizontalLayout;
 		NumberField balanceNumberField;
+		List<RealIsinActionEntryEditor> realIsinActionEntryEditorList;
 		List<TradeVO> tradeVOList;
 		AtomicReference<Double> quantityAR;
 		List<RealIsinActionEntryVO> realIAEVOList;
@@ -302,20 +331,20 @@ public class DebtEquityMutualView extends Div {
 		tradeVOList = new ArrayList<TradeVO>();
 		quantityAR = new AtomicReference<Double>();
 		quantityAR.set(0D);
-		realIAEVOList = new ArrayList<RealIsinActionEntryVO>();
+		isinActionEntrySpecVOList = isinActionSpecVO.getIsinActionEntrySpecVOList();
+		realIAEVOList = new ArrayList<RealIsinActionEntryVO>(isinActionEntrySpecVOList.size());
+		realIsinActionEntryEditorList = new ArrayList<RealIsinActionEntryEditor>(isinActionEntrySpecVOList.size());
 		accountingIAEVOList = new ArrayList<AccountingIsinActionEntryVO>();
 		isinActionCreateVO.setTradeVOList(tradeVOList);
 		isinActionCreateVO.setRealIAEVOList(realIAEVOList);
 		isinActionCreateVO.setAccountingIAEVOList(accountingIAEVOList);
 		
-		isinActionEntrySpecVOList = isinActionSpecVO.getIsinActionEntrySpecVOList();
-
 		childFormLayout.add(ViewFuncs.newHorizontalLine());
 		balanceNumberField = new NumberField();
 		childFormLayout.addFormItem(balanceNumberField, "Balance");
 		balanceNumberField.setEnabled(false);
 		balanceNumberField.setValue(
-				isinActionCreateVO.getFifoIAVOList()
+				isinActionCreateVO.getFifoLotVOList()
 					.stream()
 					.mapToDouble(balanceIAVO -> balanceIAVO.getBalance())
 					.sum()
@@ -326,10 +355,33 @@ public class DebtEquityMutualView extends Div {
 			realIAEVOList.add(realIsinActionEntryVO);
 			realIsinActionEntryVO.setIsinActionEntrySpecVO(isinActionEntrySpecVO);
 			RealIsinActionEntryEditor realIsinActionEntryEditor = context.getBean(RealIsinActionEntryEditor.class, realIsinActionEntryVO,
-					new RealIsinActionEntryEditor.InputArgs(isinActionCreateVO.getEntitledIsin(), isinActionCreateVO.getDematAccount(), isinActionCreateVO.getRecordDate(), quantityAR, balanceNumberField.getValue(), debtEquityMutualService, miscService));
+					new RealIsinActionEntryEditor.InputArgs(isinActionCreateVO.getEntitledIsin(), isinActionCreateVO.getDematAccount(), isinActionCreateVO.getRecordDate(), quantityAR, balanceNumberField.getValue(),
+							isinActionEntrySpecVOList.stream().anyMatch(iActionEntrySpecVO -> iActionEntrySpecVO.getLotCreationType() == IsinActionEntrySpecVO.IALotCreationType.TRADE),
+							debtEquityMutualService, miscService));
+			realIsinActionEntryEditorList.add(realIsinActionEntryEditor);
 			childFormLayout.add(realIsinActionEntryEditor);
 		}
 		
+		// Input provided by user propagated to read-only fields
+		if (isinActionEntrySpecVOList.stream().anyMatch(isinActionEntrySpecVO -> isinActionEntrySpecVO.getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.PREVIOUS_INPUT)) {
+			for (int i = 0; i < realIsinActionEntryEditorList.size(); i++) {
+				if (realIAEVOList.get(i).getIsinActionEntrySpecVO().getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.INPUT) {
+					realIsinActionEntryEditorList.get(i).getQuantityNumberField().addValueChangeListener(e -> {
+						if (e.isFromClient()) {
+							Double newVal = e.getValue();
+							for (int j = 0; j < realIsinActionEntryEditorList.size(); j++) {
+								if (realIAEVOList.get(j).getIsinActionEntrySpecVO().getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.PREVIOUS_INPUT) {
+									realIsinActionEntryEditorList.get(j).setQuantityNumberField(newVal);
+									realIAEVOList.get(j).setQuantity(newVal);	// It is read-only and hence this needs to be done explicitly
+																				// realIsinActionEntryEditorList.get(j).getBean().setQuantity(newVal);
+								}
+							}
+						}
+					});
+				}
+			}
+		}
+
 		childFormLayout.add(ViewFuncs.newHorizontalLine());
 		buttonsHorizontalLayout = new HorizontalLayout();
 		childFormLayout.add(buttonsHorizontalLayout);
@@ -349,7 +401,7 @@ public class DebtEquityMutualView extends Div {
 						ViewFuncs.showError("ACTION level quantity is required to map FIFO details");
 						return;
 					}
-					acceptFifoMap(new String[] {isinActionCreateVO.getEntitledIsin(), isinActionCreateVO.getDematAccount().getValue()}, isinActionCreateVO.getFifoIAVOList(), quantityAR.get());
+					acceptFifoMap(new String[] {isinActionCreateVO.getEntitledIsin(), isinActionCreateVO.getDematAccount().getValue()}, isinActionCreateVO.getFifoLotVOList(), quantityAR.get());
 				} catch (Exception e) {
 					ViewFuncs.showError("System Error!!! Contact Support.");
 					e.printStackTrace();
@@ -432,27 +484,29 @@ public class DebtEquityMutualView extends Div {
 		
 	}
 	
-	private void acceptFifoMap(String[] labels, List<IsinActionVO> balanceIAVOList, double iAQuantity) {
+	private void acceptFifoMap(String[] labels, List<LotVO> balanceLotVOList, double iAQuantity) {
 		Dialog dialog;
 		VerticalLayout verticalLayout;
 		HorizontalLayout hLayout;
-		Button closeButton, doneButton, cancelButton;
-		Grid<IsinActionVO> quantityPriceGrid;
-		Binder<IsinActionVO> quantityPriceBinder;
-		Editor<IsinActionVO> quantityPriceEditor;
-		List<IsinActionVO> beforeChangeIsinActionVOList;
+		Button closeButton, doneButton, cancelButton, zeroAllButton;
+		Grid<LotVO> quantityPriceGrid;
+		Binder<LotVO> quantityPriceBinder;
+		Editor<LotVO> quantityPriceEditor;
+		List<LotVO> beforeChangeLotVOList;
 		NumberField quantityNumberField;
 
-		beforeChangeIsinActionVOList = new ArrayList<IsinActionVO>(balanceIAVOList.size());
-		beforeChangeIsinActionVOList.addAll(balanceIAVOList);
-
-		for (IsinActionVO isinActionVO: balanceIAVOList) {
-			System.out.println(isinActionVO.getIsinActionId() + "::" + isinActionVO.getTradeId() + "::" + isinActionVO.getActionType() + "::" + isinActionVO.getSettlementDate().toString() + "::" + isinActionVO.getTransactionQuantity() + "::" + isinActionVO.getBalance());
+		beforeChangeLotVOList = new ArrayList<LotVO>(balanceLotVOList.size());
+		for (LotVO lotVO : balanceLotVOList) {	// Replacement for .addAll, so that the items are cloned (note: Just shallow copy, not deep)
+			beforeChangeLotVOList.add(new LotVO(lotVO));
 		}
+
 		dialog = new Dialog();
 		dialog.setHeaderTitle("FIFO Map");
 		closeButton = new Button(new Icon("lumo", "cross"),
 		        (e) -> {
+					for (LotVO lotVO : beforeChangeLotVOList) {
+						balanceLotVOList.add(new LotVO(lotVO));
+					}
 		        	dialog.close();
 		        });
 		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -465,18 +519,18 @@ public class DebtEquityMutualView extends Div {
 		verticalLayout.add(new Label("ISIN: " + labels[0]));
 		verticalLayout.add(new Label("Demat A/c: " + labels[1]));
 		
-		quantityPriceGrid = new Grid<>(IsinActionVO.class, false);
+		quantityPriceGrid = new Grid<>(LotVO.class, false);
 		quantityPriceGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		quantityPriceGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
-		quantityPriceGrid.setItems(balanceIAVOList);
-		quantityPriceGrid.setColumns("settlementDate", "actionType", "transactionQuantity", "balance");
+		quantityPriceGrid.setItems(balanceLotVOList);
+		quantityPriceGrid.setColumns("acquisitionDate", "isinActionVO.actionType.value", "transactionQuantity", "balance");
 		quantityPriceGrid.getColumnByKey("balance").setHeader("Mapped Quantity");
-		for (Column<IsinActionVO> column : quantityPriceGrid.getColumns()) {
+		for (Column<LotVO> column : quantityPriceGrid.getColumns()) {
 			column.setResizable(true);
 		}
 		verticalLayout.add(quantityPriceGrid);
 
-		quantityPriceBinder = new Binder<>(IsinActionVO.class);
+		quantityPriceBinder = new Binder<>(LotVO.class);
 		quantityPriceEditor = quantityPriceGrid.getEditor();
 		quantityPriceEditor.setBinder(quantityPriceBinder);
 		
@@ -484,7 +538,7 @@ public class DebtEquityMutualView extends Div {
 		quantityNumberField.getElement().addEventListener("keydown", e -> quantityPriceEditor.cancel())
         	.setFilter("event.key === 'Escape' || event.key === 'Esc'");
 		quantityPriceBinder.forField(quantityNumberField)
-			.bind(IsinActionVO::getBalance, IsinActionVO::setBalance);
+			.bind(LotVO::getBalance, LotVO::setBalance);
 		quantityPriceGrid.getColumnByKey("balance").setEditorComponent(quantityNumberField);
 		quantityNumberField.addValueChangeListener(e -> {
 			if (quantityNumberField.getValue() == null) {
@@ -504,8 +558,8 @@ public class DebtEquityMutualView extends Div {
 				// Validations
 				double totalMappedQuantity;
 				totalMappedQuantity = 0;
-				for (IsinActionVO balanceIAVO : balanceIAVOList) {
-					totalMappedQuantity += (balanceIAVO.getBalance() == null ? 0 : balanceIAVO.getBalance());
+				for (LotVO balanceLotVO : balanceLotVOList) {
+					totalMappedQuantity += (balanceLotVO.getBalance() == null ? 0 : balanceLotVO.getBalance());
 				}
 				if (Math.abs(iAQuantity - totalMappedQuantity) > Constants.EPSILON) {
 					ViewFuncs.showError("Total of Mapped Quantities does not match Action Quantity");
@@ -517,13 +571,26 @@ public class DebtEquityMutualView extends Div {
 			
 			dialog.close();
 		});
+		
 		cancelButton = new Button("Cancel");
 		hLayout.add(cancelButton);
 		cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		cancelButton.addClickListener(event -> {
-			balanceIAVOList.clear();
-			balanceIAVOList.addAll(beforeChangeIsinActionVOList);
+			balanceLotVOList.clear();
+			for (LotVO lotVO : beforeChangeLotVOList) {
+				balanceLotVOList.add(new LotVO(lotVO));
+			}
 			dialog.close();
+		});
+
+		zeroAllButton = new Button("Zero All");
+		hLayout.add(zeroAllButton);
+		zeroAllButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		zeroAllButton.addClickListener(event -> {
+			for (LotVO balanceLotVO : balanceLotVOList) {
+				balanceLotVO.setBalance(0D);
+			}
+			quantityPriceGrid.getDataProvider().refreshAll();
 		});
 
 		quantityPriceGrid.addItemDoubleClickListener(e -> {
@@ -541,7 +608,7 @@ public class DebtEquityMutualView extends Div {
 		Dialog dialog;
 		FormLayout formLayout;
 		HorizontalLayout hLayout;
-		Button addButton, toGridButton, closeButton, cancelButton, doneButton;
+		Button addButton, updateButton, clearButton, closeButton, cancelButton, doneButton;
 		Grid<TradeVO> tradeGrid;
 		GridListDataView<TradeVO> tradeGridLDV;
 		TextField orderNoTextField, orderTimeTextField, tradeNoTextField, tradeTimeTextField;
@@ -555,7 +622,9 @@ public class DebtEquityMutualView extends Div {
 		deleteRowTradeIdAR = new AtomicReference<Long>();
 		deleteRowTradeIdAR.set(null);
 		beforeChangeTradeVOList = new ArrayList<TradeVO>(tradeVOList.size());
-		beforeChangeTradeVOList.addAll(tradeVOList);
+		for (TradeVO tradeVO : tradeVOList) {
+			beforeChangeTradeVOList.add(tradeVO);
+		}
 
 		dialog = new Dialog();
 		dialog.setHeaderTitle("Trades");
@@ -563,7 +632,9 @@ public class DebtEquityMutualView extends Div {
 		closeButton = new Button(new Icon("lumo", "cross"),
 		        (e) -> {
 					tradeVOList.clear();
-					tradeVOList.addAll(beforeChangeTradeVOList);
+					for (TradeVO tradeVO : beforeChangeTradeVOList) {
+						tradeVOList.add(tradeVO);
+					}
 		        	dialog.close();
 		        });
 		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -614,64 +685,90 @@ public class DebtEquityMutualView extends Div {
 
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "");
-		addButton = new Button("New Row");
+		addButton = new Button("Add");
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addButton.setDisableOnClick(true);
-		// On click of New Row
+		// On click of Add
 		addButton.addClickListener(event -> {
 			try {
-				TradeVO tradeVO;
-				tradeVO = new TradeVO();
-				tradeVO.setTradeId((long) (tradeVOList.size() == 0 ? -1 : (tradeVOList.get(tradeVOList.size() - 1).getTradeId() - 1))); 
-				tradeGridLDV.addItem(tradeVO);
-				tradeGrid.select(tradeVO);
-				editRowTradeIdAR.set(tradeVO.getTradeId());
 
-				vO2Fields(tradeVO, orderNoTextField, orderTimeTextField, tradeNoTextField, tradeTimeTextField,
-						tradeIdNumberField, quantityNumberField, pricePerUnitNumberField, brokeragePerUnitNumberField,
-						orderDateDatePicker, tradeDateDatePicker);
+				if (editRowTradeIdAR.get() != null) {
+					ConfirmDialog confirmDialog = new ConfirmDialog();
+					confirmDialog.setHeader("Confirm Add");
+					confirmDialog.setText("Are you sure you want to ADD (and not UPDATE)?");
+					confirmDialog.setConfirmButton("Confirm", confirmEvent -> {
+						TradeVO tradeVO;
+						tradeVO = new TradeVO();
+						fields2VO(tradeVO, orderNoTextField, orderTimeTextField, tradeNoTextField, tradeTimeTextField,
+								tradeIdNumberField, quantityNumberField, pricePerUnitNumberField, brokeragePerUnitNumberField,
+								orderDateDatePicker, tradeDateDatePicker);
+						tradeVO.setTradeId((long) (tradeVOList.size() == 0 ? -1 : (tradeVOList.get(tradeVOList.size() - 1).getTradeId() - 1)));
+						tradeGridLDV.addItem(tradeVO);
+						tradeGrid.select(tradeVO);
+						editRowTradeIdAR.set(tradeVO.getTradeId());
+						tradeIdNumberField.setValue(tradeVO.getTradeId().doubleValue());
+					});
+					confirmDialog.setCancelButton("Cancel", cancelEvent -> {
+					});
+					confirmDialog.open();
+				} else {
+					TradeVO tradeVO;
+					tradeVO = new TradeVO();
+					fields2VO(tradeVO, orderNoTextField, orderTimeTextField, tradeNoTextField, tradeTimeTextField,
+							tradeIdNumberField, quantityNumberField, pricePerUnitNumberField, brokeragePerUnitNumberField,
+							orderDateDatePicker, tradeDateDatePicker);
+					tradeVO.setTradeId((long) (tradeVOList.size() == 0 ? -1 : (tradeVOList.get(tradeVOList.size() - 1).getTradeId() - 1)));
+					tradeGridLDV.addItem(tradeVO);
+					tradeGrid.select(tradeVO);
+					editRowTradeIdAR.set(tradeVO.getTradeId());
+					tradeIdNumberField.setValue(tradeVO.getTradeId().doubleValue());
+				}
 			} finally {
 				addButton.setEnabled(true);
 			}
 		});
 
-		toGridButton = new Button("Save to Grid");
-		toGridButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		toGridButton.setDisableOnClick(true);
-		// On click of To Grid
-		toGridButton.addClickListener(event -> {
+		updateButton = new Button("Update");
+		updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		updateButton.setDisableOnClick(true);
+		// On click of Update
+		updateButton.addClickListener(event -> {
 			try {
 				TradeVO tradeVO;
 				if (editRowTradeIdAR.get() == null) {
-					tradeVO = new TradeVO();
-					tradeVO.setTradeId((long) (tradeVOList.size() == 0 ? -1 : (tradeVOList.get(tradeVOList.size() - 1).getTradeId() - 1)));
-					tradeGridLDV.addItem(tradeVO); // tradeVOList is updated automatically
-					tradeGrid.select(tradeVO);
-					tradeIdNumberField.setValue(tradeVO.getTradeId().doubleValue());
-				} else {
-					tradeVO = tradeVOList
-							.stream()
-							.filter(tradeVObj -> tradeVObj.getTradeId().equals(editRowTradeIdAR.get()))
-							.findFirst()
-							.get();
+					ViewFuncs.showError("No row selected for Update");
+					return;
 				}
-				editRowTradeIdAR.set(tradeVO.getTradeId());
+				tradeVO = tradeVOList
+						.stream()
+						.filter(tradeVObj -> tradeVObj.getTradeId().equals(editRowTradeIdAR.get()))
+						.findFirst()
+						.get();
 				tradeGrid.select(tradeVO);
-				tradeVO.setOrderNo(orderNoTextField.isEmpty() ? null : orderNoTextField.getValue());
-				tradeVO.setOrderTime(orderTimeTextField.isEmpty() ? null : orderTimeTextField.getValue());
-				tradeVO.setTradeNo(tradeNoTextField.isEmpty() ? null : tradeNoTextField.getValue());
-				tradeVO.setTradeTime(tradeTimeTextField.isEmpty() ? null : tradeTimeTextField.getValue());
-				tradeVO.setQuantity(quantityNumberField.getValue());
-				tradeVO.setPricePerUnit(pricePerUnitNumberField.getValue());
-				tradeVO.setBrokeragePerUnit(brokeragePerUnitNumberField.getValue());
-				tradeVO.setOrderDate(orderDateDatePicker.getValue() == null ? null : Date.valueOf(orderDateDatePicker.getValue()));
-				tradeVO.setTradeDate(tradeDateDatePicker.getValue() == null ? null : Date.valueOf(tradeDateDatePicker.getValue()));
+				fields2VO(tradeVO, orderNoTextField, orderTimeTextField, tradeNoTextField, tradeTimeTextField,
+						tradeIdNumberField, quantityNumberField, pricePerUnitNumberField, brokeragePerUnitNumberField,
+						orderDateDatePicker, tradeDateDatePicker);
 				tradeGridLDV.refreshItem(tradeVO);
 			} finally {
-				toGridButton.setEnabled(true);
+				updateButton.setEnabled(true);
 			}
 		});
-		hLayout.add(addButton, toGridButton);
+		
+		clearButton = new Button("Clear");
+		clearButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		clearButton.setDisableOnClick(true);
+		// On click of Update
+		clearButton.addClickListener(event -> {
+			try {
+				vO2Fields(new TradeVO(), orderNoTextField, orderTimeTextField, tradeNoTextField, tradeTimeTextField,
+						tradeIdNumberField, quantityNumberField, pricePerUnitNumberField, brokeragePerUnitNumberField,
+						orderDateDatePicker, tradeDateDatePicker);
+			} finally {
+				clearButton.setEnabled(true);
+			}
+		});
+		
+		hLayout.add(addButton, updateButton, clearButton);
 		formLayout.add(ViewFuncs.newLine());
 		
 		formLayout.add(ViewFuncs.newHorizontalLine());
@@ -727,7 +824,9 @@ public class DebtEquityMutualView extends Div {
 		cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		cancelButton.addClickListener(event -> {
 			tradeVOList.clear();
-			tradeVOList.addAll(beforeChangeTradeVOList);
+			for (TradeVO tradeVO : beforeChangeTradeVOList) {
+				tradeVOList.add(tradeVO);
+			}
 			dialog.close();
 		});
 		hLayout.add(doneButton, cancelButton);
@@ -742,7 +841,6 @@ public class DebtEquityMutualView extends Div {
 			TradeVO tradeVO;
 
 			tradeVO = event.getItem();
-			System.out.println("Clicked Row " + tradeVO.getTradeId());
 			if (deleteRowTradeIdAR == null || deleteRowTradeIdAR.get() != tradeVO.getTradeId()) {
 				editRowTradeIdAR.set(tradeVO.getTradeId());
 				vO2Fields(tradeVO, orderNoTextField, orderTimeTextField, tradeNoTextField, tradeTimeTextField,
@@ -827,6 +925,22 @@ public class DebtEquityMutualView extends Div {
 		}
 	}
 
+	private void fields2VO(TradeVO tradeVO, TextField orderNoTextField, TextField orderTimeTextField, TextField tradeNoTextField, TextField tradeTimeTextField,
+			NumberField tradeIdNumberField, NumberField quantityNumberField, NumberField pricePerUnitNumberField, NumberField brokeragePerUnitNumberField,
+			DatePicker orderDateDatePicker, DatePicker tradeDateDatePicker) {
+		
+		tradeVO.setTradeId(tradeIdNumberField.getValue() == null ? null : tradeIdNumberField.getValue().longValue());
+		tradeVO.setOrderNo(orderNoTextField.getValue());
+		tradeVO.setOrderTime(orderTimeTextField.getValue());
+		tradeVO.setTradeNo(tradeNoTextField.getValue());
+		tradeVO.setTradeTime(tradeTimeTextField.getValue());
+		tradeVO.setQuantity(quantityNumberField.getValue());
+		tradeVO.setPricePerUnit(pricePerUnitNumberField.getValue());
+		tradeVO.setBrokeragePerUnit(brokeragePerUnitNumberField.getValue());
+		tradeVO.setOrderDate(orderDateDatePicker.getValue() == null ? null : java.sql.Date.valueOf(orderDateDatePicker.getValue()));
+		tradeVO.setTradeDate(tradeDateDatePicker.getValue() == null ? null : java.sql.Date.valueOf(tradeDateDatePicker.getValue()));
+	}
+
 	private void acceptAccountingEntries(List<AccountingIsinActionEntryVO> accountingIAEVOList) {
 		Dialog dialog;
 		FormLayout formLayout;
@@ -843,14 +957,18 @@ public class DebtEquityMutualView extends Div {
 		List<AccountingIsinActionEntryVO> beforeChangeAccountingIAVOList;
 		
 		beforeChangeAccountingIAVOList = new ArrayList<AccountingIsinActionEntryVO>(accountingIAEVOList.size());
-		beforeChangeAccountingIAVOList.addAll(accountingIAEVOList);
+		for (AccountingIsinActionEntryVO accountingIsinActionEntryVO : accountingIAEVOList) {
+			beforeChangeAccountingIAVOList.add(accountingIsinActionEntryVO);
+		}
     	
 		dialog = new Dialog();
 		dialog.setHeaderTitle("Accounting Entries");
 		closeButton = new Button(new Icon("lumo", "cross"),
 		        (e) -> {
 		        	accountingIAEVOList.clear();
-		        	accountingIAEVOList.addAll(beforeChangeAccountingIAVOList);
+		    		for (AccountingIsinActionEntryVO accountingIsinActionEntryVO : beforeChangeAccountingIAVOList) {
+		    			accountingIAEVOList.add(accountingIsinActionEntryVO);
+		    		}
 		        	dialog.close();
 		        });
 		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -917,7 +1035,9 @@ public class DebtEquityMutualView extends Div {
 		cancelButton = new Button("Cancel");
 		cancelButton.addClickListener(event -> {
         	accountingIAEVOList.clear();
-        	accountingIAEVOList.addAll(beforeChangeAccountingIAVOList);
+    		for (AccountingIsinActionEntryVO accountingIsinActionEntryVO : beforeChangeAccountingIAVOList) {
+    			accountingIAEVOList.add(accountingIsinActionEntryVO);
+    		}
 			dialog.close();
 		});
 		cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);

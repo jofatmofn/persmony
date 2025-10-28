@@ -15,7 +15,7 @@ public interface IsinActionRepository extends JpaRepository<IsinAction, Long>, J
 	@Query(nativeQuery=true, value=
 			"SELECT IA.* "
 			+ "FROM isin_action IA "
-			+ "WHERE IA.settlement_date < :sellDate "
+			+ "WHERE IA.settlement_date <= :sellDate "
 			+ "AND LOWER(IA.isin_fk) = LOWER(:isin) "
 			+ "AND IA.demat_account_fk = :dematAccount "
 			+ "ORDER BY IA.settlement_date"

@@ -39,6 +39,7 @@ public class IsinActionEntrySpecVO {
 		
 	public enum IAFifoMappingType implements FlaggedEnum {
 		USER_CHOICE,
+		PREVIOUS_USER_CHOICE,
 		FULL_BALANCE,
 		NOT_APPLICABLE;
 	}

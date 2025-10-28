@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import lombok.Getter;
@@ -32,4 +34,12 @@ public class Isin {
 	private DomainValue securityType;	// Maps to Transaction Category
 
 	private Long stockId;	// TODO: FK to new Stock entity
+	
+	@PrePersist
+	@PreUpdate
+	void normalizeId() {
+		if (isin != null) {
+			isin = isin.toUpperCase();
+		}
+	}
 }

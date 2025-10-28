@@ -20,7 +20,7 @@ public class IsinActionCreateVO {
 	Date recordDate;
 	List<RealIsinActionEntryVO> realIAEVOList;
 
-	List<IsinActionVO> fifoIAVOList;
+	List<LotVO> fifoLotVOList;
 	List<TradeVO> tradeVOList;
 	List<AccountingIsinActionEntryVO> accountingIAEVOList;
 	
