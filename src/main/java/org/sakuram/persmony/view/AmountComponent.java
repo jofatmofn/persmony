@@ -9,9 +9,8 @@ import com.vaadin.flow.component.textfield.NumberField;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter @Setter(AccessLevel.NONE)
+@Getter
 public class AmountComponent {
 	Double netAmount, returnedPrincipalAmount, interestAmount, tdsAmount;
 	@Getter(AccessLevel.NONE)
@@ -19,9 +18,11 @@ public class AmountComponent {
 	HorizontalLayout layout;
 	@Getter(AccessLevel.NONE)
 	long transactionTypeDvId;
+	@Getter(AccessLevel.NONE)
+	NumberField netNumberField;
 
 	public AmountComponent(long transactionTypeDvId) {
-		NumberField netNumberField, returnedPrincipalNumberField, interestNumberField, tdsNumberField;
+		NumberField returnedPrincipalNumberField, interestNumberField, tdsNumberField;
 		Checkbox amountsToAddupCheckbox;
 
 		layout = new HorizontalLayout();
@@ -82,5 +83,9 @@ public class AmountComponent {
 			return false;
 		}
 		return true;
+	}
+	
+	public void setNetNumberField(Double netAmount) {
+		netNumberField.setValue(netAmount);
 	}
 }

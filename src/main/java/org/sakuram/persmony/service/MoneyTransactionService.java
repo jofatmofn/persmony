@@ -82,7 +82,6 @@ public class MoneyTransactionService {
 				singleRealisationVO.getReturnedPrincipalAmount(),
 				singleRealisationVO.getInterestAmount(),
 				singleRealisationVO.getTdsAmount());
-		realisation = realisationRepository.save(realisation);
 		if (singleRealisationVO.getRealisationTypeDvId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 			if (singleRealisationVO.getSavingsAccountTransactionId() == null) {
 				throw new AppException("Savings Account Transaction Id cannot be null", null);
@@ -102,6 +101,7 @@ public class MoneyTransactionService {
 				referencedRealisation.setReferredRealisation(realisation);
 			}
 		}
+		realisation = realisationRepository.save(realisation);
 		
 		if (singleRealisationVO.isLastRealisation()) {
 			investmentTransaction.setTaxGroup(Constants.domainValueCache.get(singleRealisationVO.getTaxGroupDvId()));

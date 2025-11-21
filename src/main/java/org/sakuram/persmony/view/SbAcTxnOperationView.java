@@ -24,6 +24,8 @@ import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 import org.sakuram.persmony.valueobject.SbAcTxnImportStatsVO;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import com.vaadin.flow.component.Component;
@@ -68,6 +70,9 @@ public class SbAcTxnOperationView extends Div {
 
 	private static final long serialVersionUID = -335915836819765125L;
 
+	@Autowired
+	ObjectProvider<RealisationComponent> provider;
+	
 	SbAcTxnService sbAcTxnService;
 	MiscService miscService;
 	
@@ -213,8 +218,13 @@ public class SbAcTxnOperationView extends Div {
 					ViewFuncs.showError("Narration cannot be Empty");
 					return;
 				}
-				if (bankAccountOrInvestorDvSelect.getValue() != null && balanceNumberField.getValue() == null ||
-						bankAccountOrInvestorDvSelect.getValue() == null && balanceNumberField.getValue() != null) {
+				if (bankAccountOrInvestorDvSelect.getValue() == null) {
+					ViewFuncs.showError("Account cannot be Empty");
+					return;
+				}
+				// TODO Change from the following CRUDE checking
+				if (bankAccountOrInvestorDvSelect.getValue().getValue().contains("::") && balanceNumberField.getValue() == null ||
+						!bankAccountOrInvestorDvSelect.getValue().getValue().contains("::") && balanceNumberField.getValue() != null) {
 					ViewFuncs.showError("Balance is applicable (only) for a banking Transaction");
 					return;
 				}
@@ -538,8 +548,8 @@ public class SbAcTxnOperationView extends Div {
 			
 			savingsAccountTransactionVO = event.getItem();
 			if (savingsAccountTransactionVO.isPresent()) {
-				acceptSbAcTxnCategory(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), savingsAccountTransactionVO.get().getAmount(), txnCatToDvCatMap);
 				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
+				acceptSbAcTxnCategory(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), savingsAccountTransactionVO.get().getAmount(), txnCatToDvCatMap);
 			}
 		});
 		sATGridContextMenu.addItem("No Category", event -> {
@@ -549,6 +559,7 @@ public class SbAcTxnOperationView extends Div {
 			
 			savingsAccountTransactionVO = event.getItem();
 			if (savingsAccountTransactionVO.isPresent()) {
+				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
 				sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(1);
 				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 						null,
@@ -558,9 +569,35 @@ public class SbAcTxnOperationView extends Div {
 						savingsAccountTransactionVO.get().getAmount()
 						));
 				sbAcTxnService.saveSbAcTxnCategories(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), sbAcTxnCategoryVOList);
-				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
 				notification = Notification.show("Categorised Successfully.");
 				notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+			}
+		});
+		sATGridContextMenu.addItem("Realise (DIT)", event -> {
+			Optional<SavingsAccountTransactionVO> savingsAccountTransactionVO;
+			
+			savingsAccountTransactionVO = event.getItem();
+			if (savingsAccountTransactionVO.isPresent()) {
+				Dialog dialog;
+				Button closeButton;
+				RealisationComponent realisationComponent;
+				
+				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
+				realisationComponent = provider.getObject();
+				dialog = new Dialog();
+				dialog.setHeaderTitle("Realisation");
+				closeButton = new Button(new Icon("lumo", "cross"),
+				        (e) -> {
+				        	dialog.close();
+				        });
+				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+				dialog.getHeader().add(closeButton);
+	    		dialog.add(realisationComponent);
+	    		dialog.open();
+	    		realisationComponent.getSaveButton().addClickListener(saveClickEvent -> {
+	    			dialog.close();
+	    		});
+	    		realisationComponent.handleRealisation(savingsAccountTransactionVO.get());
 			}
 		});
 	}

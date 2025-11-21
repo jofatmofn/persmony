@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.service.SbAcTxnService;
@@ -18,14 +17,12 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestVO;
-import org.sakuram.persmony.valueobject.InvestmentTransaction2VO;
 import org.sakuram.persmony.valueobject.DueRealisationVO;
 import org.sakuram.persmony.valueobject.DuesVO;
 import org.sakuram.persmony.valueobject.RenewalVO;
 import org.sakuram.persmony.valueobject.RetrieveAccrualsRealisationsRequestVO;
 import org.sakuram.persmony.valueobject.RetrieveAccrualsRealisationsResponseVO;
 import org.sakuram.persmony.valueobject.ScheduleVO;
-import org.sakuram.persmony.valueobject.SingleRealisationVO;
 import org.sakuram.persmony.valueobject.TransferVO;
 import org.sakuram.persmony.valueobject.TxnSingleRealisationWithBankVO;
 import org.sakuram.persmony.valueobject.UpdateTaxDetailRequestVO;
@@ -71,8 +68,9 @@ public class OperationView extends Div {
 	MoneyTransactionService moneyTransactionService;
 	MiscService miscService;
 	SbAcTxnService sbAcTxnService;
+	RealisationComponent realisationComponent;
 
-	public OperationView(MoneyTransactionService moneyTransactionService, MiscService miscService, SbAcTxnService sbAcTxnService) {
+	public OperationView(MoneyTransactionService moneyTransactionService, MiscService miscService, SbAcTxnService sbAcTxnService, RealisationComponent realisationComponent) {
 		Span selectSpan;
 		FormLayout formLayout;
 		Select<Map.Entry<Integer,String>> operationSelect;
@@ -81,6 +79,7 @@ public class OperationView extends Div {
 		this.moneyTransactionService = moneyTransactionService;
 		this.miscService = miscService;
 		this.sbAcTxnService = sbAcTxnService;
+		this.realisationComponent = realisationComponent;
 
 		operationItemsList = new ArrayList<Map.Entry<Integer,String>>() {
 			private static final long serialVersionUID = 1L;
@@ -115,7 +114,8 @@ public class OperationView extends Div {
 			try {
 	            switch(event.getValue().getKey()) {
 	            case 1:
-	            	handleRealisation(formLayout);
+	        		add(realisationComponent);
+	        		realisationComponent.handleRealisation();
 	            	break;
 	            case 2:
 	            	handleTxnSingleRealisationWithBank(formLayout, Constants.DVID_TRANSACTION_TYPE_ACCRUAL);
@@ -154,7 +154,7 @@ public class OperationView extends Div {
 		add(formLayout);
 	}
 
-	@SuppressWarnings("unused")
+	/* @SuppressWarnings("unused")
 	private void handleRealisation(FormLayout parentFormLayout) {
 		IntegerField investmentTransactionIdIntegerField;
 		Select<IdValueVO> realisationTypeDvSelect;
@@ -375,7 +375,7 @@ public class OperationView extends Div {
 				saveButton.setEnabled(true);
 			}
 		});
-	}
+	} */
 	
 	private void handleTxnSingleRealisationWithBank(FormLayout formLayout, long transactionTypeDvId) {
 		TextField investmentIdTextField;

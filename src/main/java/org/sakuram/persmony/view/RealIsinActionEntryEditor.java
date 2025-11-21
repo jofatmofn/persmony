@@ -1,7 +1,6 @@
 package org.sakuram.persmony.view;
 
 import java.sql.Date;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.sakuram.persmony.service.DebtEquityMutualService;
 import org.sakuram.persmony.service.MiscService;
@@ -91,9 +90,6 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		
 		addFormItem(quantityNumberField, "Quantity");
 		quantityNumberField.setEnabled(false);
-		/* quantityNumberField.addValueChangeListener(event -> {
-			inputArgs.getQuantityAR().set(quantityNumberField.getValue());
-		}); */
 		switch(isinActionEntrySpecVO.getQuantityInputType()) {
 		case INPUT:
 			quantityNumberField.setEnabled(true);
@@ -213,7 +209,6 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		String entitledIsin;
 		IdValueVO dematAccount;
 		Date recordDate;
-		AtomicReference<Double> quantityAR;
 		Double balance;
 		boolean isTradeApplicable;
 		DebtEquityMutualService debtEquityMutualService;

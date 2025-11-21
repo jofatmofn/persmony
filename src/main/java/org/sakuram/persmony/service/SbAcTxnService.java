@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -304,12 +305,12 @@ public class SbAcTxnService {
 					transactionDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(1)));
 					valueDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(2)));
 					narration = cellContentList.get(3);
-					reference = cellContentList.get(6);
-					if (cellContentList.get(7).equals("")) {
+					reference = cellContentList.get(5);
+					if (cellContentList.get(6).equals("")) {
 						amount = Double.parseDouble(cellContentList.get(8).replace(",", ""));
 						bookingDvId = Constants.DVID_BOOKING_CREDIT;
 					} else {
-						amount = Double.parseDouble(cellContentList.get(7).replace(",", ""));
+						amount = Double.parseDouble(cellContentList.get(6).replace(",", ""));
 						bookingDvId = Constants.DVID_BOOKING_DEBIT;
 					}
 					balance = Double.parseDouble(cellContentList.get(9).replace(",", ""));
@@ -483,6 +484,7 @@ public class SbAcTxnService {
 						if (sbAcTxnCategoryVO.getSbAcTxnCategoryId().equals(sbAcTxnCategoryUpdated.getId())) {
 							if (sbAcTxnCategoryUpdated.getTransactionCategory().getId() != sbAcTxnCategoryVO.getTransactionCategory().getId() ||
 									!sbAcTxnCategoryUpdated.getEndAccountReference().equals(sbAcTxnCategoryVO.getEndAccountReference().getValue()) ||
+									!Objects.equals(sbAcTxnCategoryUpdated.getGroupId(), sbAcTxnCategoryVO.getGroupId()) ||
 									!sbAcTxnCategoryUpdated.getAmount().equals(sbAcTxnCategoryVO.getAmount())) {
 								sbAcTxnCategoryUpdated.setTransactionCategory(transactionCategoryDvUi);
 								sbAcTxnCategoryUpdated.setEndAccountReference(endAccountReferenceUiToDb(sbAcTxnCategoryVO.getEndAccountReference()));

@@ -22,17 +22,17 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter(AccessLevel.NONE)
 public class SbAcTxnComponent {
+	@Getter
 	HorizontalLayout layout;
+	@Getter @Setter
 	IntegerField sbAcTxnIdIntegerField;	// TODO: Should be LongField
+	Button fetchButton;
 	
 	public SbAcTxnComponent(SbAcTxnService sbAcTxnService, Supplier<Long> bankAccountDvIdSupplier, Supplier<Date> transactionDateSupplier) {
-		Button fetchButton;
 		
 		layout = new HorizontalLayout();
 		sbAcTxnIdIntegerField = new IntegerField("SAT Id");
@@ -99,5 +99,10 @@ public class SbAcTxnComponent {
 				fetchButton.setEnabled(true);
 			}
 		});
+	}
+	
+	void setEnabled(boolean enabled) {
+		sbAcTxnIdIntegerField.setEnabled(enabled);
+		fetchButton.setEnabled(enabled);
 	}
 }

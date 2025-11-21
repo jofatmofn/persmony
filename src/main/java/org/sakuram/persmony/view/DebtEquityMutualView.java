@@ -355,7 +355,7 @@ public class DebtEquityMutualView extends Div {
 			realIAEVOList.add(realIsinActionEntryVO);
 			realIsinActionEntryVO.setIsinActionEntrySpecVO(isinActionEntrySpecVO);
 			RealIsinActionEntryEditor realIsinActionEntryEditor = context.getBean(RealIsinActionEntryEditor.class, realIsinActionEntryVO,
-					new RealIsinActionEntryEditor.InputArgs(isinActionCreateVO.getEntitledIsin(), isinActionCreateVO.getDematAccount(), isinActionCreateVO.getRecordDate(), quantityAR, balanceNumberField.getValue(),
+					new RealIsinActionEntryEditor.InputArgs(isinActionCreateVO.getEntitledIsin(), isinActionCreateVO.getDematAccount(), isinActionCreateVO.getRecordDate(), balanceNumberField.getValue(),
 							isinActionEntrySpecVOList.stream().anyMatch(iActionEntrySpecVO -> iActionEntrySpecVO.getLotCreationType() == IsinActionEntrySpecVO.IALotCreationType.TRADE),
 							debtEquityMutualService, miscService));
 			realIsinActionEntryEditorList.add(realIsinActionEntryEditor);
@@ -363,22 +363,22 @@ public class DebtEquityMutualView extends Div {
 		}
 		
 		// Input provided by user propagated to read-only fields
-		if (isinActionEntrySpecVOList.stream().anyMatch(isinActionEntrySpecVO -> isinActionEntrySpecVO.getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.PREVIOUS_INPUT)) {
-			for (int i = 0; i < realIsinActionEntryEditorList.size(); i++) {
-				if (realIAEVOList.get(i).getIsinActionEntrySpecVO().getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.INPUT) {
-					realIsinActionEntryEditorList.get(i).getQuantityNumberField().addValueChangeListener(e -> {
-						if (e.isFromClient()) {
-							Double newVal = e.getValue();
-							for (int j = 0; j < realIsinActionEntryEditorList.size(); j++) {
-								if (realIAEVOList.get(j).getIsinActionEntrySpecVO().getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.PREVIOUS_INPUT) {
-									realIsinActionEntryEditorList.get(j).setQuantityNumberField(newVal);
-									realIAEVOList.get(j).setQuantity(newVal);	// It is read-only and hence this needs to be done explicitly
-																				// realIsinActionEntryEditorList.get(j).getBean().setQuantity(newVal);
-								}
+		for (int i = 0; i < realIsinActionEntryEditorList.size(); i++) {
+			RealIsinActionEntryEditor realIsinActionEntryEditor = realIsinActionEntryEditorList.get(i);
+			if (realIAEVOList.get(i).getIsinActionEntrySpecVO().getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.INPUT) {
+				realIsinActionEntryEditor.getQuantityNumberField().addValueChangeListener(e -> {
+					quantityAR.set(realIsinActionEntryEditor.getQuantityNumberField().getValue());
+					if (e.isFromClient()) {
+						Double newVal = e.getValue();
+						for (int j = 0; j < realIsinActionEntryEditorList.size(); j++) {
+							if (realIAEVOList.get(j).getIsinActionEntrySpecVO().getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.PREVIOUS_INPUT) {
+								realIsinActionEntryEditorList.get(j).setQuantityNumberField(newVal);
+								realIAEVOList.get(j).setQuantity(newVal);	// It is read-only and hence this needs to be done explicitly
+																			// Same as realIsinActionEntryEditorList.get(j).getBean().setQuantity(newVal);
 							}
 						}
-					});
-				}
+					}
+				});
 			}
 		}
 
@@ -811,7 +811,7 @@ public class DebtEquityMutualView extends Div {
 					totalTradeQuantity += tradeVO.getQuantity();
 				}
 				if (Math.abs(iAQuantity - totalTradeQuantity) > Constants.EPSILON) {
-					ViewFuncs.showError("Total of Trade Quantities does not match Action Quantity");
+					ViewFuncs.showError("Total of Trade Quantities " + totalTradeQuantity + " does not match Action Quantity " + iAQuantity);
 					return;
 				}
 			} finally {
