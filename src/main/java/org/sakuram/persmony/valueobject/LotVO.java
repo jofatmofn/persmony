@@ -17,6 +17,7 @@ import lombok.ToString;
 public class LotVO {
 	IsinActionVO isinActionVO;
 	Long tradeId;
+	Long isinActionPartId;
 	Double transactionQuantity;
 	Double balance;
 	Date acquisitionDate;
@@ -26,6 +27,7 @@ public class LotVO {
 	public LotVO(LotVO lotVO) {
 		this.isinActionVO = lotVO.isinActionVO; // This is still a reference, not a copy. As isinActionVO is read-only, this is fine.
 		this.tradeId = lotVO.tradeId;
+		this.isinActionPartId = lotVO.isinActionPartId;
 		this.transactionQuantity = lotVO.transactionQuantity;
 		this.balance = lotVO.balance;
 		this.acquisitionDate = lotVO.acquisitionDate;

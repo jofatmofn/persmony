@@ -27,20 +27,12 @@ public class IsinActionMatch {
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name="from_isin_action_fk", nullable=false)
-	private IsinAction fromIsinAction;
+	@JoinColumn(name="from_isin_action_part_fk", nullable=true)	// Only for match reason FIFO, this is false
+	private IsinActionPart fromIsinActionPart;
 	
 	@ManyToOne
-	@JoinColumn(name="from_trade_fk", nullable=true)
-	private Trade fromTrade;
-	
-	@ManyToOne
-	@JoinColumn(name="to_isin_action_fk", nullable=false)
-	private IsinAction toIsinAction;
-	
-	@ManyToOne
-	@JoinColumn(name="to_trade_fk", nullable=true)
-	private Trade toTrade;
+	@JoinColumn(name="to_isin_action_part_fk", nullable=true) // Only for match reason FIFO, this is false
+	private IsinActionPart toIsinActionPart;
 	
 	@Column(name="quantity", nullable=true, columnDefinition="NUMERIC", precision=11, scale=5)
 	private Double quantity;

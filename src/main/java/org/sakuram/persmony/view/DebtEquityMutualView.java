@@ -301,7 +301,7 @@ public class DebtEquityMutualView extends Div {
 					recordDateDatePicker.getValue() != null) {
 				fifoLotVOList.addAll(debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), Date.valueOf(recordDateDatePicker.getValue()), dematAccountDvSelect.getValue().getId(), false, "A")
 						.stream()
-						.filter(lotVO -> lotVO.getBalance() != null && lotVO.getBalance() > 0)
+						.filter(lotVO -> lotVO.getBalance() != null && lotVO.getBalance() > 0 && lotVO.getIsinActionVO().getBookingType().getId() == Constants.DVID_BOOKING_CREDIT)
 						.collect(Collectors.toList())
 					);
 				isinActionCreateVO.setActionType(actionDvSelect.getValue());

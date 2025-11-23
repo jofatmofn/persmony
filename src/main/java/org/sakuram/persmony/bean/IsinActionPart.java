@@ -1,6 +1,9 @@
 package org.sakuram.persmony.bean;
 
 import java.sql.Date;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -10,9 +13,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import org.sakuram.persmony.util.Constants;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -49,4 +55,35 @@ public class IsinActionPart {
 	@OneToOne(mappedBy="isinActionPart", cascade=CascadeType.ALL)
 	private Trade trade;
 
+	@JsonIgnore
+    @OneToMany(mappedBy="fromIsinActionPart")
+    private List<IsinActionMatch> toIsinActionMatchList;
+    
+	@JsonIgnore
+    @OneToMany(mappedBy="toIsinActionPart")
+    private List<IsinActionMatch> fromIsinActionMatchList;
+
+	public double getInQuantity() {
+	    return Optional.ofNullable(fromIsinActionMatchList)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(isinActionMatch -> isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_FIFO &&
+                		isinActionMatch.getFromIsinActionPart().getIsinAction().getDematAccount().getId() == this.getIsinAction().getDematAccount().getId() ||
+                		isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_OTHERS &&
+                		isinActionMatch.getFromIsinActionPart().getIsinAction().getDematAccount().getId() != this.getIsinAction().getDematAccount().getId())	// TODO: There should not be a need for demat based criteria
+                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity())
+                .sum();
+	}
+	
+	public double getOutQuantity() {
+	    return Optional.ofNullable(toIsinActionMatchList)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(isinActionMatch -> isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_FIFO &&
+                		isinActionMatch.getToIsinActionPart().getIsinAction().getDematAccount().getId() == this.getIsinAction().getDematAccount().getId() ||
+                		isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_OTHERS &&
+                		isinActionMatch.getToIsinActionPart().getIsinAction().getDematAccount().getId() != this.getIsinAction().getDematAccount().getId())	// TODO: There should not be a need for demat based criteria
+                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity())
+                .sum();
+	}
 }

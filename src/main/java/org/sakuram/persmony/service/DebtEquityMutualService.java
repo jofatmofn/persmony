@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -61,32 +60,15 @@ public class DebtEquityMutualService {
 	
 	public List<LotVO> fetchLots(String isinStr, Date priorToDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
 		List<IsinActionPart> isinActionPartList;
-		List<IsinActionMatch> isinActionMatchList;
 		List<LotVO> lotVOList;
 		
 		isinActionPartList = isinActionPartRepository.findMatchingIsinActionParts(isinStr, priorToDate, dematAccount, isIsinIndependent, orderBy);
 		
-		isinActionMatchList = isinActionPartList.stream()	// Given the children(IAP) list, get all the parent(IA)'s all the children(IAM)
-			    .map(IsinActionPart::getIsinAction)
-			    .filter(Objects::nonNull)
-			    .flatMap(isinAction -> isinAction.getToIsinActionMatchList().stream())
-			    .distinct()
-			    .collect(Collectors.toList());
 		lotVOList = new ArrayList<LotVO>(isinActionPartList.size());
 		for(IsinActionPart isinActionPart : isinActionPartList) {
 			IsinAction isinAction;
-			double balance;
 			
 			isinAction = isinActionPart.getIsinAction();
-			balance = isinActionPart.getQuantity() - isinActionMatchList
-					.stream()
-					.filter(isinActionMatch -> 
-						isinActionMatch.getFromIsinAction().getId() == isinAction.getId() &&
-						isinActionMatch.getFromIsinAction().getQuantityBooking().getId() == Constants.DVID_BOOKING_CREDIT &&
-						!isinActionMatch.getFromIsinAction().isInternal() &&
-						(isinActionPart.getTrade() == null && isinActionMatch.getFromTrade() == null || isinActionPart.getTrade().getId() == isinActionMatch.getFromTrade().getId()))
-					.mapToDouble(isinActionMatch -> isinActionMatch.getQuantity())
-					.sum();
 			lotVOList.add(new LotVO(
 					new IsinActionVO(
 						isinAction.getId(),
@@ -98,8 +80,9 @@ public class DebtEquityMutualService {
 						new IdValueVO(isinAction.getDematAccount().getId(), isinAction.getDematAccount().getValue()),
 						isinAction.isInternal()),
 					(isinActionPart.getTrade() == null ? null : isinActionPart.getTrade().getId()),
+					isinActionPart.getId(),
 					isinActionPart.getQuantity(),
-					balance,
+					isinActionPart.getQuantity() - isinActionPart.getOutQuantity(),
 					isinActionPart.getAcquisitionDate(),
 					isinActionPart.getPricePerUnit()
 					)
@@ -220,7 +203,7 @@ public class DebtEquityMutualService {
 			
 			switch(rIAEVO.getIsinActionEntrySpecVO().getLotCreationType()) {
 			case TRADE:
-				createLots(isinActionCreateVO.getTradeVOList(), fifoLotVOList, isinAction);
+				createLots(isinActionCreateVO.getTradeVOList(), null, fifoLotVOList, isinAction);
 				break;
 			case PROPAGATION:
 				// TODO Rounding quantities should NOT be done for Mutual Funds
@@ -328,7 +311,7 @@ public class DebtEquityMutualService {
 				tradeVOList = new ArrayList<TradeVO>();
 				// TODO Enhancement to accept BrokeragePerUnit in the UI
 				tradeVOList.add(new TradeVO(null, rIAEVO.getQuantity(), rIAEVO.getPricePerUnit(), null, null, null, null, null, null, null));
-				createLots(tradeVOList, fifoLotVOList, isinAction);
+				createLots(tradeVOList, isinActionPart, fifoLotVOList, isinAction);
 				break;
 			}
 			
@@ -336,7 +319,7 @@ public class DebtEquityMutualService {
 		
 	}
 
-	private void createLots(List<TradeVO> tradeVOList, List<LotVO> fifoLotVOList, IsinAction isinAction) {
+	private void createLots(List<TradeVO> tradeVOList, IsinActionPart isinActionPartInserted, List<LotVO> fifoLotVOList, IsinAction isinAction) {
 		int fifoInd;
 		double currentFifoBalance, lotBalance;
 		
@@ -356,6 +339,7 @@ public class DebtEquityMutualService {
 			
 			if (tradeVO.isEmpty()) {	// isinActionPart already inserted AND trade is not applicable
 				trade = null;
+				isinActionPart = isinActionPartInserted;
 			} else {
 				// IsinActionPart
 				isinActionPart = new IsinActionPart();
@@ -382,24 +366,17 @@ public class DebtEquityMutualService {
 			if (fifoLotVOList != null) {
 				lotBalance = tradeVO.getQuantity();
 				while(lotBalance > 0) {
-					IsinAction fromIsinAction;
-					Trade fromTrade;
+					IsinActionPart fromIsinActionPart;
 					
 					fifoInd = getNextLotWithBalance(fifoLotVOList, fifoInd);
 					currentFifoBalance = fifoLotVOList.get(fifoInd).getBalance();
 					
 					isinActionMatch = new IsinActionMatch();
-					fromIsinAction = isinActionRepository.findById(fifoLotVOList.get(fifoInd).getIsinActionVO().getIsinActionId()).
+					fromIsinActionPart = isinActionPartRepository.findById(fifoLotVOList.get(fifoInd).getIsinActionPartId()).
 							orElseThrow(() -> new AppException("Missing From Isin Action", null));
-					isinActionMatch.setFromIsinAction(fromIsinAction);
-					if (fifoLotVOList.get(fifoInd).getTradeId() != null) {
-						fromTrade = tradeRepository.findById(fifoLotVOList.get(fifoInd).getTradeId()).
-								orElseThrow(() -> new AppException("Missing From Isin Trade", null));
-						isinActionMatch.setFromTrade(fromTrade);
-					}
+					isinActionMatch.setFromIsinActionPart(fromIsinActionPart);
 					isinActionMatch.setMatchReason(Constants.domainValueCache.get(Constants.DVID_ISIN_ACTION_MATCH_REASON_FIFO));
-					isinActionMatch.setToIsinAction(isinAction);
-					isinActionMatch.setToTrade(trade);
+					isinActionMatch.setToIsinActionPart(isinActionPart);
 					if (currentFifoBalance > lotBalance) {
 						isinActionMatch.setQuantity(lotBalance);
 						currentFifoBalance -= lotBalance;

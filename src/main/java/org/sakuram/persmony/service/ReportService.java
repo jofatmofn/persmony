@@ -1100,7 +1100,7 @@ public class ReportService {
 		return reportList;
 	}
 	
-	public List<List<Object[]>> isinReport() {
+	/* public List<List<Object[]>> isinReport() {
 		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
 		List<Isin> isinList;
@@ -1213,7 +1213,7 @@ public class ReportService {
 			previousStockId = isin.getStockId();
 		}
 		return reportList;
-	}
+	} */
 
 	private Triplet<Map<Long, Double[]>, List<List<Object[]>>, List<Object[]>> fetchAccrualForFy(int fyStartYear, Long investorDvId) throws ParseException {
 		Double investorSummary[];
