@@ -30,6 +30,28 @@ public class SavingsAccountTransactionVO {
 	IdValueVO costCenter;
 	IdValueVO voucherType;
 
+	public String toString() {
+		return String.format("%s,%s,%s,%s,%s,%s,%s,\"%s\",%s,%s,%s,%s,%s,%s,%s,%s,%s",
+				savingsAccountTransactionId,
+				bankAccountOrInvestor.value,
+				transactionDate,
+				amount,
+				booking.value,
+				valueDate,
+				reference,
+				narration,
+				balance,
+				transactionId,
+				utrNumber,
+				remitterBranch,
+				(transactionCode == null ? null : transactionCode.value),
+				branchCode,
+				transactionTime,
+				(costCenter == null ? null : costCenter.value),
+				(voucherType == null ? null : voucherType.value)
+				);
+	}
+	
 	public SavingsAccountTransactionVO(long savingsAccountTransactionId, String bankAccountOrInvestor, Date transactionDate, Double amount, String booking) {
 		this.savingsAccountTransactionId = savingsAccountTransactionId;
 		this.bankAccountOrInvestor = new IdValueVO(null, bankAccountOrInvestor);

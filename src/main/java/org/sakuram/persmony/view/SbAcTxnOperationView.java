@@ -3,6 +3,7 @@ package org.sakuram.persmony.view;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.sql.Date;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.sakuram.persmony.service.MiscService;
@@ -28,6 +30,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.vaadin.firitin.components.DynamicFileDownloader;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
@@ -462,6 +466,18 @@ public class SbAcTxnOperationView extends Div {
 			column.setResizable(true);
 		}
 		formLayout.add(savingsAccountTransactionsGrid);
+		formLayout.add(new DynamicFileDownloader("Download as CSV...", "sb_transactions.csv", out -> {
+			Stream<SavingsAccountTransactionVO> savingsAccountTransactionVOStream = null;
+			savingsAccountTransactionVOStream = savingsAccountTransactionsGrid.getGenericDataView().getItems();
+
+			PrintWriter writer = new PrintWriter(out);
+			writer.println("savingsAccountTransactionId,bankAccountOrInvestor,transactionDate,amount,booking,valueDate,reference,narration,balance,transactionId,utrNumber,remitterBranch,transactionCode,branchCode,transactionTime,costCenter,voucherType");
+			savingsAccountTransactionVOStream.forEach(savingsAccountTransactionVO -> {
+				writer.println(savingsAccountTransactionVO.toString());
+			});
+			writer.close();
+		}));
+
 		
 		// On click of Fetch
 		fetchButton.addClickListener(event -> {
@@ -702,7 +718,7 @@ public class SbAcTxnOperationView extends Div {
 					}
 				}
 				for (Map.Entry<Character, Double> groupTotalEntry : groupwiseTotalMap.entrySet()) {
-					if (groupTotalEntry.getValue().doubleValue() > sbAcTxnAmount.doubleValue()) {
+					if (groupTotalEntry.getValue().doubleValue() > sbAcTxnAmount.doubleValue() + Constants.EPSILON) {
 						ViewFuncs.showError("Group <" + groupTotalEntry.getKey() + ">: Total of Category-wise amounts (" + groupTotalEntry.getValue().doubleValue() + ") exceeds the SB A/c Txn. Amount.");
 						return;
 					}

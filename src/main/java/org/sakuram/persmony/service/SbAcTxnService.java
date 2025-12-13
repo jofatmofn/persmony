@@ -483,7 +483,7 @@ public class SbAcTxnService {
 					for (SbAcTxnCategory sbAcTxnCategoryUpdated : savingsAccountTransaction.getSbAcTxnCategoryList()) {
 						if (sbAcTxnCategoryVO.getSbAcTxnCategoryId().equals(sbAcTxnCategoryUpdated.getId())) {
 							if (sbAcTxnCategoryUpdated.getTransactionCategory().getId() != sbAcTxnCategoryVO.getTransactionCategory().getId() ||
-									!sbAcTxnCategoryUpdated.getEndAccountReference().equals(sbAcTxnCategoryVO.getEndAccountReference().getValue()) ||
+									!Objects.equals(sbAcTxnCategoryUpdated.getEndAccountReference(), sbAcTxnCategoryVO.getEndAccountReference().getValue()) ||
 									!Objects.equals(sbAcTxnCategoryUpdated.getGroupId(), sbAcTxnCategoryVO.getGroupId()) ||
 									!sbAcTxnCategoryUpdated.getAmount().equals(sbAcTxnCategoryVO.getAmount())) {
 								sbAcTxnCategoryUpdated.setTransactionCategory(transactionCategoryDvUi);
