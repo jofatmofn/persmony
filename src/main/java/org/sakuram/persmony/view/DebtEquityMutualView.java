@@ -1,7 +1,6 @@
 package org.sakuram.persmony.view;
 
 import java.sql.Date;
-import java.time.LocalDate;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.sakuram.persmony.service.DebtEquityMutualService;
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.AccountingIsinActionEntryVO;
+import org.sakuram.persmony.valueobject.ActionVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.IsinActionCreateVO;
 import org.sakuram.persmony.valueobject.IsinActionSpecVO;
@@ -50,6 +50,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -173,7 +174,7 @@ public class DebtEquityMutualView extends Div {
 					List<LotVO> lotVOList = null;
 					
 		            dialog.close();
-					lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), new java.sql.Date(new java.util.Date().getTime()), dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "S");
+					lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), null, dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "S");
 					Notification.show("No. of Lots fetched: " + lotVOList.size())
 						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 					lotsGrid.setColumns("isinActionVO.internal", "isinActionVO.settlementDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "tradeId", "isinActionVO.actionType.value", "isinActionVO.bookingType.value", "isinActionVO.dematAccount.value", "transactionQuantity");
@@ -215,7 +216,7 @@ public class DebtEquityMutualView extends Div {
 					List<LotVO> lotVOList = null;
 					
 		            dialog.close();
-					lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), new java.sql.Date(new java.util.Date().getTime()), dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "A")
+					lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), null, dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "A")
 							.stream()
 							.filter(lotVO -> lotVO.getIsinActionVO().getBookingType().getId() == Constants.DVID_BOOKING_CREDIT)
 							.collect(Collectors.toList());
@@ -248,9 +249,15 @@ public class DebtEquityMutualView extends Div {
 		SecuritySearchComponent securitySearchComponent;
 		Select<IdValueVO> dematAccountDvSelect, actionDvSelect;
 		DatePicker recordDateDatePicker;
+		IntegerField actionIdIntegerField;	// TODO LongField
+		IntegerField newSharesPerOldIntegerField, oldSharesBaseIntegerField;
+		HorizontalLayout hLayout;
 		List<LotVO> fifoLotVOList;
 		IsinActionCreateVO isinActionCreateVO;
 		IsinActionSpecVO isinActionSpecVO;
+		
+		actionIdIntegerField = new IntegerField();
+        parentFormLayout.addFormItem(actionIdIntegerField, "Action Id");
 		
         actionDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_SECURITY_ACTION, false, true), null, false, false);
         parentFormLayout.addFormItem(actionDvSelect, "Action");
@@ -259,7 +266,7 @@ public class DebtEquityMutualView extends Div {
 		childFormLayout = new FormLayout();
 		childFormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 
-		isinActionSpecVO = new IsinActionSpecVO(new ArrayList<IsinActionEntrySpecVO>());
+		isinActionSpecVO = new IsinActionSpecVO();
 		isinActionCreateVO = new IsinActionCreateVO();
 		fifoLotVOList = new ArrayList<LotVO>();
 		isinActionCreateVO.setFifoLotVOList(fifoLotVOList);
@@ -267,30 +274,88 @@ public class DebtEquityMutualView extends Div {
 		securitySearchComponent = new SecuritySearchComponent(debtEquityMutualService, miscService);
 		parentFormLayout.addFormItem(securitySearchComponent.getLayout(), "Entitled ISIN");
 		
+        recordDateDatePicker = new DatePicker();
+		parentFormLayout.addFormItem(recordDateDatePicker, "Record Date");
+		
+		newSharesPerOldIntegerField = new IntegerField();
+		oldSharesBaseIntegerField = new IntegerField();
+		newSharesPerOldIntegerField.setMin(1);
+		newSharesPerOldIntegerField.setMax(100);
+		newSharesPerOldIntegerField.setEnabled(isinActionSpecVO.isRatioApplicable());
+		oldSharesBaseIntegerField.setMin(1);
+		oldSharesBaseIntegerField.setMax(100);
+		oldSharesBaseIntegerField.setEnabled(isinActionSpecVO.isRatioApplicable());
+		hLayout = new HorizontalLayout();
+		hLayout.add(newSharesPerOldIntegerField, new Label(":"), oldSharesBaseIntegerField);
+		parentFormLayout.addFormItem(hLayout, "Ratio (New:Old)");
+		
         dematAccountDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), null, false, false);
         parentFormLayout.addFormItem(dematAccountDvSelect, "Demat Account");
         
-        recordDateDatePicker = new DatePicker();
-        recordDateDatePicker.setValue(LocalDate.now());
-		parentFormLayout.addFormItem(recordDateDatePicker, "Record Date");
-		
 		parentFormLayout.add(childFormLayout);
 		
+        actionIdIntegerField.addValueChangeListener(event -> {
+        	if (actionIdIntegerField.getValue() == null) {
+        		actionDvSelect.setValue(null);
+        		actionDvSelect.setEnabled(true);
+        		securitySearchComponent.getIsinTextField().setValue("");
+        		securitySearchComponent.setEnabled(true);
+    			recordDateDatePicker.setValue(null);
+        		recordDateDatePicker.setEnabled(true);
+        		newSharesPerOldIntegerField.setValue(null);
+        		newSharesPerOldIntegerField.setEnabled(true);
+        		oldSharesBaseIntegerField.setValue(null);
+        		oldSharesBaseIntegerField.setEnabled(true);
+        	} else {
+        		ActionVO actionVO = debtEquityMutualService.fetchAction(actionIdIntegerField.getValue().longValue());
+        		actionDvSelect.setValue(actionVO.getActionType());
+        		actionDvSelect.setEnabled(false);
+        		securitySearchComponent.getIsinTextField().setValue(actionVO.getEntitledIsin() == null ? "" : actionVO.getEntitledIsin());
+        		securitySearchComponent.setEnabled(false);
+        		recordDateDatePicker.setValue(actionVO.getRecordDate() == null ? null : actionVO.getRecordDate().toLocalDate());
+        		recordDateDatePicker.setEnabled(false);
+        		newSharesPerOldIntegerField.setValue(actionVO.getNewSharesPerOld() == null ? null : actionVO.getNewSharesPerOld().intValue());
+        		newSharesPerOldIntegerField.setEnabled(false);
+        		oldSharesBaseIntegerField.setValue(actionVO.getOldSharesBase() == null ? null : actionVO.getOldSharesBase().intValue());
+        		oldSharesBaseIntegerField.setEnabled(false);
+        	}
+        });
+        
         actionDvSelect.addValueChangeListener(event -> {
         	childFormLayout.remove(childFormLayout.getChildren().collect(Collectors.toList()));
-        	isinActionSpecVO.getIsinActionEntrySpecVOList().clear();
-        	if (Constants.ISIN_ACTION_SPEC_MAP.containsKey(actionDvSelect.getValue().getId())) {
+        	if (actionDvSelect.getValue() != null && Constants.ISIN_ACTION_SPEC_MAP.containsKey(actionDvSelect.getValue().getId())) {
         		IsinActionSpecVO localIsinActionSpecVO = Constants.ISIN_ACTION_SPEC_MAP.get(actionDvSelect.getValue().getId());
-        		isinActionSpecVO.getIsinActionEntrySpecVOList().addAll(localIsinActionSpecVO.getIsinActionEntrySpecVOList());
+        		isinActionSpecVO.copyFrom(localIsinActionSpecVO);
+        		if (isinActionSpecVO.isRecordDateApplicable()) {
+            		recordDateDatePicker.setEnabled(true);
+        		} else {
+        			recordDateDatePicker.setValue(null);
+            		recordDateDatePicker.setEnabled(false);
+        		}
+        		if (isinActionSpecVO.isRatioApplicable()) {
+        			newSharesPerOldIntegerField.setEnabled(true);
+        			oldSharesBaseIntegerField.setEnabled(true);
+        		} else {
+            		newSharesPerOldIntegerField.setValue(null);
+        			newSharesPerOldIntegerField.setEnabled(false);
+            		oldSharesBaseIntegerField.setValue(null);
+        			oldSharesBaseIntegerField.setEnabled(false);
+        		}
 				if (securitySearchComponent.getIsinTextField().getValue() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
 						dematAccountDvSelect.getValue() != null &&
-						recordDateDatePicker.getValue() != null) {
-					isinActionCreateVO.setActionType(actionDvSelect.getValue());
-					isinActionCreateVO.setEntitledIsin(securitySearchComponent.getIsinTextField().getValue());
+						(recordDateDatePicker.getValue() != null || !isinActionSpecVO.isRecordDateApplicable())) {
+					isinActionCreateVO.setActionVO(new ActionVO(
+							new IdValueVO(actionDvSelect.getValue().getId(), null),
+							securitySearchComponent.getIsinTextField().getValue(),
+							(recordDateDatePicker.getValue() == null ? null : Date.valueOf(recordDateDatePicker.getValue())),
+							(newSharesPerOldIntegerField.getValue() == null ? null : newSharesPerOldIntegerField.getValue().shortValue()),
+							(oldSharesBaseIntegerField.getValue() == null ? null : oldSharesBaseIntegerField.getValue().shortValue())
+							));
 					isinActionCreateVO.setDematAccount(dematAccountDvSelect.getValue());
-					isinActionCreateVO.setRecordDate(Date.valueOf(recordDateDatePicker.getValue()));
 	        		handleCreateIsinActions2(childFormLayout, isinActionSpecVO, isinActionCreateVO);
 				}
+        	} else {
+        		isinActionSpecVO.copyFrom(new IsinActionSpecVO());
         	}
         });
         
@@ -298,16 +363,20 @@ public class DebtEquityMutualView extends Div {
 			fifoLotVOList.clear();
 			if (securitySearchComponent.getIsinTextField().getValue() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
 					dematAccountDvSelect.getValue() != null &&
-					recordDateDatePicker.getValue() != null) {
-				fifoLotVOList.addAll(debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), Date.valueOf(recordDateDatePicker.getValue()), dematAccountDvSelect.getValue().getId(), false, "A")
+					(recordDateDatePicker.getValue() != null || !isinActionSpecVO.isRecordDateApplicable())) {
+				fifoLotVOList.addAll(debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), recordDateDatePicker.getValue() == null ? null : Date.valueOf(recordDateDatePicker.getValue()), dematAccountDvSelect.getValue().getId(), false, "A")
 						.stream()
 						.filter(lotVO -> lotVO.getBalance() != null && lotVO.getBalance() > 0 && lotVO.getIsinActionVO().getBookingType().getId() == Constants.DVID_BOOKING_CREDIT)
 						.collect(Collectors.toList())
 					);
-				isinActionCreateVO.setActionType(actionDvSelect.getValue());
-				isinActionCreateVO.setEntitledIsin(securitySearchComponent.getIsinTextField().getValue());
+				isinActionCreateVO.setActionVO(new ActionVO(
+						new IdValueVO(actionDvSelect.getValue().getId(), null),
+						securitySearchComponent.getIsinTextField().getValue(),
+						(recordDateDatePicker.getValue() == null ? null : Date.valueOf(recordDateDatePicker.getValue())),
+						(newSharesPerOldIntegerField.getValue() == null ? null : newSharesPerOldIntegerField.getValue().shortValue()),
+						(oldSharesBaseIntegerField.getValue() == null ? null : oldSharesBaseIntegerField.getValue().shortValue())
+						));
 				isinActionCreateVO.setDematAccount(dematAccountDvSelect.getValue());
-				isinActionCreateVO.setRecordDate(Date.valueOf(recordDateDatePicker.getValue()));
 	    		handleCreateIsinActions2(childFormLayout, isinActionSpecVO, isinActionCreateVO);
 			}
 		};
@@ -355,8 +424,9 @@ public class DebtEquityMutualView extends Div {
 			realIAEVOList.add(realIsinActionEntryVO);
 			realIsinActionEntryVO.setIsinActionEntrySpecVO(isinActionEntrySpecVO);
 			RealIsinActionEntryEditor realIsinActionEntryEditor = context.getBean(RealIsinActionEntryEditor.class, realIsinActionEntryVO,
-					new RealIsinActionEntryEditor.InputArgs(isinActionCreateVO.getEntitledIsin(), isinActionCreateVO.getDematAccount(), isinActionCreateVO.getRecordDate(), balanceNumberField.getValue(),
+					new RealIsinActionEntryEditor.InputArgs(isinActionCreateVO.getActionVO().getEntitledIsin(), isinActionCreateVO.getDematAccount(), isinActionCreateVO.getActionVO().getRecordDate(), balanceNumberField.getValue(),
 							isinActionEntrySpecVOList.stream().anyMatch(iActionEntrySpecVO -> iActionEntrySpecVO.getLotCreationType() == IsinActionEntrySpecVO.IALotCreationType.TRADE),
+							isinActionSpecVO.getActionDvId() == Constants.DVID_ISIN_ACTION_TYPE_GIFT_OR_TRANSFER && isinActionEntrySpecVO.getEntrySpecName().equals(Constants.ACTION_TYPE_GIFT_OR_TRANSFER_ENTRY_SPEC_NAME_RECEIVE),
 							debtEquityMutualService, miscService));
 			realIsinActionEntryEditorList.add(realIsinActionEntryEditor);
 			childFormLayout.add(realIsinActionEntryEditor);
@@ -401,7 +471,7 @@ public class DebtEquityMutualView extends Div {
 						ViewFuncs.showError("ACTION level quantity is required to map FIFO details");
 						return;
 					}
-					acceptFifoMap(new String[] {isinActionCreateVO.getEntitledIsin(), isinActionCreateVO.getDematAccount().getValue()}, isinActionCreateVO.getFifoLotVOList(), quantityAR.get());
+					acceptFifoMap(new String[] {isinActionCreateVO.getActionVO().getEntitledIsin(), isinActionCreateVO.getDematAccount().getValue()}, isinActionCreateVO.getFifoLotVOList(), quantityAR.get());
 				} catch (Exception e) {
 					ViewFuncs.showError("System Error!!! Contact Support.");
 					e.printStackTrace();
@@ -523,7 +593,7 @@ public class DebtEquityMutualView extends Div {
 		quantityPriceGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		quantityPriceGrid.setNestedNullBehavior(NestedNullBehavior.ALLOW_NULLS);
 		quantityPriceGrid.setItems(balanceLotVOList);
-		quantityPriceGrid.setColumns("acquisitionDate", "isinActionVO.actionType.value", "transactionQuantity", "balance");
+		quantityPriceGrid.setColumns("ownershipChangeDate", "isinActionVO.actionType.value", "transactionQuantity", "balance");
 		quantityPriceGrid.getColumnByKey("balance").setHeader("Mapped Quantity");
 		for (Column<LotVO> column : quantityPriceGrid.getColumns()) {
 			column.setResizable(true);

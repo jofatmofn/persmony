@@ -1,6 +1,5 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -14,10 +13,12 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class IsinActionCreateVO {
-	IdValueVO actionType;
-	String entitledIsin;
+	// Existing Action
+	Long actionId;
+	// New Action
+	ActionVO actionVO;
+	
 	IdValueVO dematAccount;
-	Date recordDate;
 	List<RealIsinActionEntryVO> realIAEVOList;
 
 	List<LotVO> fifoLotVOList;

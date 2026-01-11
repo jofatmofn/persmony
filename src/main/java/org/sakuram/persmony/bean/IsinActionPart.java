@@ -42,8 +42,8 @@ public class IsinActionPart {
 	@JoinColumn(name="isin_action_fk", nullable=false)
 	private IsinAction isinAction;
 	
-	@Column(name="acquisition_date", nullable=false)
-	private Date acquisitionDate;
+	@Column(name="ownership_change_date", nullable=false)
+	private Date ownershipChangeDate;
 	
 	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
 	private Double quantity;

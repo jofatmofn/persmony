@@ -67,9 +67,9 @@ public class MiscService {
     	}
     	
     	try (CSVParser csvParser = new CSVParser(new BufferedReader(new InputStreamReader(new FileInputStream(new File(getClass().getClassLoader().getResource("IA Spec.csv").toURI())), "UTF-8")), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+	    	Long actionTypeDvId = null;
     		for (CSVRecord csvRecord : csvParser.getRecords()) {
     	    	List<String> cellContentList;
-    	    	Long actionTypeDvId;
     	    	List<IsinActionEntrySpecVO> isinActionEntrySpecVOList;
     	    	IsinActionEntrySpecVO isinActionEntrySpecVO;
     	    	int col;
@@ -77,29 +77,34 @@ public class MiscService {
     	    	cellContentList = new ArrayList<String>();
     			csvRecord.iterator().forEachRemaining(cellContentList::add);
     			cellContentList.replaceAll(String::trim);
-    			actionTypeDvId = Long.valueOf(cellContentList.get(0));
+    			if (!cellContentList.get(0).equals("")) {	// Else use the previous value
+        			actionTypeDvId = Long.valueOf(cellContentList.get(0));
+    			}
     			if (Constants.ISIN_ACTION_SPEC_MAP.containsKey(actionTypeDvId)) {
     				isinActionEntrySpecVOList = Constants.ISIN_ACTION_SPEC_MAP.get(actionTypeDvId).getIsinActionEntrySpecVOList();
     			} else {
     				isinActionEntrySpecVOList = new ArrayList<IsinActionEntrySpecVO>();
-    				Constants.ISIN_ACTION_SPEC_MAP.put(actionTypeDvId, new IsinActionSpecVO(isinActionEntrySpecVOList));
+        			col = 0;
+    				Constants.ISIN_ACTION_SPEC_MAP.put(actionTypeDvId, new IsinActionSpecVO(
+        					Long.valueOf(cellContentList.get(col++)),
+    						Boolean.valueOf(cellContentList.get(col++)),
+    						Boolean.valueOf(cellContentList.get(col++)),
+    						Boolean.valueOf(cellContentList.get(col++)),
+    						isinActionEntrySpecVOList));
     			}
-    			col = 0;
+    			col = 4;
     			isinActionEntrySpecVO = new IsinActionEntrySpecVO(
-    					Long.valueOf(cellContentList.get(col++)),
     					cellContentList.get(col++),
     					Long.valueOf(cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinType.class, cellContentList.get(col++)),
-    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IASettlementDateType.class, cellContentList.get(col++)),
-    					Boolean.valueOf(cellContentList.get(col++)),
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IADateType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAQuantityType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAPriceType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAFifoMappingType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotDateType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotQuantityType.class, cellContentList.get(col++)),
-    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotPriceType.class, cellContentList.get(col++)),
-    					Boolean.valueOf(cellContentList.get(col++))
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotPriceType.class, cellContentList.get(col++))
     					);
     			isinActionEntrySpecVOList.add(isinActionEntrySpecVO);
     			/* for (String cellContent: cellContentList) {

@@ -20,7 +20,7 @@ public class LotVO {
 	Long isinActionPartId;
 	Double transactionQuantity;
 	Double balance;
-	Date acquisitionDate;
+	Date ownershipChangeDate;
 	Double pricePerUnit;
 	
 	// For cloning during .addAll to beforeChange backup list
@@ -30,7 +30,7 @@ public class LotVO {
 		this.isinActionPartId = lotVO.isinActionPartId;
 		this.transactionQuantity = lotVO.transactionQuantity;
 		this.balance = lotVO.balance;
-		this.acquisitionDate = lotVO.acquisitionDate;
+		this.ownershipChangeDate = lotVO.ownershipChangeDate;
 		this.pricePerUnit = lotVO.pricePerUnit;
 	}
 }

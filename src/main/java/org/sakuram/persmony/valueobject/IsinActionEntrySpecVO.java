@@ -18,9 +18,10 @@ public class IsinActionEntrySpecVO {
 		OTHER_ISIN
 	}
 	
-	public enum IASettlementDateType implements FlaggedEnum {
-		RECORD_DATE,
-		OTHER_DATE
+	public enum IADateType implements FlaggedEnum {
+		ACQUISITION,
+		DISPOSAL,
+		NONE
 	}
 	
 	public enum IAQuantityType implements FlaggedEnum {
@@ -70,12 +71,10 @@ public class IsinActionEntrySpecVO {
 		NULL;
 	}
 	
-	long actionDvId;
 	String entrySpecName;
 	long bookingTypeDvId;
 	IAIsinType isinInputType;
-	IASettlementDateType settlementDateInputType;
-	boolean isFactorOfExistingQuantity;
+	IADateType dateType;
 	IAQuantityType quantityInputType;
 	IAPriceType priceInputType;
 	IAFifoMappingType fifoMappingType;
@@ -83,5 +82,4 @@ public class IsinActionEntrySpecVO {
 	IALotDateType lotDateType;
 	IALotQuantityType lotQuantityType;
 	IALotPriceType lotPriceType;
-	boolean toGroupIAs;
 }

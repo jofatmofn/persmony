@@ -45,12 +45,14 @@ public class IsinActionPartRepositoryImpl implements IsinActionPartRepositoryCus
 			mainQueryStringBuffer.append(String.valueOf(dematAccount));
 			mainQueryStringBuffer.append(" ");
 		}
-		mainQueryStringBuffer.append("AND IAP.acquisition_date <= '");
-		mainQueryStringBuffer.append(Constants.ANSI_DATE_FORMAT.format(sellDate));
-		mainQueryStringBuffer.append("' ");
+		if (sellDate != null) {
+			mainQueryStringBuffer.append("AND IAP.ownership_change_date <= '");
+			mainQueryStringBuffer.append(Constants.ANSI_DATE_FORMAT.format(sellDate));
+			mainQueryStringBuffer.append("' ");
+		}
 		mainQueryStringBuffer.append("ORDER BY ");
 		if (orderBy.equals("A")) {
-			mainQueryStringBuffer.append("IAP.acquisition_date");
+			mainQueryStringBuffer.append("IAP.ownership_change_date");
 		} else {
 			mainQueryStringBuffer.append("IA.settlement_date");
 		}

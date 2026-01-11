@@ -45,7 +45,7 @@ public class Action {
 	@Column(name="old_shares_base", nullable=true)
 	private Short oldSharesBase;
 	
-	@Column(name="fractional_entitlement_cash", nullable=true, columnDefinition="NUMERIC", precision=8, scale=3)
+	@Column(name="fractional_entitlement_cash", nullable=true, columnDefinition="NUMERIC", precision=8, scale=3)	// TODO Belongs to Demat level Action
 	private Double fractionalEntitlementCash;
 	
 }
