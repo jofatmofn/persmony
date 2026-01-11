@@ -58,9 +58,6 @@ public class IsinAction {
 	@JoinColumn(name="demat_account_fk", nullable=false)
 	private DomainValue dematAccount;
 	
-	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)	// TODO: Delete
-	private Double quantity;
-
 	@ManyToOne
 	@JoinColumn(name="quantity_booking_fk", nullable=false)
 	private DomainValue quantityBooking;
@@ -85,9 +82,6 @@ public class IsinAction {
 	@OrderBy("acquisitionDate")
 	private List<IsinActionPart> isinActionPartList;
 
-	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)	// TODO: Delete
-	private Double pricePerUnit;
-	
 	public double getComputedQuantity() {
 	    return Optional.ofNullable(isinActionPartList)
                 .orElse(Collections.emptyList())

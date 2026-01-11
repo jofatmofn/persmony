@@ -27,19 +27,16 @@ public class IsinActionMatch {
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name="from_isin_action_part_fk", nullable=true)	// Only for match reason FIFO, this is false
+	@JoinColumn(name="from_isin_action_part_fk", nullable=false)
 	private IsinActionPart fromIsinActionPart;
 	
 	@ManyToOne
-	@JoinColumn(name="to_isin_action_part_fk", nullable=true) // Only for match reason FIFO, this is false
+	@JoinColumn(name="to_isin_action_part_fk", nullable=false)
 	private IsinActionPart toIsinActionPart;
 	
 	@Column(name="quantity", nullable=true, columnDefinition="NUMERIC", precision=11, scale=5)
 	private Double quantity;
 
-	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double pricePerUnit;
-	
 	@ManyToOne
 	@JoinColumn(name="match_reason_fk", nullable=false)
 	private DomainValue matchReason;

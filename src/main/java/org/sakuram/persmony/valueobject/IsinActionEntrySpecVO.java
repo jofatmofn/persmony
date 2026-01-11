@@ -83,4 +83,5 @@ public class IsinActionEntrySpecVO {
 	IALotDateType lotDateType;
 	IALotQuantityType lotQuantityType;
 	IALotPriceType lotPriceType;
+	boolean toGroupIAs;
 }

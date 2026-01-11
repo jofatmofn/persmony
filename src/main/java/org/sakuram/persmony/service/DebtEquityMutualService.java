@@ -122,7 +122,9 @@ public class DebtEquityMutualService {
 		}
 		
 		// Action
-		if (isinActionCreateVO.getAccountingIAEVOList().size() + isinActionCreateVO.getRealIAEVOList().size() > 1) {
+		if (isinActionCreateVO.getAccountingIAEVOList().size() + isinActionCreateVO.getRealIAEVOList().size() > 1 &&
+				isinActionCreateVO.getActionType().getId() != Constants.DVID_ISIN_ACTION_TYPE_GIFT_OR_TRANSFER ||
+				isinActionCreateVO.getRealIAEVOList().stream().anyMatch(realIsinActionEntryVO -> realIsinActionEntryVO.getIsinActionEntrySpecVO().isToGroupIAs())) {
 			isin = isinRepository.findByIdCaseInsensitive(isinActionCreateVO.getEntitledIsin()).
 					orElseThrow(() -> new AppException("Missing ISIN " + isinActionCreateVO.getEntitledIsin(), null));
 			action = new Action();
@@ -131,7 +133,7 @@ public class DebtEquityMutualService {
 			action.setFractionalEntitlementCash(null);	// TODO: Later enhancement
 			action.setNewSharesPerOld(newSharesPerOld);
 			action.setOldSharesBase(oldSharesBase);
-			action.setRecordDate(isinActionCreateVO.getRecordDate());	// TODO: Record Date is not stored, if Action is not created
+			action.setRecordDate(isinActionCreateVO.getRecordDate());
 			actionRepository.save(action);
 		} else {
 			action = null;

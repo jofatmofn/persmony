@@ -63,10 +63,7 @@ public class RealIsinActionEntryEditor extends FormLayout {
 	    bookingTextField.setEnabled(false);
 	    
 		addFormItem(settlementDateDatePicker, "Settlement Date");
-		if (realIsinActionEntryVO.getIsinActionEntrySpecVO().getSettlementDateInputType() == IsinActionEntrySpecVO.IASettlementDateType.OTHER_DATE) {
-			settlementDateDatePicker.setEnabled(true);
-		} else {
-			settlementDateDatePicker.setEnabled(false);
+		if (realIsinActionEntryVO.getIsinActionEntrySpecVO().getSettlementDateInputType() == IsinActionEntrySpecVO.IASettlementDateType.RECORD_DATE) {
 			realIsinActionEntryVO.setSettlementDate(inputArgs.getRecordDate());
 		}
 		

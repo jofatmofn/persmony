@@ -98,7 +98,8 @@ public class MiscService {
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotCreationType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotDateType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotQuantityType.class, cellContentList.get(col++)),
-    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotPriceType.class, cellContentList.get(col++))
+    					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IALotPriceType.class, cellContentList.get(col++)),
+    					Boolean.valueOf(cellContentList.get(col++))
     					);
     			isinActionEntrySpecVOList.add(isinActionEntrySpecVO);
     			/* for (String cellContent: cellContentList) {

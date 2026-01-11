@@ -39,9 +39,6 @@ public class Action {
 	@Column(name="record_date", nullable=true)	// TODO: Nullable false
 	private Date recordDate;
 	
-	@Column(name="new_isto_old", length=8, nullable=true)	// TODO: Delete
-	private String newIstoOld;
-
 	@Column(name="new_shares_per_old", nullable=true)
 	private Short newSharesPerOld;
 	
