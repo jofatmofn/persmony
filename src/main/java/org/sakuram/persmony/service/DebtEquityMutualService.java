@@ -142,7 +142,8 @@ public class DebtEquityMutualService {
 			
 			isinAction = new IsinAction();
 			if (action == null) {
-				isinAction.setActionType(Constants.domainValueCache.get(isinActionCreateVO.getActionVO().getActionType().getId()));
+				// isinAction.setActionType(Constants.domainValueCache.get(isinActionCreateVO.getActionVO().getActionType().getId()));
+				throw new AppException("Unhandled scenario - Internal entry without Action", null);
 			} else {
 				isinAction.setAction(action);
 			}
@@ -152,6 +153,11 @@ public class DebtEquityMutualService {
 			isinAction.setQuantityBooking(Constants.domainValueCache.get(aIAEVO.getBookingType().getId()));
 			isinAction.setSettlementDate(aIAEVO.getSettlementDate());
 			isinActionRepository.save(isinAction);
+			// IsinActionPart
+			isinActionPart = new IsinActionPart();
+			isinActionPart.setIsinAction(isinAction);
+			isinActionPart.setQuantity(aIAEVO.getTransactionQuantity());
+			isinActionPartRepository.save(isinActionPart);
 		}
 		
 		// IsinAction - Real

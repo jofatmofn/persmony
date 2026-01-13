@@ -42,7 +42,7 @@ public class IsinActionPart {
 	@JoinColumn(name="isin_action_fk", nullable=false)
 	private IsinAction isinAction;
 	
-	@Column(name="ownership_change_date", nullable=false)
+	@Column(name="ownership_change_date", nullable=true)
 	private Date ownershipChangeDate;
 	
 	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
