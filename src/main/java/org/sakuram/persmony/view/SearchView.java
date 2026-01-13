@@ -34,7 +34,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -228,7 +228,7 @@ public class SearchView extends Div {
 			Grid<RealisationVO> realisationGrid;
 			Grid<SavingsAccountTransactionVO> savingsAccountTransactionGrid;
 			Button closeButton;
-			Label investmentLabel;
+			NativeLabel investmentLabel;
 			
 			try {
 				dialog = new Dialog();
@@ -241,7 +241,7 @@ public class SearchView extends Div {
 				verticalLayout.getStyle().set("width", "90rem");
 				dialog.add(verticalLayout);
 				
-				investmentLabel = new Label("Investment: <" + event.getItem().getInvestmentId() + "> / <" + event.getItem().getProductProvider() + "> / <" + event.getItem().getProductName() + "> / <" + event.getItem().getInvestmentIdWithProvider() + ">");
+				investmentLabel = new NativeLabel("Investment: <" + event.getItem().getInvestmentId() + "> / <" + event.getItem().getProductProvider() + "> / <" + event.getItem().getProductName() + "> / <" + event.getItem().getInvestmentIdWithProvider() + ">");
 				verticalLayout.add(investmentLabel);
 
 				investmentTransactionsGrid = new Grid<>(InvestmentTransactionVO.class);

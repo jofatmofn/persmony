@@ -2,7 +2,6 @@ package org.sakuram.persmony.view;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.sql.Date;
 import java.util.AbstractMap;
@@ -15,7 +14,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.SbAcTxnService;
 import org.sakuram.persmony.util.Constants;
@@ -28,8 +26,8 @@ import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 import org.sakuram.persmony.valueobject.SbAcTxnImportStatsVO;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
@@ -48,7 +46,7 @@ import com.vaadin.flow.component.grid.Grid.NestedNullBehavior;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -311,32 +309,20 @@ public class SbAcTxnOperationView extends Div {
 			ViewFuncs.showError(event.getErrorMessage());
 		});
 		upload.addSucceededListener(event -> {
-			DiskFileItem diskFileItem;
-			InputStream inputStream;
-			OutputStream outputStream;
-			int ret;
-			
-		    try {
-		    	diskFileItem = new org.apache.commons.fileupload.disk.DiskFileItem(
-		    			"file",
-	    				"text/csv",
-	    				true,
-	    				event.getFileName(),
-	    				(int) fileBuffer.getInputStream().available(),
-	    				fileBuffer.getFileData().getFile().getParentFile());
-		    	// stackoverflow 42253005 commonsmultipartfile-size-is-0
-		    	inputStream = fileBuffer.getInputStream();
-		    	outputStream = diskFileItem.getOutputStream(); // stackoverflow 4120635 java-lang-nullpointerexception-while-creating-diskfileitem
-		    	ret = inputStream.read();
-		    	while ( ret != -1 )
-		    	{
-		    		outputStream.write(ret);
-		    	    ret = inputStream.read();
-		    	}
-		    	outputStream.flush();
-		    	uploadedContents.setMultipartFile(new CommonsMultipartFile(diskFileItem));
+		    try (InputStream in = fileBuffer.getInputStream()) {
+
+		        MultipartFile multipartFile =
+		            new MockMultipartFile(
+		                "file",                       // form field name
+		                event.getFileName(),          // original filename
+		                event.getMIMEType(),          // content type
+		                in                            // stream
+		            );
+
+		        uploadedContents.setMultipartFile(multipartFile);
+
 		    } catch (IOException e) {
-				ViewFuncs.showError("File upload failed: " + e.getMessage());
+		        ViewFuncs.showError("Upload failed: " + e.getMessage());
 		    }
 		});
 		
@@ -632,7 +618,7 @@ public class SbAcTxnOperationView extends Div {
 		TextField groupIdTextField;
 		NumberField amountNumberField;
 		Grid.Column<SbAcTxnCategoryVO> transactionCategoryColumn, endAccountReferenceColumn, amountColumn, groupIdColumn;
-		Label txnAmountLabel;
+		NativeLabel txnAmountLabel;
 		
 		sbAcTxnCategoryVOList = sbAcTxnService.fetchSbAcTxnCategories(savingsAccountTransactionId);
 		
@@ -648,7 +634,7 @@ public class SbAcTxnOperationView extends Div {
 		verticalLayout.getStyle().set("width", "75rem");
 		dialog.add(verticalLayout);
 		
-		txnAmountLabel = new Label("SB A/c Txn. Amount: " + sbAcTxnAmount.doubleValue());
+		txnAmountLabel = new NativeLabel("SB A/c Txn. Amount: " + sbAcTxnAmount.doubleValue());
 		verticalLayout.add(txnAmountLabel);
 
 		sbAcTxnCategoryGrid = new Grid<>(SbAcTxnCategoryVO.class, false);

@@ -44,7 +44,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -663,20 +663,20 @@ public class OperationView extends Div {
 		TextField oldInvestmentIdTextField, investmentIdWithProviderTextField;
 		NumberField rateOfInterestNumberField, faceValueNumberField;
 		DatePicker investmentEndDatePicker;
-		Label label1;
+		NativeLabel label1;
 		Button saveButton, paymentScheduleButton, receiptScheduleButton, accrualScheduleButton;
 		List<ScheduleVO> paymentScheduleVOList,  receiptScheduleVOList, accrualScheduleVOList;
 		HorizontalLayout hLayout;
 		
 		// UI Elements
-		label1 = new Label();
+		label1 = new NativeLabel();
 		formLayout.addFormItem(label1, "");
 		label1.getElement().setProperty("innerHTML", "<b>Details of the old investment being renewed</b>");
 		
 		oldInvestmentIdTextField = new TextField();
 		formLayout.addFormItem(oldInvestmentIdTextField, "Persmony Investment Id");
 		
-		label1 = new Label();
+		label1 = new NativeLabel();
 		formLayout.addFormItem(label1, "");
 		label1.getElement().setProperty("innerHTML", "<b>Details of the new/renewed investment</b>");
 		
@@ -774,19 +774,19 @@ public class OperationView extends Div {
 		TextField oldInvestmentIdTextField, investmentIdWithProviderTextField, investorIdWithProviderTextField;
 		NumberField faceValueNumberField, unitsNumberField;
 		DatePicker investmentStartDatePicker;
-		Label label1;
+		NativeLabel label1;
 		Button saveButton;
 		HorizontalLayout hLayout;
 		
 		// UI Elements
-		label1 = new Label();
+		label1 = new NativeLabel();
 		formLayout.addFormItem(label1, "");
 		label1.getElement().setProperty("innerHTML", "<b>Details of the old investment being transferred</b>");
 		
 		oldInvestmentIdTextField = new TextField();
 		formLayout.addFormItem(oldInvestmentIdTextField, "Persmony Investment Id");
 		
-		label1 = new Label();
+		label1 = new NativeLabel();
 		formLayout.addFormItem(label1, "");
 		label1.getElement().setProperty("innerHTML", "<b>Details of the transfer</b>");
 		
@@ -1081,7 +1081,7 @@ public class OperationView extends Div {
 	
 	private void handleUpdateTaxDetail3(FormLayout formLayout, DueRealisationVO selectedDueRealisationVO, GridListDataView<DueRealisationVO> accrualsRealisationsGridLDV) {
 		HorizontalLayout hLayout;
-		Label label1;
+		NativeLabel label1;
 		NumberField interestNumberField, tdsNumberField;
 		DatePicker accountedDatePicker, form26asBookingDatePicker;
 		TextField form16aCertificateTextField;
@@ -1091,7 +1091,7 @@ public class OperationView extends Div {
 		
 		id = selectedDueRealisationVO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? selectedDueRealisationVO.getInvestmentTransactionId() : selectedDueRealisationVO.getRealisationId();
 		// UI Elements
-		label1 = new Label();
+		label1 = new NativeLabel();
 		// formLayout.addFormItem(label1, "Tax Details of");
 		label1.getElement().setProperty("innerHTML", "<b>" + selectedDueRealisationVO.getTransactionType()
 				+ "</b> id <b>"

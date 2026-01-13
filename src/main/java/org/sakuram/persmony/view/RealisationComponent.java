@@ -23,7 +23,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -114,7 +114,7 @@ public class RealisationComponent extends VerticalLayout {
 		topPaneHorizontalLayout.add(outFields3FormLayout);
 		
 		investmentTransactionIdIntegerField.addValueChangeListener(event -> {
-			Label investmentIdLabel, transactionTypeLabel, dueAmountLabel, statusLabel, investorLabel, productProviderLabel, productTypeLabel;
+			NativeLabel investmentIdLabel, transactionTypeLabel, dueAmountLabel, statusLabel, investorLabel, productProviderLabel, productTypeLabel;
 			InvestmentTransaction2VO investmentTransaction2VOL;
 			
 			inFields2FormLayout.remove(inFields2FormLayout.getChildren().collect(Collectors.toList()));
@@ -130,21 +130,21 @@ public class RealisationComponent extends VerticalLayout {
 			}
 			
 			investmentTransaction2VOL.copyTo(investmentTransaction2VO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
-			investmentIdLabel = new Label(String.valueOf(investmentTransaction2VOL.getInvestmentId()));
+			investmentIdLabel = new NativeLabel(String.valueOf(investmentTransaction2VOL.getInvestmentId()));
 			outFields1FormLayout.addFormItem(investmentIdLabel, "Investment Id");
-			investorLabel = new Label(investmentTransaction2VOL.getInvestor());
+			investorLabel = new NativeLabel(investmentTransaction2VOL.getInvestor());
 			outFields1FormLayout.addFormItem(investorLabel, "Investor");
-			productProviderLabel = new Label(investmentTransaction2VOL.getProductProvider());
+			productProviderLabel = new NativeLabel(investmentTransaction2VOL.getProductProvider());
 			outFields1FormLayout.addFormItem(productProviderLabel, "Product Provider");
 			
-			productTypeLabel = new Label(investmentTransaction2VOL.getProductType());
+			productTypeLabel = new NativeLabel(investmentTransaction2VOL.getProductType());
 			outFields2FormLayout.addFormItem(productTypeLabel, "Product Type");
-			transactionTypeLabel = new Label(investmentTransaction2VOL.getTransactionType());
+			transactionTypeLabel = new NativeLabel(investmentTransaction2VOL.getTransactionType());
 			outFields2FormLayout.addFormItem(transactionTypeLabel, "Transaction Type");
 			
-			dueAmountLabel = new Label(investmentTransaction2VOL.getDueAmount() == null ? " " : investmentTransaction2VOL.getDueAmount().toString());
+			dueAmountLabel = new NativeLabel(investmentTransaction2VOL.getDueAmount() == null ? " " : investmentTransaction2VOL.getDueAmount().toString());
 			outFields3FormLayout.addFormItem(dueAmountLabel, "Due Amount");			
-			statusLabel = new Label(investmentTransaction2VOL.getStatus());
+			statusLabel = new NativeLabel(investmentTransaction2VOL.getStatus());
 			outFields3FormLayout.addFormItem(statusLabel, "Status");
 		});
 		

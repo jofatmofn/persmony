@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Scope;
 
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -44,7 +44,7 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		
 		IsinActionEntrySpecVO isinActionEntrySpecVO = realIsinActionEntryVO.getIsinActionEntrySpecVO();
 		add(ViewFuncs.newHorizontalLine());
-		addFormItem(new Label(realIsinActionEntryVO.getIsinActionEntrySpecVO().getEntrySpecName()), "Real Entry");
+		addFormItem(new NativeLabel(realIsinActionEntryVO.getIsinActionEntrySpecVO().getEntrySpecName()), "Real Entry");
 		
 		bookingTextField = new TextField();
 		settlementDateDatePicker = new DatePicker();

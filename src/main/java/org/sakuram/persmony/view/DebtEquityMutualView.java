@@ -27,6 +27,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.HasValue.ValueChangeEvent;
 import com.vaadin.flow.component.HasValue.ValueChangeListener;
+import com.vaadin.flow.component.ModalityMode;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -41,7 +42,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -163,7 +164,7 @@ public class DebtEquityMutualView extends Div {
 					return;
 				}
 		        dialog = new Dialog();
-		        dialog.setModal(true); // Non-modal popover effect
+		        dialog.setModality(ModalityMode.MODELESS); // Non-modal popover effect
 		        dialog.setDraggable(true);
 		        dialog.setCloseOnOutsideClick(true);
 				dialog.setHeaderTitle("Demat Account");
@@ -205,7 +206,7 @@ public class DebtEquityMutualView extends Div {
 					return;
 				}
 		        dialog = new Dialog();
-		        dialog.setModal(true); // Non-modal popover effect
+		        dialog.setModality(ModalityMode.MODELESS); // Non-modal popover effect
 		        dialog.setDraggable(true);
 		        dialog.setCloseOnOutsideClick(true);
 				dialog.setHeaderTitle("Demat Account");
@@ -286,7 +287,7 @@ public class DebtEquityMutualView extends Div {
 		oldSharesBaseIntegerField.setMax(100);
 		oldSharesBaseIntegerField.setEnabled(isinActionSpecVO.isRatioApplicable());
 		hLayout = new HorizontalLayout();
-		hLayout.add(newSharesPerOldIntegerField, new Label(":"), oldSharesBaseIntegerField);
+		hLayout.add(newSharesPerOldIntegerField, new NativeLabel(":"), oldSharesBaseIntegerField);
 		parentFormLayout.addFormItem(hLayout, "Ratio (New:Old)");
 		
         dematAccountDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), null, false, false);
@@ -586,8 +587,8 @@ public class DebtEquityMutualView extends Div {
 		dialog.add(verticalLayout);
 		
 		;
-		verticalLayout.add(new Label("ISIN: " + labels[0]));
-		verticalLayout.add(new Label("Demat A/c: " + labels[1]));
+		verticalLayout.add(new NativeLabel("ISIN: " + labels[0]));
+		verticalLayout.add(new NativeLabel("Demat A/c: " + labels[1]));
 		
 		quantityPriceGrid = new Grid<>(LotVO.class, false);
 		quantityPriceGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
