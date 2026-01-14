@@ -3,9 +3,9 @@ package org.sakuram.persmony.repository;
 import java.sql.Date;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 
 import org.apache.logging.log4j.LogManager;
 import org.sakuram.persmony.bean.IsinActionPart;
