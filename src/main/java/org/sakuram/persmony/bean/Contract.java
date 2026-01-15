@@ -44,28 +44,28 @@ public class Contract {
 	private String settlementNo;
 	
 	@Column(name="brokerage", nullable=false, columnDefinition="NUMERIC", precision=6, scale=3)
-	private Double brokerage;
+	private BigDecimal brokerage;
 	
 	@Column(name="exchange_transaction_charge", nullable=false, columnDefinition="NUMERIC", precision=6, scale=3)
-	private Double exchangeTransactionCharge;
+	private BigDecimal exchangeTransactionCharge;
 	
 	@Column(name="clearing_charge", nullable=false, columnDefinition="NUMERIC", precision=6, scale=3)
-	private Double clearingCharge;
+	private BigDecimal clearingCharge;
 	
 	@Column(name="gst", nullable=false, columnDefinition="NUMERIC", precision=6, scale=3)
-	private Double gst;
+	private BigDecimal gst;
 	
 	@Column(name="stt", nullable=false, columnDefinition="NUMERIC", precision=6, scale=3)
-	private Double stt;
+	private BigDecimal stt;
 
 	@Column(name="sebi_turnover_fee", nullable=false, columnDefinition="NUMERIC", precision=6, scale=3)
-	private Double sebiTurnoverFee;
+	private BigDecimal sebiTurnoverFee;
 
 	@Column(name="stamp_duty", nullable=false, columnDefinition="NUMERIC", precision=6, scale=3)
-	private Double stampDuty;
+	private BigDecimal stampDuty;
 
 	@Column(name="net_amount", nullable=false, columnDefinition="NUMERIC", precision=11, scale=3)
-	private Double netAmount;
+	private BigDecimal netAmount;
 
 	@JsonIgnore
 	@ManyToMany(mappedBy="contractList")
@@ -76,4 +76,8 @@ public class Contract {
 	@OneToMany(mappedBy = "contract", cascade = CascadeType.ALL)
 	private List<IsinAction> isinActionList;
 
+	public Double getNetAmount() {
+		return (netAmount == null ? null : netAmount.doubleValue());
+	}
+	
 }

@@ -54,7 +54,7 @@ public class Investment {
 	@Column(name="investor_id_with_provider", length=31, nullable=true)
 	private String investorIdWithProvider;
 	
-	@Column(name="product_id_of_provider", length=31, nullable=true)
+	@Column(name="product_id_of_provider", length=63, nullable=true)
 	private String productIdOfProvider;
 	
 	@Column(name="investment_id_with_provider", length=63, nullable=true)
@@ -68,22 +68,22 @@ public class Investment {
 	private DomainValue productType;
 	
 	@Column(name="units", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)	// Non-portable way of setting the default
-	private Double units;
+	private BigDecimal units;
 	
 	@Column(name="worth", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double worth;
+	private BigDecimal worth;
 	
 	@Column(name="clean_price", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double cleanPrice;
+	private BigDecimal cleanPrice;
 	
 	@Column(name="accrued_interest", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double accruedInterest;
+	private BigDecimal accruedInterest;
 	
 	@Column(name="charges", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double charges;
+	private BigDecimal charges;
 	
 	@Column(name="rate_of_interest", nullable=true, columnDefinition="NUMERIC", precision=6, scale=4)
-	private Double rateOfInterest;
+	private BigDecimal rateOfInterest;
 	
 	@ManyToOne
 	@JoinColumn(name="taxability_fk", nullable=true)
@@ -137,6 +137,38 @@ public class Investment {
 	private DomainValue defaultTaxGroup;
 	
 	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double units, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch, DomainValue defaultBankAccount, DomainValue defaultTaxGroup) {
+		this(investor,
+				productProvider,
+				dematAccount,
+				facilitator,
+				investorIdWithProvider,
+				productIdOfProvider,
+				investmentIdWithProvider,
+				productName,
+				productType,
+				(units == null ? null : BigDecimal.valueOf(units)),
+				(worth == null ? null : BigDecimal.valueOf(worth)),
+				(cleanPrice == null ? null : BigDecimal.valueOf(cleanPrice)),
+				(accruedInterest == null ? null : BigDecimal.valueOf(accruedInterest)),
+				(charges == null ? null : BigDecimal.valueOf(charges)),
+				(rateOfInterest == null ? null : BigDecimal.valueOf(rateOfInterest)),
+				taxability,
+				previousInvestment,
+				newInvestmentReason,
+				investmentStartDate,
+				investmentEndDate,
+				isClosed,
+				closureType,
+				closureDate,
+				isAccrualApplicable,
+				investmentTransactionList,
+				dynamicReceiptPeriodicity,
+				providerBranch,
+				defaultBankAccount,
+				defaultTaxGroup);
+	}
+	
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, BigDecimal units, BigDecimal worth, BigDecimal cleanPrice, BigDecimal accruedInterest, BigDecimal charges, BigDecimal rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch, DomainValue defaultBankAccount, DomainValue defaultTaxGroup) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;
@@ -167,4 +199,21 @@ public class Investment {
 		this.defaultBankAccount = defaultBankAccount;
 		this.defaultTaxGroup = defaultTaxGroup;
 	}
+	
+	public Double getUnits() {
+		return (units == null ? null : units.doubleValue());
+	}
+	
+	public Double getWorth() {
+		return (worth == null ? null : worth.doubleValue());
+	}
+	
+	public Double getAccruedInterest() {
+		return (accruedInterest == null ? null : accruedInterest.doubleValue());
+	}
+	
+	public Double getRateOfInterest() {
+		return (rateOfInterest == null ? null : rateOfInterest.doubleValue());
+	}
+	
 }

@@ -4,8 +4,8 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.bean.Realisation;
@@ -620,7 +620,7 @@ public class MoneyTransactionService {
 					Constants.domainValueCache.get(transactionType),
 					scheduleVO.getDueDate(),
 					(transactionType == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) ?
-							Double.valueOf(ObjectUtils.defaultIfNull(scheduleVO.getInterestAmount(), 0).doubleValue() - ObjectUtils.defaultIfNull(scheduleVO.getTdsAmount(), 0).doubleValue()) :
+							Double.valueOf(Objects.requireNonNullElse(scheduleVO.getInterestAmount(), 0).doubleValue() - Objects.requireNonNullElse(scheduleVO.getTdsAmount(), 0).doubleValue()) :
 							scheduleVO.getDueAmount(),
 					Constants.domainValueCache.get(Constants.DVID_TRANSACTION_STATUS_PENDING),
 					scheduleVO.getReturnedPrincipalAmount(),

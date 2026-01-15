@@ -51,20 +51,20 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	private Date accountedTransactionDate;
 	
 	@Column(name="due_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double dueAmount;
+	private BigDecimal dueAmount;
 	
 	@ManyToOne
 	@JoinColumn(name="status_fk", nullable=false)
 	private DomainValue status;
 	
 	@Column(name="returned_principal_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double returnedPrincipalAmount;
+	private BigDecimal returnedPrincipalAmount;
 	
 	@Column(name="interest_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double interestAmount;
+	private BigDecimal interestAmount;
 	
 	@Column(name="tds_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double tdsAmount; /* Only for Accruals and Receipts */
+	private BigDecimal tdsAmount; /* Only for Accruals and Receipts */
 	
 	@Column(name="accrual_tds_reference", length=31, nullable=true)
 	private String accrualTdsReference;
@@ -88,6 +88,20 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	private List<Realisation> realisationList;
 
 	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Double dueAmount, DomainValue status, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxGroup, BigDecimal assessmentYear, List<Realisation> realisationList) {
+		this(investment,
+				transactionType,
+				dueDate,
+				(dueAmount == null ? null : BigDecimal.valueOf(dueAmount)),
+				status,
+				(returnedPrincipalAmount == null ? null: BigDecimal.valueOf(returnedPrincipalAmount)),
+				(interestAmount == null ? null : BigDecimal.valueOf(interestAmount)),
+				(tdsAmount == null ? null : BigDecimal.valueOf(tdsAmount)),
+				taxGroup,
+				assessmentYear,
+				realisationList);
+	}
+	
+	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, BigDecimal dueAmount, DomainValue status, BigDecimal returnedPrincipalAmount, BigDecimal interestAmount, BigDecimal tdsAmount, DomainValue taxGroup, BigDecimal assessmentYear, List<Realisation> realisationList) {
 		this.investment = investment;
 		this.transactionType = transactionType;
 		this.dueDate = dueDate;
@@ -100,4 +114,33 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 		this.assessmentYear = assessmentYear;
 		this.realisationList = realisationList;
 	}
+	
+	public Double getDueAmount() {
+		return (dueAmount == null ? null : dueAmount.doubleValue());
+	}
+	
+	public void setDueAmount(Double dueAmount) {
+		this.dueAmount = (dueAmount == null ? null : BigDecimal.valueOf(dueAmount));
+	}
+
+	public Double getReturnedPrincipalAmount() {
+		return (returnedPrincipalAmount == null ? null : returnedPrincipalAmount.doubleValue());
+	}
+	
+	public Double getInterestAmount() {
+		return (interestAmount == null ? null : interestAmount.doubleValue());
+	}
+	
+	public void setInterestAmount(Double interestAmount) {
+		this.interestAmount = (interestAmount == null ? null : BigDecimal.valueOf(interestAmount));
+	}
+	
+	public Double getTdsAmount() {
+		return (tdsAmount == null ? null : tdsAmount.doubleValue());
+	}
+	
+	public void setTdsAmount(Double tdsAmount) {
+		this.tdsAmount = (tdsAmount == null ? null : BigDecimal.valueOf(tdsAmount));
+	}
+	
 }

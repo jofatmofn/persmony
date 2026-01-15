@@ -1,5 +1,7 @@
 package org.sakuram.persmony.bean;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -41,13 +43,22 @@ public class SbAcTxnCategory {
 	private String endAccountReference;
 
 	@Column(name="amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double amount;
+	private BigDecimal amount;
 
 	public SbAcTxnCategory(SavingsAccountTransaction savingsAccountTransaction, DomainValue transactionCategory, String endAccountReference, Character groupId, Double amount) {
 		this.savingsAccountTransaction = savingsAccountTransaction;
 		this.transactionCategory = transactionCategory;
 		this.endAccountReference = endAccountReference;
 		this.groupId = groupId;
-		this.amount = amount;
+		this.amount = (amount == null ? null : BigDecimal.valueOf(amount));
 	}
+	
+	public Double getAmount() {
+		return (amount == null ? null : amount.doubleValue());
+	}
+
+	public void setAmount(Double amount) {
+		this.amount = (amount == null ? null : BigDecimal.valueOf(amount));
+	}
+	
 }

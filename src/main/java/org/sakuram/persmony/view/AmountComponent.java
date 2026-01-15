@@ -1,6 +1,7 @@
 package org.sakuram.persmony.view;
 
-import org.apache.commons.lang3.ObjectUtils;
+import java.util.Objects;
+
 import org.sakuram.persmony.util.Constants;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -41,14 +42,14 @@ public class AmountComponent {
 			interestNumberField.addValueChangeListener(event -> {
 				interestAmount = interestNumberField.getValue();
 				if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
-					netAmount = ObjectUtils.defaultIfNull(interestAmount, 0).doubleValue() - ObjectUtils.defaultIfNull(tdsAmount, 0).doubleValue();
+					netAmount = Objects.requireNonNullElse(interestAmount, 0).doubleValue() - Objects.requireNonNullElse(tdsAmount, 0).doubleValue();
 				}
 			});
 			tdsNumberField = new NumberField("TDS");
 			tdsNumberField.addValueChangeListener(event -> {
 				tdsAmount = tdsNumberField.getValue();
 				if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
-					netAmount = ObjectUtils.defaultIfNull(interestAmount, 0).doubleValue() - ObjectUtils.defaultIfNull(tdsAmount, 0).doubleValue();
+					netAmount = Objects.requireNonNullElse(interestAmount, 0).doubleValue() - Objects.requireNonNullElse(tdsAmount, 0).doubleValue();
 				}
 			});
 			layout.add(interestNumberField, tdsNumberField);
@@ -75,10 +76,10 @@ public class AmountComponent {
 
 	public boolean isInputValid() {
 		double netAmountL, returnedPrincipalAmountL, interestAmountL, tdsAmountL;
-		netAmountL = ObjectUtils.defaultIfNull(netAmount, 0).doubleValue();
-		returnedPrincipalAmountL = ObjectUtils.defaultIfNull(returnedPrincipalAmount, 0).doubleValue();
-		interestAmountL = ObjectUtils.defaultIfNull(interestAmount, 0).doubleValue();
-		tdsAmountL = ObjectUtils.defaultIfNull(tdsAmount, 0).doubleValue();
+		netAmountL = Objects.requireNonNullElse(netAmount, 0).doubleValue();
+		returnedPrincipalAmountL = Objects.requireNonNullElse(returnedPrincipalAmount, 0).doubleValue();
+		interestAmountL = Objects.requireNonNullElse(interestAmount, 0).doubleValue();
+		tdsAmountL = Objects.requireNonNullElse(tdsAmount, 0).doubleValue();
 		if ((netAmountL <= 0 && transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_PAYMENT) || returnedPrincipalAmountL < 0 || tdsAmountL < 0 || amountsToAddup && netAmountL != (returnedPrincipalAmountL + interestAmountL - tdsAmountL)) {
 			return false;
 		}

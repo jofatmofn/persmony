@@ -3,9 +3,9 @@ package org.sakuram.persmony.view;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.service.SbAcTxnService;
@@ -263,7 +263,7 @@ public class RealisationComponent extends VerticalLayout {
 					return;
 				}
 				if (investmentTransaction2VO.getTransactionTypeDvId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) {
-					if (ObjectUtils.defaultIfNull(amountComponent.getReturnedPrincipalAmount(), 0).doubleValue() > 0) {
+					if (Objects.requireNonNullElse(amountComponent.getReturnedPrincipalAmount(), 0).doubleValue() > 0) {
 						ViewFuncs.showError("Returned Principal Amount is not applicable for Accrual transactions");
 						return;
 					}

@@ -9,16 +9,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.ObjectUtils;
+import java.util.Objects;
+
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.bean.Isin;
-import org.sakuram.persmony.bean.IsinAction;
-import org.sakuram.persmony.bean.IsinActionMatch;
-import org.sakuram.persmony.bean.IsinActionPart;
 import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.bean.SavingsAccountTransaction;
 import org.sakuram.persmony.bean.SbAcTxnCategory;
@@ -217,9 +215,9 @@ public class ReportService {
 			} else if ((investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_PENDING  &&
 					investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT || investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL) &&
 					(investmentTransaction.getReturnedPrincipalAmount() != null || investmentTransaction.getInterestAmount() != null || investmentTransaction.getTdsAmount() != null)) {
-				investmentTransactionAmount = ObjectUtils.defaultIfNull(investmentTransaction.getReturnedPrincipalAmount(), 0).doubleValue() +
-						ObjectUtils.defaultIfNull(investmentTransaction.getInterestAmount(), 0).doubleValue() -
-						ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0).doubleValue();
+				investmentTransactionAmount = Objects.requireNonNullElse(investmentTransaction.getReturnedPrincipalAmount(), 0).doubleValue() +
+						Objects.requireNonNullElse(investmentTransaction.getInterestAmount(), 0).doubleValue() -
+						Objects.requireNonNullElse(investmentTransaction.getTdsAmount(), 0).doubleValue();
 				if (investmentTransactionAmount == 0) {
 					System.out.println("Skipped Investment Transaction " + investmentTransaction.getId());
 					continue;
@@ -366,7 +364,7 @@ public class ReportService {
 				dataArray[2] = anticipatedAmount;
 				realisationAmountSummary = miscService.fetchRealisationAmountSummary(investmentTransaction);
 				dataArray[3] = (realisationAmountSummary.getAmount() == 0) ?
-						(ObjectUtils.defaultIfNull(investmentTransaction.getDueAmount(), 0).doubleValue() - ObjectUtils.defaultIfNull(investmentTransaction.getReturnedPrincipalAmount(), 0).doubleValue())
+						(Objects.requireNonNullElse(investmentTransaction.getDueAmount(), 0).doubleValue() - Objects.requireNonNullElse(investmentTransaction.getReturnedPrincipalAmount(), 0).doubleValue())
 						: (realisationAmountSummary.getAmount() - realisationAmountSummary.getReturnedPrincipalAmount());
 			}
 		}
@@ -586,8 +584,8 @@ public class ReportService {
 			savingsAccountTransaction = sbAcTxnCategory.getSavingsAccountTransaction();
 
 			if (sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax() == null || sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax().getAssessmentYear() == null) {
-				if (ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).before(fyStartDate) ||
-						ObjectUtils.defaultIfNull(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).after(fyEndDate)) {
+				if (Objects.requireNonNullElse(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).before(fyStartDate) ||
+						Objects.requireNonNullElse(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).after(fyEndDate)) {
 					continue;
 				}
 			} else  if (sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax().getAssessmentYear() != incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1){
@@ -826,8 +824,8 @@ public class ReportService {
 				} else {
 					tableInd = TABLE_IND_OS_OTHER_INTEREST;
 				}
-				if (ObjectUtils.defaultIfNull(realisation.getInterestAmount(),0).doubleValue() > 0 || ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0).doubleValue() > 0) {
-					reportTableList.get(tableInd).add(new Object[] {"", "", ObjectUtils.defaultIfNull(realisation.getAccountedRealisationDate(), realisation.getRealisationDate()),
+				if (Objects.requireNonNullElse(realisation.getInterestAmount(),0).doubleValue() > 0 || Objects.requireNonNullElse(realisation.getTdsAmount(), 0).doubleValue() > 0) {
+					reportTableList.get(tableInd).add(new Object[] {"", "", Objects.requireNonNullElse(realisation.getAccountedRealisationDate(), realisation.getRealisationDate()),
 							realisation.getInvestmentTransaction().getInvestment().getProductProvider().getValue(),
 							formAccountNo(realisation.getInvestmentTransaction().getInvestment()),
 							realisation.getInterestAmount(),
@@ -1062,9 +1060,9 @@ public class ReportService {
 					break; // Report no more issue for this investment
 				} else if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
 					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL && isStartAccumulating) {
-						expectedPrincipal += ObjectUtils.defaultIfNull(investmentTransaction.getReturnedPrincipalAmount(), 0D);
-						expectedInterest += ObjectUtils.defaultIfNull(investmentTransaction.getInterestAmount(), 0D);
-						expectedTds += ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0D).doubleValue();
+						expectedPrincipal += Objects.requireNonNullElse(investmentTransaction.getReturnedPrincipalAmount(), 0D);
+						expectedInterest += Objects.requireNonNullElse(investmentTransaction.getInterestAmount(), 0D);
+						expectedTds += Objects.requireNonNullElse(investmentTransaction.getTdsAmount(), 0D).doubleValue();
 					} else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
 						isStartAccumulating = true;
 						for (Realisation realisation : investmentTransaction.getRealisationList()) {
@@ -1075,10 +1073,10 @@ public class ReportService {
 										realisation.getAmount()});
 								isProcessingComplete = false;
 							}
-							expectedPrincipal += ObjectUtils.defaultIfNull(realisation.getReturnedPrincipalAmount(), 0D);
-							expectedInterest += ObjectUtils.defaultIfNull(realisation.getInterestAmount(), 0D);
-							expectedTds += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0D).doubleValue();
-							actualAmount += ObjectUtils.defaultIfNull(realisation.getAmount(), 0D);
+							expectedPrincipal += Objects.requireNonNullElse(realisation.getReturnedPrincipalAmount(), 0D);
+							expectedInterest += Objects.requireNonNullElse(realisation.getInterestAmount(), 0D);
+							expectedTds += Objects.requireNonNullElse(realisation.getTdsAmount(), 0D).doubleValue();
+							actualAmount += Objects.requireNonNullElse(realisation.getAmount(), 0D);
 						}
 					}
 				}
@@ -1253,7 +1251,7 @@ public class ReportService {
 
 			// Income
 			forInterestStartDate = (investment.getInvestmentStartDate() == null || investment.getInvestmentStartDate().before(fyStartDate) ? fyStartDate : investment.getInvestmentStartDate());
-			investmentLastDate = ObjectUtils.defaultIfNull(investment.getClosureDate(), investment.getInvestmentEndDate());
+			investmentLastDate = Objects.requireNonNullElse(investment.getClosureDate(), investment.getInvestmentEndDate());
 			forInterestEndDate = (investmentLastDate == null || investmentLastDate.after(fyEndDate) ? fyEndDate : investmentLastDate);
 			interestDays = Duration.between(forInterestStartDate.toLocalDate().atStartOfDay(), forInterestEndDate.toLocalDate().atStartOfDay()).toDays();
 
@@ -1261,8 +1259,8 @@ public class ReportService {
 			if (investorSummary == null) {
 				investorSummary = new Double[] {0D, 0D};
 			}
-			investmentYearEndAccrual = ObjectUtils.defaultIfNull(investment.getWorth(), 0).doubleValue() *
-					ObjectUtils.defaultIfNull(investment.getRateOfInterest(), 0).doubleValue() / 100 *
+			investmentYearEndAccrual = Objects.requireNonNullElse(investment.getWorth(), 0).doubleValue() *
+					Objects.requireNonNullElse(investment.getRateOfInterest(), 0).doubleValue() / 100 *
 					interestDays / fyDays;
 			investorSummary[0] += investmentYearEndAccrual;
 			if (investment.getDefaultTaxGroup() != null && Constants.DVID_TAX_GROUP_PO_BANK_DEPOSIT_INTEREST == investment.getDefaultTaxGroup().getId()) {
@@ -1277,8 +1275,8 @@ public class ReportService {
 					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL &&
 							investmentTransaction.getDueDate().compareTo(fyStartDate) >= 0 &&
 							investmentTransaction.getDueDate().compareTo(fyEndDate) <= 0) {
-						investorSummary[1] += ObjectUtils.defaultIfNull(investmentTransaction.getTdsAmount(), 0D).doubleValue();
-						investmentTransactionAmount = ObjectUtils.defaultIfNull(investmentTransaction.getInterestAmount(), 0D);
+						investorSummary[1] += Objects.requireNonNullElse(investmentTransaction.getTdsAmount(), 0D).doubleValue();
+						investmentTransactionAmount = Objects.requireNonNullElse(investmentTransaction.getInterestAmount(), 0D);
 						investmentYearEndAccrual -= investmentTransactionAmount;
 						accrualDetailsForInvestor.get(tdsGroupInd).add(new Object[] {"", "", investmentTransaction.getDueDate(),
 								investment.getProductProvider().getValue(),
@@ -1289,11 +1287,11 @@ public class ReportService {
 					}
 					else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
 						for (Realisation realisation : investmentTransaction.getRealisationList()) {
-							realisationDate = ObjectUtils.defaultIfNull(realisation.getAccountedRealisationDate(), realisation.getRealisationDate());
+							realisationDate = Objects.requireNonNullElse(realisation.getAccountedRealisationDate(), realisation.getRealisationDate());
 							if (realisationDate.compareTo(fyStartDate) >= 0 &&
 									realisationDate.compareTo(fyEndDate) <= 0) {
-								investorSummary[1] += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0D).doubleValue();
-								investmentYearEndAccrual -= ObjectUtils.defaultIfNull(realisation.getInterestAmount(), 0D);
+								investorSummary[1] += Objects.requireNonNullElse(realisation.getTdsAmount(), 0D).doubleValue();
+								investmentYearEndAccrual -= Objects.requireNonNullElse(realisation.getInterestAmount(), 0D);
 							}
 						}
 					}
@@ -1319,7 +1317,7 @@ public class ReportService {
 
 	private String formAccountNo(Investment investment) {
 		return investment.getId() + "/" +
-				ObjectUtils.defaultIfNull(investment.getInvestmentIdWithProvider(), "");
+				Objects.requireNonNullElse(investment.getInvestmentIdWithProvider(), "");
 	}
 	
 	private String expandIsin(String isinStr) {

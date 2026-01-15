@@ -1,5 +1,6 @@
 package org.sakuram.persmony.bean;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 
 import jakarta.persistence.Column;
@@ -51,16 +52,16 @@ public class Realisation {
 	private Realisation referredRealisation;
 	
 	@Column(name="amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double amount;
+	private BigDecimal amount;
 
 	@Column(name="returned_principal_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double returnedPrincipalAmount;
+	private BigDecimal returnedPrincipalAmount;
 	
 	@Column(name="interest_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double interestAmount;
+	private BigDecimal interestAmount;
 	
 	@Column(name="tds_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double tdsAmount; /* Only for Accruals and Receipts */
+	private BigDecimal tdsAmount; /* Only for Accruals and Receipts */
 	
 	@Column(name="tds_reference", length=31, nullable=true)
 	private String tdsReference;
@@ -77,10 +78,35 @@ public class Realisation {
 		this.realisationType = realisationType;
 		this.savingsAccountTransaction = savingsAccountTransaction;
 		this.referredRealisation = realisation;
-		this.amount = amount;
-		this.returnedPrincipalAmount = returnedPrincipalAmount;
-		this.interestAmount = interestAmount;
-		this.tdsAmount = tdsAmount;
+		this.amount = (amount == null ? null : BigDecimal.valueOf(amount));
+		this.returnedPrincipalAmount = (returnedPrincipalAmount == null ? null : BigDecimal.valueOf(returnedPrincipalAmount));
+		this.interestAmount = (interestAmount == null ? null : BigDecimal.valueOf(interestAmount));
+		this.tdsAmount = (tdsAmount == null ? null : BigDecimal.valueOf(tdsAmount));
 		this.tdsReference = null;
 	}
+	
+	public Double getAmount() {
+		return (amount == null ? null : amount.doubleValue());
+	}
+	
+	public Double getReturnedPrincipalAmount() {
+		return (returnedPrincipalAmount == null ? null : returnedPrincipalAmount.doubleValue());
+	}
+	
+	public Double getInterestAmount() {
+		return (interestAmount == null ? null : interestAmount.doubleValue());
+	}
+	
+	public void setInterestAmount(Double interestAmount) {
+		this.interestAmount = (interestAmount == null ? null : BigDecimal.valueOf(interestAmount));
+	}
+	
+	public Double getTdsAmount() {
+		return (tdsAmount == null ? null : tdsAmount.doubleValue());
+	}
+	
+	public void setTdsAmount(Double tdsAmount) {
+		this.tdsAmount = (tdsAmount == null ? null : BigDecimal.valueOf(tdsAmount));
+	}
+	
 }

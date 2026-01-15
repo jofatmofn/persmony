@@ -1,5 +1,6 @@
 package org.sakuram.persmony.bean;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,6 +51,13 @@ public class Trade {
 	private String tradeNo;
 	
 	@Column(name="brokerage_per_unit", nullable=false, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double brokeragePerUnit;
+	private BigDecimal brokeragePerUnit;
+
+	public Double getBrokeragePerUnit() {
+		return (brokeragePerUnit == null ? null : brokeragePerUnit.doubleValue());
+	}
 	
+	public void setBrokeragePerUnit(Double brokeragePerUnit) {
+		this.brokeragePerUnit = (brokeragePerUnit == null ? null : BigDecimal.valueOf(brokeragePerUnit));
+	}
 }

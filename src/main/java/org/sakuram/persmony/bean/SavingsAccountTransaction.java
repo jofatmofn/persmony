@@ -1,5 +1,6 @@
 package org.sakuram.persmony.bean;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.text.ParseException;
 import java.util.List;
@@ -49,7 +50,7 @@ public class SavingsAccountTransaction {
 	private Date transactionDate;
 	
 	@Column(name="amount", nullable=false, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double amount;
+	private BigDecimal amount;
 
 	@ManyToOne
 	@JoinColumn(name="booking_fk", nullable=true)	//TOD: false
@@ -65,7 +66,7 @@ public class SavingsAccountTransaction {
 	private String narration;
 	
 	@Column(name="balance", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)	//Balance is not applicable for non-banking transaction
-	private Double balance;
+	private BigDecimal balance;
 
 	@Column(name="transaction_id", length=15, nullable=true)
 	private String transactionId;
@@ -127,7 +128,7 @@ public class SavingsAccountTransaction {
 	public SavingsAccountTransaction(DomainValue bankAccountOrInvestor, Date transactionDate, Double amount) {
 		this.bankAccountOrInvestor = bankAccountOrInvestor;
 		this.transactionDate = transactionDate;
-		this.amount = amount;
+		this.amount = (amount == null ? null : BigDecimal.valueOf(amount));
 	}
 	
 	public SavingsAccountTransaction(Long bankAccountOrInvestorDvId, String transactionDateStr, Double amount, Long bookingDvId, String valueDateStr, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) throws ParseException {
@@ -154,12 +155,12 @@ public class SavingsAccountTransaction {
 	{
 		this.bankAccountOrInvestor = (bankAccountOrInvestorDvId == null ? null : Constants.domainValueCache.get(bankAccountOrInvestorDvId));
 		this.transactionDate = transactionDate;
-		this.amount = amount;
+		this.amount = (amount == null ? null : BigDecimal.valueOf(amount));
 		this.booking = Constants.domainValueCache.get(bookingDvId);
 		this.valueDate = valueDate;
 		this.reference = (reference == null || reference.equals("") ? null : reference);
 		this.narration = narration;
-		this.balance = balance;
+		this.balance = (balance == null ? null : BigDecimal.valueOf(balance));
 		this.transactionId = (transactionId == null || transactionId.equals("") ? null : transactionId);
 		this.utrNumber = (utrNumber == null || utrNumber.equals("") ? null : utrNumber);
 		this.remitterBranch = (remitterBranch == null || remitterBranch.equals("") ? null : remitterBranch);
@@ -169,4 +170,13 @@ public class SavingsAccountTransaction {
 		this.costCenter = (costCenterDvId == null ? null : Constants.domainValueCache.get(costCenterDvId));
 		this.voucherType = (voucherTypeDvId == null ? null : Constants.domainValueCache.get(voucherTypeDvId));
 	}
+	
+	public Double getAmount() {
+		return (amount == null ? null : amount.doubleValue());
+	}
+	
+	public Double getBalance() {
+		return (balance == null ? null : balance.doubleValue());
+	}
+	
 }

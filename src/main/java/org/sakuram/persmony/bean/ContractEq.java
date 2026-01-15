@@ -39,17 +39,21 @@ public class ContractEq {
 	private List<IsinAction> isinActionList;
 	
 	@Column(name="stamp_duty", nullable=true, columnDefinition="NUMERIC", precision=6, scale=3)	// Applicable to MF
-	private Double stampDuty;
+	private BigDecimal stampDuty;
 
 	@Column(name="allotment_date", nullable=true)	// Applicable to MF
 	private Date allotmentDate;
 	
 	@Column(name="net_amount", nullable=false, columnDefinition="NUMERIC", precision=11, scale=3)
-	private Double netAmount;
+	private BigDecimal netAmount;
 
 	@JsonIgnore
 	@ManyToMany(mappedBy="contractEqList")
 	@OrderBy("transaction_date")
 	private List<SavingsAccountTransaction> savingsAccountTransactionList;
+
+	public Double getNetAmount() {
+		return (netAmount == null ? null : netAmount.doubleValue());
+	}
 	
 }

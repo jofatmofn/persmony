@@ -1,5 +1,7 @@
 package org.sakuram.persmony.bean;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -35,10 +37,18 @@ public class IsinActionMatch {
 	private IsinActionPart toIsinActionPart;
 	
 	@Column(name="quantity", nullable=true, columnDefinition="NUMERIC", precision=11, scale=5)
-	private Double quantity;
+	private BigDecimal quantity;
 
 	@ManyToOne
 	@JoinColumn(name="match_reason_fk", nullable=false)
 	private DomainValue matchReason;
+	
+	public Double getQuantity() {
+		return (quantity == null ? null : quantity.doubleValue());
+	}
+	
+	public void setQuantity(Double quantity) {
+		this.quantity = (quantity == null ? null : BigDecimal.valueOf(quantity));
+	}
 	
 }

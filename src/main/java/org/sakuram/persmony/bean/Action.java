@@ -47,6 +47,6 @@ public class Action {
 	private Short oldSharesBase;
 	
 	@Column(name="fractional_entitlement_cash", nullable=true, columnDefinition="NUMERIC", precision=8, scale=3)	// TODO Belongs to Demat level Action
-	private Double fractionalEntitlementCash;
+	private BigDecimal fractionalEntitlementCash;
 	
 }

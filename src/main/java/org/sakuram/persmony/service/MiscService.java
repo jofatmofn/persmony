@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.LongStream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.ObjectUtils;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.bean.Realisation;
@@ -330,10 +330,10 @@ public class MiscService {
     	tdsAmount = 0;
     	amount = 0;
 		for (Realisation realisation : investmentTransaction.getRealisationList()) {
-			returnedPrincipalAmount += ObjectUtils.defaultIfNull(realisation.getReturnedPrincipalAmount(), 0).doubleValue();
-			interestAmount += ObjectUtils.defaultIfNull(realisation.getInterestAmount(), 0).doubleValue();
-			tdsAmount += ObjectUtils.defaultIfNull(realisation.getTdsAmount(), 0).doubleValue();
-			amount += ObjectUtils.defaultIfNull(realisation.getAmount(), 0).doubleValue();
+			returnedPrincipalAmount += Objects.requireNonNullElse(realisation.getReturnedPrincipalAmount(), 0).doubleValue();
+			interestAmount += Objects.requireNonNullElse(realisation.getInterestAmount(), 0).doubleValue();
+			tdsAmount += Objects.requireNonNullElse(realisation.getTdsAmount(), 0).doubleValue();
+			amount += Objects.requireNonNullElse(realisation.getAmount(), 0).doubleValue();
 		}
 		return new RealisationVO(
 				0,

@@ -1,5 +1,6 @@
 package org.sakuram.persmony.bean;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.Collections;
 import java.util.List;
@@ -46,10 +47,10 @@ public class IsinActionPart {
 	private Date ownershipChangeDate;
 	
 	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
-	private Double quantity;
+	private BigDecimal quantity;
 
 	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
-	private Double pricePerUnit;
+	private BigDecimal pricePerUnit;
 	
 	@JsonIgnore
 	@OneToOne(mappedBy="isinActionPart", cascade=CascadeType.ALL)
@@ -71,7 +72,7 @@ public class IsinActionPart {
                 		isinActionMatch.getFromIsinActionPart().getIsinAction().getDematAccount().getId() == this.getIsinAction().getDematAccount().getId() ||
                 		isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_OTHERS &&
                 		isinActionMatch.getFromIsinActionPart().getIsinAction().getDematAccount().getId() != this.getIsinAction().getDematAccount().getId())	// TODO: There should not be a need for demat based criteria
-                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity())
+                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity().doubleValue())
                 .sum();
 	}
 	
@@ -83,7 +84,24 @@ public class IsinActionPart {
                 		isinActionMatch.getToIsinActionPart().getIsinAction().getDematAccount().getId() == this.getIsinAction().getDematAccount().getId() ||
                 		isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_OTHERS &&
                 		isinActionMatch.getToIsinActionPart().getIsinAction().getDematAccount().getId() != this.getIsinAction().getDematAccount().getId())	// TODO: There should not be a need for demat based criteria
-                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity())
+                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity().doubleValue())
                 .sum();
 	}
+	
+	public Double getQuantity() {
+		return quantity.doubleValue();
+	}
+	
+	public void setQuantity(Double quantity) {
+		this.quantity = (quantity == null ? null : BigDecimal.valueOf(quantity));
+	}
+	
+	public Double getPricePerUnit() {
+		return pricePerUnit.doubleValue();
+	}
+	
+	public void setPricePerUnit(Double pricePerUnit) {
+		this.pricePerUnit = (pricePerUnit == null ? null : BigDecimal.valueOf(pricePerUnit));
+	}
+	
 }
