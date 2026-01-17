@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,7 +12,7 @@ public class TxnSingleRealisationWithBankVO {
 	long investmentId;
 	long transactionTypeDvId;
 	Double netAmount, returnedPrincipalAmount, interestAmount, tdsAmount;
-	Date transactionDate;
+	LocalDate transactionDate;
 	Long savingsAccountTransactionId;
 	Long taxGroupDvId;
 }

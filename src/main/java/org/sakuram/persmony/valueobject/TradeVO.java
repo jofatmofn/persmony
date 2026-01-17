@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,10 +17,10 @@ public class TradeVO {
 	Double quantity;
 	Double pricePerUnit;
 	Double brokeragePerUnit;
-	Date orderDate;
+	LocalDate orderDate;
 	String orderTime;
 	String orderNo;
-	Date tradeDate;
+	LocalDate tradeDate;
 	String tradeTime;
 	String tradeNo;
 	

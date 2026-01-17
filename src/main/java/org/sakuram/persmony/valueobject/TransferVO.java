@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,5 +17,5 @@ public class TransferVO {
 	String investmentIdWithProvider;
 	Double units;
 	Double faceValue;
-	Date investmentStartDate;
+	LocalDate investmentStartDate;
 }

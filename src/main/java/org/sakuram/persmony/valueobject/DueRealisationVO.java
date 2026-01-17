@@ -1,8 +1,7 @@
 package org.sakuram.persmony.valueobject;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Objects;
 
 import org.sakuram.persmony.util.Constants;
@@ -23,28 +22,28 @@ public class DueRealisationVO {
 	long transactionTypeDvId;
 	String transactionType;
 	String taxGroup;
-	Date dueDate;
+	LocalDate dueDate;
 	Double dueAmount;
 	Double investmentTransactionInterestAmount;
 	Double investmentTransactionTdsAmount;
 	String accrualTdsReference;
 	Boolean investmentTransactionInAis;
-	Date investmentTransactionForm26asBookingDate;
+	LocalDate investmentTransactionForm26asBookingDate;
 	
 	Long realisationId;
-	Date realisationDate;
+	LocalDate realisationDate;
 	Double realisationAmount;
 	Double realisationInterestAmount;
 	Double realisationTdsAmount;
 	String realisationTdsReference;
 	Boolean realisationInAis;
-	Date realisationForm26asBookingDate;
+	LocalDate realisationForm26asBookingDate;
 	
 	transient Double interestAmount;
 	transient Double tdsAmount;
 	transient String tdsReference;
 	transient Boolean inAis;
-	transient Date form26asBookingDate;	
+	transient LocalDate form26asBookingDate;	
 	
 	public String toString() {
 		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
@@ -71,33 +70,33 @@ public class DueRealisationVO {
 	}
 	public DueRealisationVO(Object[] record) {
 		int colPos = 0;
-		investmentId = ((BigInteger) record[colPos++]).longValue();
+		investmentId = ((Long) record[colPos++]).longValue();
 		investor = (String) record[colPos++];
 		productProvider = (String) record[colPos++];
 		investmentIdWithProvider = (String) record[colPos++];
 		productType = (String) record[colPos++];
 		worth = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
 		
-		investmentTransactionId = ((BigInteger) record[colPos++]).longValue();
-		transactionTypeDvId = ((BigInteger) record[colPos++]).longValue();
+		investmentTransactionId = ((Long) record[colPos++]).longValue();
+		transactionTypeDvId = ((Long) record[colPos++]).longValue();
 		transactionType = (String) record[colPos++];
 		taxGroup = (String) record[colPos++];
-		dueDate = (Date) record[colPos++];
+		dueDate = (LocalDate) record[colPos++];
 		dueAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
 		investmentTransactionInterestAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
 		investmentTransactionTdsAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
 		accrualTdsReference = (String) record[colPos++];
 		investmentTransactionInAis = (Boolean) record[colPos++];
-		investmentTransactionForm26asBookingDate = (Date) record[colPos++];
+		investmentTransactionForm26asBookingDate = (LocalDate) record[colPos++];
 		
-		realisationId = record[colPos] == null ? null : ((BigInteger) record[colPos]).longValue(); colPos++;
-		realisationDate = (Date) record[colPos++];
+		realisationId = record[colPos] == null ? null : ((Long) record[colPos]).longValue(); colPos++;
+		realisationDate = (LocalDate) record[colPos++];
 		realisationAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
 		realisationInterestAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
 		realisationTdsAmount = record[colPos] == null ? null : ((BigDecimal) record[colPos]).doubleValue(); colPos++;
 		realisationTdsReference = (String) record[colPos++];
 		realisationInAis = (Boolean) record[colPos++];
-		realisationForm26asBookingDate = (Date) record[colPos++];
+		realisationForm26asBookingDate = (LocalDate) record[colPos++];
 	}
 	
 	@Override
@@ -124,7 +123,7 @@ public class DueRealisationVO {
 	public Boolean getInAis() {
 		return transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? investmentTransactionInAis : realisationInAis;
 	}
-	public Date getForm26asBookingDate() {
+	public LocalDate getForm26asBookingDate() {
 		return transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL ? investmentTransactionForm26asBookingDate : realisationForm26asBookingDate;
 	}
 }

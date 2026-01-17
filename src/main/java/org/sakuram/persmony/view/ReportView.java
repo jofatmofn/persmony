@@ -4,10 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -107,7 +104,7 @@ public class ReportView extends VerticalLayout {
         });
 
 		generateButton = new MultiDownloadButton("Generate", () -> createReportStreams(reportService, reportFields));		
-		generateButton.getContent().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		// generateButton.getContent().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		add(generateButton);
 	}
 
@@ -139,7 +136,7 @@ public class ReportView extends VerticalLayout {
 					showError("Select the period before clicking Generate");
 					return emptyReportStreamResourceList;
 				}
-            	periodSummaryCriteriaVO = new PeriodSummaryCriteriaVO(Date.valueOf(reportFields.periodFromDatePicker.getValue()), Date.valueOf(reportFields.periodToDatePicker.getValue()));
+            	periodSummaryCriteriaVO = new PeriodSummaryCriteriaVO(reportFields.periodFromDatePicker.getValue(), reportFields.periodToDatePicker.getValue());
 	            switch(reportFields.reportSelect.getValue()) {
 	            case "Receipt Transactions":
 	            	reportList = reportService.receiptTransactions(periodSummaryCriteriaVO);
@@ -187,10 +184,12 @@ public class ReportView extends VerticalLayout {
 			return emptyReportStreamResourceList;
 		}
 		
+		System.out.println("No. of reports: " + reportList.size());
+		int reportInd = 1;
 		List<StreamResource> reportStreamResourceList = new ArrayList<StreamResource>(reportList.size());
 		for (List<Object[]> recordList : reportList) {
 			System.out.println("Report Size: " + recordList.size());
-			reportStreamResourceList.add(new StreamResource("", 
+			reportStreamResourceList.add(new StreamResource(reportFields.reportSelect.getValue() + "_" + reportInd++ + ".csv", 
 			new StreamResourceWriter() {
 				
 				@Override

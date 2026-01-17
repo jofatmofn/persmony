@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -38,7 +38,7 @@ public class Contract {
 	private String contractNo;
 	
 	@Column(name="contract_date", nullable=false)
-	private Date contractDate;
+	private LocalDate contractDate;
 	
 	@Column(name="settlement_no", length=31, nullable=false)	// Settlement Date in ISIN Action
 	private String settlementNo;

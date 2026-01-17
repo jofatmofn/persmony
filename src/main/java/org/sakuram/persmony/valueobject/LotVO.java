@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +20,7 @@ public class LotVO {
 	Long isinActionPartId;
 	Double transactionQuantity;
 	Double balance;
-	Date ownershipChangeDate;
+	LocalDate ownershipChangeDate;
 	Double pricePerUnit;
 	
 	// For cloning during .addAll to beforeChange backup list

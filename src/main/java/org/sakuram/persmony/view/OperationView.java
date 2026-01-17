@@ -1,7 +1,6 @@
 package org.sakuram.persmony.view;
 
 import java.io.PrintWriter;
-import java.sql.Date;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +57,6 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.converter.LocalDateToDateConverter;
 import com.vaadin.flow.router.Route;
 
 @Route("operation")
@@ -297,7 +295,7 @@ public class OperationView extends Div {
 			formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
 
 			realisationIdIntegerField = new IntegerField();
-			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO == null || investmentTransaction2VO.getDefaultBankAccountIdValueVO() == null ? null : investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId()), () -> (transactionDatePicker == null || transactionDatePicker.getValue() == null ? null : Date.valueOf(transactionDatePicker.getValue())));
+			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO == null || investmentTransaction2VO.getDefaultBankAccountIdValueVO() == null ? null : investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId()), () -> transactionDatePicker.getValue());
 			if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 				formLayout.addFormItem(sbAcTxnComponent.getLayout(), "SB A/c Txn Id");
 			} else if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_ANOTHER_REALISATION) {
@@ -360,7 +358,7 @@ public class OperationView extends Div {
 						amountComponent.getReturnedPrincipalAmount(),
 						amountComponent.getInterestAmount(),
 						amountComponent.getTdsAmount(),
-						Date.valueOf(transactionDatePicker.getValue()),
+						transactionDatePicker.getValue(),
 						(lastRealisationCheckbox == null || lastRealisationCheckbox.getValue() == null || !lastRealisationCheckbox.getValue()) ? false : true,
 						(closureTypeDvSelect == null || closureTypeDvSelect.getValue() == null) ? null : closureTypeDvSelect.getValue().getId(),
 						(taxGroupDvSelect == null || taxGroupDvSelect.getValue() == null) ? null : taxGroupDvSelect.getValue().getId());
@@ -405,7 +403,7 @@ public class OperationView extends Div {
 			hLayout = new HorizontalLayout();
 			formLayout.addFormItem(hLayout, "Realisation");
 			bankAccountDvSelect = newDvSelect("Bank Account", Constants.CATEGORY_ACCOUNT, false);
-			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (bankAccountDvSelect == null || bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()), () -> (transactionDatePicker == null || transactionDatePicker.getValue() == null ? null : Date.valueOf(transactionDatePicker.getValue())));
+			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (bankAccountDvSelect == null || bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()), () -> transactionDatePicker.getValue());
 			hLayout.add(bankAccountDvSelect, sbAcTxnComponent.getLayout());
 		}
 		
@@ -448,7 +446,7 @@ public class OperationView extends Div {
 						amountComponent.getReturnedPrincipalAmount(),
 						amountComponent.getInterestAmount(),
 						amountComponent.getTdsAmount(),
-						Date.valueOf(transactionDatePicker.getValue()),
+						transactionDatePicker.getValue(),
 						(transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_ACCRUAL || sbAcTxnComponent.getSbAcTxnIdIntegerField() == null) ? null : Long.valueOf(sbAcTxnComponent.getSbAcTxnIdIntegerField().getValue()),
 						taxGroupDvSelect.getValue() == null? null : taxGroupDvSelect.getValue().getId());
 				try {
@@ -631,8 +629,8 @@ public class OperationView extends Div {
 						accruedInterestNumberField.getValue() == null ? null : (double)accruedInterestNumberField.getValue().doubleValue(),
 						chargesNumberField.getValue() == null ? null : (double)chargesNumberField.getValue().doubleValue(),
 						rateOfInterestNumberField.getValue() == null ? null : (double)rateOfInterestNumberField.getValue().doubleValue(),
-						investmentStartDatePicker.getValue() == null ? null : Date.valueOf(investmentStartDatePicker.getValue()),
-						investmentEndDatePicker.getValue() == null ? null : Date.valueOf(investmentEndDatePicker.getValue()),
+						investmentStartDatePicker.getValue(),
+						investmentEndDatePicker.getValue(),
 						paymentScheduleVOList,
 						receiptScheduleVOList,
 						(dynamicReceiptPeriodicityRadioButtonGroup.getValue().equals("Not Applicable") ? null : 'Y'),
@@ -746,7 +744,7 @@ public class OperationView extends Div {
 						investmentIdWithProviderTextField.getValue(),
 						(double)faceValueNumberField.getValue().doubleValue(),
 						rateOfInterestNumberField.getValue() == null ? null : (double)rateOfInterestNumberField.getValue().doubleValue(),
-						Date.valueOf(investmentEndDatePicker.getValue()),
+						investmentEndDatePicker.getValue(),
 						paymentScheduleVOList,
 						receiptScheduleVOList,
 						accrualScheduleVOList);
@@ -856,7 +854,7 @@ public class OperationView extends Div {
 						investmentIdWithProviderTextField.getValue().equals("") ? null : investmentIdWithProviderTextField.getValue(),
 						unitsNumberField.getValue() == null ? null : unitsNumberField.getValue().doubleValue(),
 						faceValueNumberField.getValue() == null ? null : faceValueNumberField.getValue().doubleValue(),
-						investmentStartDatePicker.getValue() == null ? null : Date.valueOf(investmentStartDatePicker.getValue()));
+						investmentStartDatePicker.getValue());
 				try {
 					moneyTransactionService.transfer(transferVO);
 					notification = Notification.show("Investment Transferred Successfully.");
@@ -1120,10 +1118,10 @@ public class OperationView extends Div {
     			tdsNumberField.setValue(selectedDueRealisationVO.getInvestmentTransactionTdsAmount());
     		}
     		if (selectedDueRealisationVO.getDueDate() != null) {
-        		accountedDatePicker.setValue(selectedDueRealisationVO.getDueDate().toLocalDate());    			
+        		accountedDatePicker.setValue(selectedDueRealisationVO.getDueDate());    			
     		}
     		if (selectedDueRealisationVO.getInvestmentTransactionForm26asBookingDate() != null) {
-        		form26asBookingDatePicker.setValue(selectedDueRealisationVO.getInvestmentTransactionForm26asBookingDate().toLocalDate());
+        		form26asBookingDatePicker.setValue(selectedDueRealisationVO.getInvestmentTransactionForm26asBookingDate());
     		}
     		if (selectedDueRealisationVO.getAccrualTdsReference() != null) {
     			form16aCertificateTextField.setValue(selectedDueRealisationVO.getAccrualTdsReference());
@@ -1139,10 +1137,10 @@ public class OperationView extends Div {
     			tdsNumberField.setValue(selectedDueRealisationVO.getRealisationTdsAmount());
     		}
     		if (selectedDueRealisationVO.getRealisationDate() != null) {
-    			accountedDatePicker.setValue(selectedDueRealisationVO.getRealisationDate().toLocalDate());
+    			accountedDatePicker.setValue(selectedDueRealisationVO.getRealisationDate());
     		}
     		if (selectedDueRealisationVO.getRealisationForm26asBookingDate() != null) {
-    			form26asBookingDatePicker.setValue(selectedDueRealisationVO.getRealisationForm26asBookingDate().toLocalDate());
+    			form26asBookingDatePicker.setValue(selectedDueRealisationVO.getRealisationForm26asBookingDate());
     		}
     		if (selectedDueRealisationVO.getRealisationTdsReference() != null) {
     			form16aCertificateTextField.setValue(selectedDueRealisationVO.getRealisationTdsReference());
@@ -1167,12 +1165,12 @@ public class OperationView extends Div {
 					updateTaxDetailRequestVO = new UpdateTaxDetailRequestVO(
 							id,
 							selectedDueRealisationVO.getTransactionTypeDvId(),
-							accountedDatePicker.getValue() == null ? null : Date.valueOf(accountedDatePicker.getValue()),
+							accountedDatePicker.getValue(),
 							interestNumberField.getValue() == null ? null : interestNumberField.getValue().doubleValue(),
 							tdsNumberField.getValue() == null ? null : tdsNumberField.getValue().doubleValue(),
 							form16aCertificateTextField.getValue().equals("") ? null : form16aCertificateTextField.getValue(),
 							inAisCheckbox.getValue(),
-							form26asBookingDatePicker.getValue() == null ? null : Date.valueOf(form26asBookingDatePicker.getValue())
+							form26asBookingDatePicker.getValue()
 							);
 							
 					moneyTransactionService.updateTaxDetail(updateTaxDetailRequestVO);
@@ -1329,8 +1327,7 @@ public class OperationView extends Div {
 		dueDatePicker = new DatePicker();
 		addCloseHandler(dueDatePicker, scheduleEditor);
 		scheduleBinder.forField(dueDatePicker)
-			.withConverter(new LocalDateToDateConverter())
-			.bind(ScheduleVO::getDueDateUtil, ScheduleVO::setDueDateUtil);
+			.bind(ScheduleVO::getDueDate, ScheduleVO::setDueDate);
 		dueDateColumn.setEditorComponent(dueDatePicker);
 		
 		if (transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {

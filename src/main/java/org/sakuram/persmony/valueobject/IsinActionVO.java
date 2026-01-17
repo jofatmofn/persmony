@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +14,7 @@ import lombok.ToString;
 @ToString
 public class IsinActionVO {
 	long isinActionId;
-	Date settlementDate;
+	LocalDate settlementDate;
 	String isin;
 	String securityName;
 	IdValueVO actionType;

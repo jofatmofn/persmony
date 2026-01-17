@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.text.ParseException;
 import java.util.List;
 
@@ -47,7 +47,7 @@ public class SavingsAccountTransaction {
 	private DomainValue bankAccountOrInvestor;
 	
 	@Column(name="transaction_date", nullable=false)
-	private Date transactionDate;
+	private LocalDate transactionDate;
 	
 	@Column(name="amount", nullable=false, columnDefinition="NUMERIC", precision=13, scale=4)
 	private BigDecimal amount;
@@ -57,7 +57,7 @@ public class SavingsAccountTransaction {
 	private DomainValue booking;
 	
 	@Column(name="value_date", nullable=true)
-	private Date valueDate;
+	private LocalDate valueDate;
 	
 	@Column(name="reference", length=63, nullable=true)	// Cheque No. / Reference No. / Instrument Id
 	private String reference;
@@ -125,7 +125,7 @@ public class SavingsAccountTransaction {
     @OneToOne(mappedBy="savingsAccountTransaction", fetch=FetchType.LAZY)
     private SbAcTxnTax sbAcTxnTax;
     
-	public SavingsAccountTransaction(DomainValue bankAccountOrInvestor, Date transactionDate, Double amount) {
+	public SavingsAccountTransaction(DomainValue bankAccountOrInvestor, LocalDate transactionDate, Double amount) {
 		this.bankAccountOrInvestor = bankAccountOrInvestor;
 		this.transactionDate = transactionDate;
 		this.amount = (amount == null ? null : BigDecimal.valueOf(amount));
@@ -133,10 +133,10 @@ public class SavingsAccountTransaction {
 	
 	public SavingsAccountTransaction(Long bankAccountOrInvestorDvId, String transactionDateStr, Double amount, Long bookingDvId, String valueDateStr, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) throws ParseException {
 		this(bankAccountOrInvestorDvId,
-				new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(transactionDateStr).getTime()),
+				LocalDate.parse(transactionDateStr),
 				amount,
 				bookingDvId,
-				(valueDateStr == null || valueDateStr.equals("") ? null : new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(valueDateStr).getTime())),
+				(valueDateStr == null || valueDateStr.equals("")) ? null : LocalDate.parse(valueDateStr),
 				reference,
 				narration,
 				balance,
@@ -151,7 +151,7 @@ public class SavingsAccountTransaction {
 		);
 	}
 
-	public SavingsAccountTransaction(Long bankAccountOrInvestorDvId, Date transactionDate, Double amount, Long bookingDvId, Date valueDate, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) 
+	public SavingsAccountTransaction(Long bankAccountOrInvestorDvId, LocalDate transactionDate, Double amount, Long bookingDvId, LocalDate valueDate, String reference, String narration, Double balance, String transactionId, String utrNumber, String remitterBranch, Long transactionCodeDvId, Integer branchCode, String transactionTime, Long costCenterDvId, Long voucherTypeDvId) 
 	{
 		this.bankAccountOrInvestor = (bankAccountOrInvestorDvId == null ? null : Constants.domainValueCache.get(bankAccountOrInvestorDvId));
 		this.transactionDate = transactionDate;

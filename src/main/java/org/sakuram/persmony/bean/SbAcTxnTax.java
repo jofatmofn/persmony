@@ -1,6 +1,6 @@
 package org.sakuram.persmony.bean;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,7 +39,7 @@ public class SbAcTxnTax {
 	private Boolean inAis;
 	
 	@Column(name="form26as_booking_date", nullable=true)
-	private Date Form26asBookingDate;
+	private LocalDate Form26asBookingDate;
 	
 	@Column(name="assessment_year", nullable=true, columnDefinition="NUMERIC", precision=4, scale=0)
 	private Short assessmentYear;

@@ -1,6 +1,6 @@
 package org.sakuram.persmony.view;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -32,7 +32,7 @@ public class SbAcTxnComponent {
 	IntegerField sbAcTxnIdIntegerField;	// TODO: Should be LongField
 	Button fetchButton;
 	
-	public SbAcTxnComponent(SbAcTxnService sbAcTxnService, Supplier<Long> bankAccountDvIdSupplier, Supplier<Date> transactionDateSupplier) {
+	public SbAcTxnComponent(SbAcTxnService sbAcTxnService, Supplier<Long> bankAccountDvIdSupplier, Supplier<LocalDate> transactionDateSupplier) {
 		
 		layout = new HorizontalLayout();
 		sbAcTxnIdIntegerField = new IntegerField("SAT Id");

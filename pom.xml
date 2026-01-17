@@ -36,13 +36,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-	        <!-- dependency>
-	            <groupId>org.springframework</groupId>
-	            <artifactId>spring-framework-bom</artifactId>
-	            <version>6.2.9</version>
-	            <type>pom</type>
-	            <scope>import</scope>
-	        </dependency -->
 	    </dependencies>
 	</dependencyManagement>
 
@@ -112,11 +105,6 @@
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-spring-boot-starter</artifactId>
 		</dependency>
-    <dependency>
-        <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-dev</artifactId>
-        <optional>true</optional>
-    </dependency>
 		<dependency>
 			<groupId>org.javatuples</groupId>
 			<artifactId>javatuples</artifactId>
@@ -142,7 +130,6 @@
 				<executions>
 					<execution>
 						<goals>
-							<goal>prepare-frontend</goal>
 							<goal>build-frontend</goal>
 						</goals>
 					</execution>

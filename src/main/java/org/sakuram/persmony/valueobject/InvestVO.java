@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -25,8 +25,8 @@ public class InvestVO {
 	Double units;
 	Double faceValue, cleanPrice, accruedInterest, charges;
 	Double rateOfInterest;
-	Date investmentStartDate;
-	Date investmentEndDate;
+	LocalDate investmentStartDate;
+	LocalDate investmentEndDate;
 	List<ScheduleVO> paymentScheduleVOList;
 	List<ScheduleVO> receiptScheduleVOList;
 	Character dynamicReceiptPeriodicity;

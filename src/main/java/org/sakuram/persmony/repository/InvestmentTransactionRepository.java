@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.sakuram.persmony.bean.Investment;
@@ -13,7 +13,7 @@ import org.sakuram.persmony.util.Constants;
 
 public interface InvestmentTransactionRepository extends JpaRepository<InvestmentTransaction, Long> {
 	public List<InvestmentTransaction> findByInvestmentOrderByDueDateDesc(Investment investment);
-	public List<InvestmentTransaction> findByDueDateBetween(Date fromDate, Date toDate);
+	public List<InvestmentTransaction> findByDueDateBetween(LocalDate fromDate, LocalDate toDate);
 	
 	@Query(nativeQuery = true, value =
 			"SELECT IT.due_date, IT.id t_id, I.id, iDV.value AS investor, CONCAT(pDV.value, ' - ', COALESCE(bDV.value, 'Central')) AS provider, I.product_name, I.investment_id_with_provider, IT.due_amount, null, IT.returned_principal_amount "
@@ -40,7 +40,7 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 			+ "	AND COALESCE(realisation_date, IT.due_date) BETWEEN :#{#fromDate} AND :#{#toDate} "
 			+ "GROUP BY IT.due_date, IT.id, I.id, iDV.value, pDV.value, bDV.value, I.product_name, I.investment_id_with_provider, IT.due_amount, IT.returned_principal_amount "
 			+ "ORDER BY due_date, t_id")
-	public List<Object[]> findReceiptTransactionsWithinPeriod(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
+	public List<Object[]> findReceiptTransactionsWithinPeriod(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 	
 	@Query(nativeQuery = true, value =
 			"SELECT ITO.*"
@@ -66,5 +66,5 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 			+ "	AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_COMPLETED
 			+ " AND due_date < :dueDate"
 			+ ")")
-	public InvestmentTransaction findPreviousCompletedTransaction(@Param("iId") long iId, @Param("dueDate") Date dueDate);
+	public InvestmentTransaction findPreviousCompletedTransaction(@Param("iId") long iId, @Param("dueDate") LocalDate dueDate);
 }

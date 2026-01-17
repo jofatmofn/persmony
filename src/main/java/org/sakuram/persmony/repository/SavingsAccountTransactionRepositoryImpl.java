@@ -49,12 +49,12 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 		}
 		if (sbAcTxnCriteriaVO.getFromDate() != null) {
 			mainQueryStringBuffer.append("AND SAT.transaction_date >= '"); // COALESCE(SAT.value_date, SAT.transaction_date)
-			mainQueryStringBuffer.append(Constants.ANSI_DATE_FORMAT.format(sbAcTxnCriteriaVO.getFromDate()));
+			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getFromDate().toString());
 			mainQueryStringBuffer.append("' ");
 		}
 		if (sbAcTxnCriteriaVO.getToDate() != null) {
 			mainQueryStringBuffer.append("AND SAT.transaction_date <= '"); // COALESCE(SAT.value_date, SAT.transaction_date)
-			mainQueryStringBuffer.append(Constants.ANSI_DATE_FORMAT.format(sbAcTxnCriteriaVO.getToDate()));
+			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getToDate().toString());
 			mainQueryStringBuffer.append("' ");
 		}
 		if (sbAcTxnCriteriaVO.getFromAmount() != null) {

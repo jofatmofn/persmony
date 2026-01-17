@@ -1,6 +1,6 @@
 package org.sakuram.persmony.bean;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +41,7 @@ public class IsinAction {
 	private Isin isin;
 	
 	@Column(name="settlement_date", nullable=false)	// Better to be in Contract, however there can be trans(ISIN) actions without Contract
-	private Date settlementDate;
+	private LocalDate settlementDate;
 	
 	@Column(name="settlement_sequence", nullable=true)	// Within the same date, action
 	private Short settlementSequence;

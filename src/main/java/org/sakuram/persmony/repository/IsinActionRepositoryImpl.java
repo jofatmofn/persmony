@@ -1,6 +1,6 @@
 package org.sakuram.persmony.repository;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
@@ -17,7 +17,7 @@ public class IsinActionRepositoryImpl implements IsinActionRepositoryCustom {
     public EntityManager entityManager;
 
 	@SuppressWarnings("unchecked")
-	public List<IsinAction> findIsinIndependentIsinActions(String isin, Date sellDate, Long dematAccount) {
+	public List<IsinAction> findIsinIndependentIsinActions(String isin, LocalDate sellDate, Long dematAccount) {
     	Query query;
     	StringBuffer mainQueryStringBuffer;
 		String queryString;
@@ -38,7 +38,7 @@ public class IsinActionRepositoryImpl implements IsinActionRepositoryCustom {
 		mainQueryStringBuffer.append(isin.trim().toUpperCase());
 		mainQueryStringBuffer.append("')) ");
 		mainQueryStringBuffer.append("AND IA.settlement_date <= '");
-		mainQueryStringBuffer.append(Constants.ANSI_DATE_FORMAT.format(sellDate));
+		mainQueryStringBuffer.append(sellDate.toString());
 		mainQueryStringBuffer.append("' ");
 		if (dematAccount != null) {
 			mainQueryStringBuffer.append("AND IA.demat_account_fk = ");

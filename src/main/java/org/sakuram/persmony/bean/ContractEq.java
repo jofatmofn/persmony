@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -42,7 +42,7 @@ public class ContractEq {
 	private BigDecimal stampDuty;
 
 	@Column(name="allotment_date", nullable=true)	// Applicable to MF
-	private Date allotmentDate;
+	private LocalDate allotmentDate;
 	
 	@Column(name="net_amount", nullable=false, columnDefinition="NUMERIC", precision=11, scale=3)
 	private BigDecimal netAmount;

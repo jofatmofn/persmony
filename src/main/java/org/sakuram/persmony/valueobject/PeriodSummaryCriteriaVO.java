@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +9,6 @@ import lombok.Setter;
 @Getter @Setter
 @AllArgsConstructor
 public class PeriodSummaryCriteriaVO {
-	Date fromDate;
-	Date toDate;
+	LocalDate fromDate;
+	LocalDate toDate;
 }

@@ -1,6 +1,6 @@
 package org.sakuram.persmony.view;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import org.sakuram.persmony.service.DebtEquityMutualService;
 import org.sakuram.persmony.service.MiscService;
@@ -129,17 +129,9 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		        (bean, fieldVal) -> {}
 		    );
 		binder.forField(settlementDateDatePicker)
-	    	.withConverter(
-		        fieldValue -> (fieldValue == null ? null : java.sql.Date.valueOf(fieldValue)),
-		        beanValue -> (beanValue == null ? null : beanValue.toLocalDate())
-		    )
 		    .bind("settlementDate");
 		binder.forField(ownershipChangeDateDatePicker)
-    	.withConverter(
-	        fieldValue -> (fieldValue == null ? null : java.sql.Date.valueOf(fieldValue)),
-	        beanValue -> (beanValue == null ? null : beanValue.toLocalDate())
-	    )
-	    .bind("ownershipChangeDate");
+	    	.bind("ownershipChangeDate");
 		binder.forField(securitySearchComponent)
 	    	.withConverter(
 	    			fieldValue -> fieldValue == null ? null : fieldValue.toUpperCase(),
@@ -191,7 +183,7 @@ public class RealIsinActionEntryEditor extends FormLayout {
     public static class InputArgs {
 		String entitledIsin;
 		IdValueVO dematAccount;
-		Date recordDate;
+		LocalDate recordDate;
 		Double balance;
 		boolean isTradeApplicable;
 		boolean isDematInput;

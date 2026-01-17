@@ -1,6 +1,6 @@
 package org.sakuram.persmony.service;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +59,7 @@ public class DebtEquityMutualService {
 	@Autowired
 	IsinActionPartRepository isinActionPartRepository;
 	
-	public List<LotVO> fetchLots(String isinStr, Date priorToDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
+	public List<LotVO> fetchLots(String isinStr, LocalDate priorToDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
 		List<IsinActionPart> isinActionPartList;
 		List<LotVO> lotVOList;
 		
@@ -323,7 +323,7 @@ public class DebtEquityMutualService {
 		
 	}
 
-	private void createLots(List<TradeVO> tradeVOList, IsinActionPart isinActionPartInserted, List<LotVO> fifoLotVOList, IsinAction isinAction, Date ownershipChangeDate) {
+	private void createLots(List<TradeVO> tradeVOList, IsinActionPart isinActionPartInserted, List<LotVO> fifoLotVOList, IsinAction isinAction, LocalDate ownershipChangeDate) {
 		int fifoInd;
 		double currentFifoBalance, lotBalance;
 		

@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +15,7 @@ public class InvestmentTransaction2VO {
 	long investmentTransactionId;
 	long transactionTypeDvId;
 	String transactionType;
-	Date dueDate;
+	LocalDate dueDate;
 	Double dueAmount;
 	long statusDvId;
 	String status;

@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,10 +10,10 @@ import lombok.Setter;
 public class UpdateTaxDetailRequestVO {
 	long id;
 	long transactionTypeDvId;
-	Date accountedDate;
+	LocalDate accountedDate;
 	Double interestAmount;
 	Double tdsAmount;
 	String tdsReference;
 	Boolean inAis;
-	Date form26asBookingDate;	
+	LocalDate form26asBookingDate;	
 }

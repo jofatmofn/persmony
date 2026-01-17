@@ -1,7 +1,6 @@
 
 package org.sakuram.persmony.view;
 
-import java.sql.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -198,12 +197,12 @@ public class RealisationComponent extends VerticalLayout {
 		}
 		
 		transactionDatePicker = new DatePicker();
-		transactionDatePicker.setValue(investmentTransaction2VO.getDueDate().toLocalDate());
+		transactionDatePicker.setValue(investmentTransaction2VO.getDueDate());
 		formLayout.addFormItem(transactionDatePicker, "Realised Date");
 		if (savingsAccountTransactionVO == null) {
 			transactionDatePicker.setEnabled(true);
 		} else {
-			transactionDatePicker.setValue(savingsAccountTransactionVO.getTransactionDate().toLocalDate());
+			transactionDatePicker.setValue(savingsAccountTransactionVO.getTransactionDate());
 			transactionDatePicker.setEnabled(false);
 		}
 		
@@ -221,7 +220,7 @@ public class RealisationComponent extends VerticalLayout {
 			formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
 
 			realisationIdIntegerField = new IntegerField();
-			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO == null || investmentTransaction2VO.getDefaultBankAccountIdValueVO() == null ? null : investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId()), () -> (transactionDatePicker == null || transactionDatePicker.getValue() == null ? null : Date.valueOf(transactionDatePicker.getValue())));
+			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO == null || investmentTransaction2VO.getDefaultBankAccountIdValueVO() == null ? null : investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId()), () -> transactionDatePicker.getValue());
 			if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 				formLayout.addFormItem(sbAcTxnComponent.getLayout(), "SB A/c Txn Id");
 				if (savingsAccountTransactionVO == null) {
@@ -289,7 +288,7 @@ public class RealisationComponent extends VerticalLayout {
 						amountComponent.getReturnedPrincipalAmount(),
 						amountComponent.getInterestAmount(),
 						amountComponent.getTdsAmount(),
-						Date.valueOf(transactionDatePicker.getValue()),
+						transactionDatePicker.getValue(),
 						(lastRealisationCheckbox == null || lastRealisationCheckbox.getValue() == null || !lastRealisationCheckbox.getValue()) ? false : true,
 						(closureTypeDvSelect == null || closureTypeDvSelect.getValue() == null) ? null : closureTypeDvSelect.getValue().getId(),
 						(taxGroupDvSelect == null || taxGroupDvSelect.getValue() == null) ? null : taxGroupDvSelect.getValue().getId());

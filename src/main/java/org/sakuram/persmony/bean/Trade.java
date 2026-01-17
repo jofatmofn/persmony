@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,7 +33,7 @@ public class Trade {
 	private IsinActionPart isinActionPart;
 	
 	@Column(name="order_date", nullable=false)
-	private Date orderDate;
+	private LocalDate orderDate;
 	
 	@Column(name="order_time", length=8, nullable=false)
 	private String orderTime;
@@ -42,7 +42,7 @@ public class Trade {
 	private String orderNo;
 	
 	@Column(name="trade_date", nullable=false)
-	private Date tradeDate;
+	private LocalDate tradeDate;
 	
 	@Column(name="trade_time", length=8, nullable=false)
 	private String tradeTime;

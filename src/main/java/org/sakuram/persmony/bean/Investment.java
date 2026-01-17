@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -98,10 +98,10 @@ public class Investment {
 	private DomainValue newInvestmentReason;
 	
 	@Column(name="investment_start_date", nullable=true)
-	private Date investmentStartDate;
+	private LocalDate investmentStartDate;
 	
 	@Column(name="investment_end_date", nullable=true)
-	private Date investmentEndDate;
+	private LocalDate investmentEndDate;
 	
 	@Column(name="is_closed", nullable=false)
 	private boolean isClosed;
@@ -111,7 +111,7 @@ public class Investment {
 	private DomainValue closureType;
 	
 	@Column(name="closure_date", nullable=true)
-	private Date closureDate;
+	private LocalDate closureDate;
 	
 	@Column(name="is_accrual_applicable", nullable=true)
 	private Boolean isAccrualApplicable;
@@ -136,7 +136,7 @@ public class Investment {
 	@JoinColumn(name="default_tax_group_fk", nullable=true)
 	private DomainValue defaultTaxGroup;
 	
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double units, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch, DomainValue defaultBankAccount, DomainValue defaultTaxGroup) {
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, Double units, Double worth, Double cleanPrice, Double accruedInterest, Double charges, Double rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, LocalDate investmentStartDate, LocalDate investmentEndDate, boolean isClosed, DomainValue closureType, LocalDate closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch, DomainValue defaultBankAccount, DomainValue defaultTaxGroup) {
 		this(investor,
 				productProvider,
 				dematAccount,
@@ -168,7 +168,7 @@ public class Investment {
 				defaultTaxGroup);
 	}
 	
-	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, BigDecimal units, BigDecimal worth, BigDecimal cleanPrice, BigDecimal accruedInterest, BigDecimal charges, BigDecimal rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, Date investmentStartDate, Date investmentEndDate, boolean isClosed, DomainValue closureType, Date closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch, DomainValue defaultBankAccount, DomainValue defaultTaxGroup) {
+	public Investment(DomainValue investor, DomainValue productProvider, DomainValue dematAccount, DomainValue facilitator, String investorIdWithProvider, String productIdOfProvider, String investmentIdWithProvider, String productName, DomainValue productType, BigDecimal units, BigDecimal worth, BigDecimal cleanPrice, BigDecimal accruedInterest, BigDecimal charges, BigDecimal rateOfInterest, DomainValue taxability, Investment previousInvestment, DomainValue newInvestmentReason, LocalDate investmentStartDate, LocalDate investmentEndDate, boolean isClosed, DomainValue closureType, LocalDate closureDate, Boolean isAccrualApplicable, List<InvestmentTransaction> investmentTransactionList, Character dynamicReceiptPeriodicity, DomainValue providerBranch, DomainValue defaultBankAccount, DomainValue defaultTaxGroup) {
 		this.investor = investor;
 		this.productProvider = productProvider;
 		this.dematAccount = dematAccount;

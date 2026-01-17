@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +13,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class AccountingIsinActionEntryVO {
-	Date settlementDate;
+	LocalDate settlementDate;
 	String isin;
 	Double transactionQuantity;
 	IdValueVO bookingType;

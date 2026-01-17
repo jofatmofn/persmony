@@ -1,6 +1,6 @@
 package org.sakuram.persmony.service;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +56,7 @@ public class MoneyTransactionService {
 		InvestmentTransaction investmentTransaction, dynamicReceiptIt;
 		SavingsAccountTransaction savingsAccountTransaction;
 		Realisation realisation, referencedRealisation;
-		Date dynamicReceiptDueDate;
+		LocalDate dynamicReceiptDueDate;
 		
 		investmentTransaction = investmentTransactionRepository.findById(singleRealisationVO.getInvestmentTransactionId())
 			.orElseThrow(() -> new AppException("Invalid Investment Transaction Id " + singleRealisationVO.getInvestmentTransactionId(), null));
@@ -121,7 +121,7 @@ public class MoneyTransactionService {
 			}
 		} else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT && investmentTransaction.getInvestment().getDynamicReceiptPeriodicity() != null) {
 			if (investmentTransaction.getInvestment().getDynamicReceiptPeriodicity().equals(Constants.DYNAMIC_REALISATION_PERIODICITY_YEAR)) {
-				dynamicReceiptDueDate = Date.valueOf(investmentTransaction.getDueDate().toLocalDate().plusYears(1));
+				dynamicReceiptDueDate = investmentTransaction.getDueDate().plusYears(1);
 				dynamicReceiptIt = new InvestmentTransaction(
 						investmentTransaction.getInvestment(),
 						investmentTransaction.getTransactionType(),
@@ -196,7 +196,7 @@ public class MoneyTransactionService {
 		List<InvestmentTransaction> investmentTransactionList;
 		InvestmentTransaction riReceiptTransaction;
 		Realisation riReceiptRealisation, niPaymentRealisation;
-		Date realisationDate;
+		LocalDate realisationDate;
 		Double realisationAmount;
 		
 		realisationDate = renewalVO.getPaymentScheduleVOList().get(0).getDueDate();

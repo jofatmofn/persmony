@@ -1,6 +1,6 @@
 package org.sakuram.persmony.valueobject;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.Setter;
 public class RealisationVO {
 	long realisationId;
 	long investmentTransactionId;
-	Date realisationDate;
+	LocalDate realisationDate;
 	String realisationType;
 	Long savingsAccountTransactionId;
 	Long referredRealisationId;

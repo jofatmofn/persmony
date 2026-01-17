@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,7 +38,7 @@ public class Action {
 	private DomainValue actionType;
 	
 	@Column(name="record_date", nullable=true)	// TODO: Nullable false
-	private Date recordDate;
+	private LocalDate recordDate;
 	
 	@Column(name="new_shares_per_old", nullable=true)
 	private Short newSharesPerOld;

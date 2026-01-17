@@ -1,7 +1,6 @@
 package org.sakuram.persmony.service;
 
-import java.math.BigInteger;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -154,7 +153,7 @@ public class ReportService {
 		lastCompletedReceiptsMap = fetchLastCompletedReceipts();
 		for (Object[] fields : recordList.subList(1, recordList.size())) {
 			if (fields[7] == null) {
-				investmentId = ((BigInteger) fields[2]).longValue();
+				investmentId = ((Long) fields[2]).longValue();
 				if (lastCompletedReceiptsMap.containsKey(investmentId)) {
 					fields[7] = lastCompletedReceiptsMap.get(investmentId).getValue1();
 					fields[8] = lastCompletedReceiptsMap.get(investmentId).getValue0();
@@ -242,8 +241,8 @@ public class ReportService {
 			}
 			for (Realisation realisation : investmentTransaction.getRealisationList()) {
 				rId = String.valueOf(realisation.getId());
-				if (realisation.getRealisationDate().before(periodSummaryCriteriaVO.getFromDate()) ||
-						realisation.getRealisationDate().after(periodSummaryCriteriaVO.getToDate())) {
+				if (realisation.getRealisationDate().isBefore(periodSummaryCriteriaVO.getFromDate()) ||
+						realisation.getRealisationDate().isAfter(periodSummaryCriteriaVO.getToDate())) {
 					col1Ind = 1;
 				} else {
 					col1Ind = 0;
@@ -353,7 +352,7 @@ public class ReportService {
 			if (previousCompletedIt == null) {
 				throw new AppException("No candidate previous IT!", null);
 			}
-			duration = Duration.between(previousCompletedIt.getDueDate().toLocalDate().atStartOfDay(), investmentTransaction.getDueDate().toLocalDate().atStartOfDay()).toDays();
+			duration = Duration.between(previousCompletedIt.getDueDate().atStartOfDay(), investmentTransaction.getDueDate().atStartOfDay()).toDays();
 			if (investmentTransaction.getInvestment().getWorth() != null && investmentTransaction.getInvestment().getRateOfInterest() != null) {
 				anticipatedAmount = investmentTransaction.getInvestment().getWorth() * duration / 365 * investmentTransaction.getInvestment().getRateOfInterest() / 100;
 				
@@ -535,7 +534,7 @@ public class ReportService {
 		List<Object[]> recordList;
 		List<List<Object[]>> reportTableList;
 		Object[] previousReportRow;
-		java.sql.Date fyStartDate, fyEndDate;
+		LocalDate fyStartDate, fyEndDate;
 		DvFlagsVO dvFlagsVO;
 		DvFlagsAccountVO dvFlagsAccountVO;
 		DomainValue investorDomainValue;
@@ -572,20 +571,20 @@ public class ReportService {
 			reportTableList.add(new ArrayList<Object[]>());
 		}
 
-		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(incomeTaxFilingDetailsRequestVO.getFyStartYear() + "-04-01").getTime());
-		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1) + "-03-31").getTime());
+		fyStartDate = LocalDate.parse(incomeTaxFilingDetailsRequestVO.getFyStartYear() + "-04-01");
+		fyEndDate = LocalDate.parse((incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1) + "-03-31");
 		// TODO: What-if the date and FY as per the provider don't match?
 
 		for (SbAcTxnCategory sbAcTxnCategory : sbAcTxnCategoryRepository.findBySavingsAccountTransactionTransactionDateBetweenOrderBySavingsAccountTransactionTransactionDateAscSavingsAccountTransactionIdAsc(
-				java.sql.Date.valueOf(fyStartDate.toLocalDate().minusDays(30)),
-				java.sql.Date.valueOf(fyEndDate.toLocalDate().plusDays(30)))) {
+				fyStartDate.minusDays(30),
+				fyEndDate.plusDays(30))) {
 			// To use value date, if available, 30 days on each side
 			
 			savingsAccountTransaction = sbAcTxnCategory.getSavingsAccountTransaction();
 
 			if (sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax() == null || sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax().getAssessmentYear() == null) {
-				if (Objects.requireNonNullElse(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).before(fyStartDate) ||
-						Objects.requireNonNullElse(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).after(fyEndDate)) {
+				if (Objects.requireNonNullElse(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).isBefore(fyStartDate) ||
+						Objects.requireNonNullElse(savingsAccountTransaction.getValueDate(), savingsAccountTransaction.getTransactionDate()).isAfter(fyEndDate)) {
 					continue;
 				}
 			} else  if (sbAcTxnCategory.getSavingsAccountTransaction().getSbAcTxnTax().getAssessmentYear() != incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1){
@@ -1003,7 +1002,7 @@ public class ReportService {
 	public List<List<Object[]>> readinessForTaxFiling(DetailsForTaxFilingRequestVO incomeTaxFilingDetailsRequestVO) throws ParseException {
 		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
-		java.sql.Date fyStartDate, fyEndDate;
+		LocalDate fyStartDate, fyEndDate;
 		double expectedPrincipal, expectedInterest, expectedTds, actualAmount;
 		boolean isProcessingComplete, isStartAccumulating;
 		InvestmentTransaction investmentTransaction;
@@ -1013,8 +1012,8 @@ public class ReportService {
 		recordList = new ArrayList<Object[]>();
 		reportList.add(recordList);
 
-		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(incomeTaxFilingDetailsRequestVO.getFyStartYear() + "-04-01").getTime());
-		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1) + "-03-31").getTime());
+		fyStartDate = LocalDate.parse(incomeTaxFilingDetailsRequestVO.getFyStartYear() + "-04-01");
+		fyEndDate = LocalDate.parse((incomeTaxFilingDetailsRequestVO.getFyStartYear() + 1) + "-03-31");
 
 		recordList.add(new Object[] {"Readiness for filing Income Tax Returns"});
 		recordList.add(new Object[] {"Assessee", Constants.domainValueCache.get(incomeTaxFilingDetailsRequestVO.getInvestorDvId()).getValue()});
@@ -1025,7 +1024,7 @@ public class ReportService {
 		for (Investment investment : investmentRepository.retrieveInvestmentActiveWithinPeriod(fyStartDate, fyEndDate)) {
 			// Additional Filters not used in DB, now applied in Java
 
-			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
+			if (investment.getClosureDate() != null && investment.getClosureDate().isBefore(fyStartDate)) {
 				continue;
 			}
 
@@ -1121,7 +1120,7 @@ public class ReportService {
 							isinAction.getId(),
 							isinAction.isInternal(),
 							isinAction.getIsin().getIsin(),
-							Constants.ANSI_DATE_FORMAT.format(isinAction.getSettlementDate()),
+							isinAction.getSettlementDate().toString(),
 							isinAction.getQuantity(),
 							isinAction.getQuantityBooking().getValue(),
 							(isinAction.getAction() == null ? "" : isinAction.getAction().getId()),
@@ -1215,12 +1214,12 @@ public class ReportService {
 
 	private Triplet<Map<Long, Double[]>, List<List<Object[]>>, List<Object[]>> fetchAccrualForFy(int fyStartYear, Long investorDvId) throws ParseException {
 		Double investorSummary[];
-		java.sql.Date fyStartDate, fyEndDate, forInterestStartDate, forInterestEndDate;
+		LocalDate fyStartDate, fyEndDate, forInterestStartDate, forInterestEndDate;
 		long fyDays, interestDays, investmentPrimaryInvestorDvId;
 		Map<Long, Double[]> investorDvIdToTaxLiabilitysMap;
 		List<List<Object[]>> accrualDetailsForInvestor;
 		List<Object[]> anticipatedAccrualDetailsForInvestor;
-		Date realisationDate, investmentLastDate;
+		LocalDate realisationDate, investmentLastDate;
 		double investmentYearEndAccrual, investmentTransactionAmount;
 		int tdsGroupInd;
 
@@ -1230,13 +1229,13 @@ public class ReportService {
 		accrualDetailsForInvestor.add(new ArrayList<Object[]>());
 		anticipatedAccrualDetailsForInvestor = new ArrayList<Object[]>();
 
-		fyStartDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse(fyStartYear + "-04-01").getTime());
-		fyEndDate = new java.sql.Date(Constants.ANSI_DATE_FORMAT.parse((fyStartYear + 1) + "-03-31").getTime());
-		fyDays = Duration.between(fyStartDate.toLocalDate().atStartOfDay(), fyEndDate.toLocalDate().atStartOfDay()).toDays() + 1;
+		fyStartDate = LocalDate.parse(fyStartYear + "-04-01");
+		fyEndDate = LocalDate.parse((fyStartYear + 1) + "-03-31");
+		fyDays = Duration.between(fyStartDate.atStartOfDay(), fyEndDate.atStartOfDay()).toDays() + 1;
 		for (Investment investment : investmentRepository.retrieveInvestmentActiveWithinPeriod(fyStartDate, fyEndDate)) {
 			// Additional Filters not used in DB, now applied in Java
 
-			if (investment.getClosureDate() != null && investment.getClosureDate().before(fyStartDate)) {
+			if (investment.getClosureDate() != null && investment.getClosureDate().isBefore(fyStartDate)) {
 				continue;
 			}
 
@@ -1250,10 +1249,10 @@ public class ReportService {
 			}
 
 			// Income
-			forInterestStartDate = (investment.getInvestmentStartDate() == null || investment.getInvestmentStartDate().before(fyStartDate) ? fyStartDate : investment.getInvestmentStartDate());
+			forInterestStartDate = (investment.getInvestmentStartDate() == null || investment.getInvestmentStartDate().isBefore(fyStartDate) ? fyStartDate : investment.getInvestmentStartDate());
 			investmentLastDate = Objects.requireNonNullElse(investment.getClosureDate(), investment.getInvestmentEndDate());
-			forInterestEndDate = (investmentLastDate == null || investmentLastDate.after(fyEndDate) ? fyEndDate : investmentLastDate);
-			interestDays = Duration.between(forInterestStartDate.toLocalDate().atStartOfDay(), forInterestEndDate.toLocalDate().atStartOfDay()).toDays();
+			forInterestEndDate = (investmentLastDate == null || investmentLastDate.isAfter(fyEndDate) ? fyEndDate : investmentLastDate);
+			interestDays = Duration.between(forInterestStartDate.atStartOfDay(), forInterestEndDate.atStartOfDay()).toDays();
 
 			investorSummary = investorDvIdToTaxLiabilitysMap.get(investmentPrimaryInvestorDvId);
 			if (investorSummary == null) {

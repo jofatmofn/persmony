@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +44,7 @@ public class IsinActionPart {
 	private IsinAction isinAction;
 	
 	@Column(name="ownership_change_date", nullable=true)
-	private Date ownershipChangeDate;
+	private LocalDate ownershipChangeDate;
 	
 	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
 	private BigDecimal quantity;

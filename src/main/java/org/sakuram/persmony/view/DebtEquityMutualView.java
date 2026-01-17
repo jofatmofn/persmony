@@ -1,6 +1,5 @@
 package org.sakuram.persmony.view;
 
-import java.sql.Date;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -313,7 +312,7 @@ public class DebtEquityMutualView extends Div {
         		actionDvSelect.setEnabled(false);
         		securitySearchComponent.getIsinTextField().setValue(actionVO.getEntitledIsin() == null ? "" : actionVO.getEntitledIsin());
         		securitySearchComponent.setEnabled(false);
-        		recordDateDatePicker.setValue(actionVO.getRecordDate() == null ? null : actionVO.getRecordDate().toLocalDate());
+        		recordDateDatePicker.setValue(actionVO.getRecordDate());
         		recordDateDatePicker.setEnabled(false);
         		newSharesPerOldIntegerField.setValue(actionVO.getNewSharesPerOld() == null ? null : actionVO.getNewSharesPerOld().intValue());
         		newSharesPerOldIntegerField.setEnabled(false);
@@ -348,7 +347,7 @@ public class DebtEquityMutualView extends Div {
 					isinActionCreateVO.setActionVO(new ActionVO(
 							new IdValueVO(actionDvSelect.getValue().getId(), null),
 							securitySearchComponent.getIsinTextField().getValue(),
-							(recordDateDatePicker.getValue() == null ? null : Date.valueOf(recordDateDatePicker.getValue())),
+							recordDateDatePicker.getValue(),
 							(newSharesPerOldIntegerField.getValue() == null ? null : newSharesPerOldIntegerField.getValue().shortValue()),
 							(oldSharesBaseIntegerField.getValue() == null ? null : oldSharesBaseIntegerField.getValue().shortValue())
 							));
@@ -365,7 +364,7 @@ public class DebtEquityMutualView extends Div {
 			if (securitySearchComponent.getIsinTextField().getValue() != null && !securitySearchComponent.getIsinTextField().isEmpty() &&
 					dematAccountDvSelect.getValue() != null &&
 					(recordDateDatePicker.getValue() != null || !isinActionSpecVO.isRecordDateApplicable())) {
-				fifoLotVOList.addAll(debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), recordDateDatePicker.getValue() == null ? null : Date.valueOf(recordDateDatePicker.getValue()), dematAccountDvSelect.getValue().getId(), false, "A")
+				fifoLotVOList.addAll(debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), recordDateDatePicker.getValue(), dematAccountDvSelect.getValue().getId(), false, "A")
 						.stream()
 						.filter(lotVO -> lotVO.getBalance() != null && lotVO.getBalance() > 0 && lotVO.getIsinActionVO().getBookingType().getId() == Constants.DVID_BOOKING_CREDIT)
 						.collect(Collectors.toList())
@@ -373,7 +372,7 @@ public class DebtEquityMutualView extends Div {
 				isinActionCreateVO.setActionVO(new ActionVO(
 						new IdValueVO(actionDvSelect.getValue().getId(), null),
 						securitySearchComponent.getIsinTextField().getValue(),
-						(recordDateDatePicker.getValue() == null ? null : Date.valueOf(recordDateDatePicker.getValue())),
+						recordDateDatePicker.getValue(),
 						(newSharesPerOldIntegerField.getValue() == null ? null : newSharesPerOldIntegerField.getValue().shortValue()),
 						(oldSharesBaseIntegerField.getValue() == null ? null : oldSharesBaseIntegerField.getValue().shortValue())
 						));
@@ -987,12 +986,12 @@ public class DebtEquityMutualView extends Div {
 		if (tradeVO.getOrderDate() == null) {
 			orderDateDatePicker.clear();
 		} else {
-			orderDateDatePicker.setValue(tradeVO.getOrderDate().toLocalDate());
+			orderDateDatePicker.setValue(tradeVO.getOrderDate());
 		}
 		if (tradeVO.getTradeDate() == null) {
 			tradeDateDatePicker.clear();
 		} else {
-			tradeDateDatePicker.setValue(tradeVO.getTradeDate().toLocalDate());
+			tradeDateDatePicker.setValue(tradeVO.getTradeDate());
 		}
 	}
 
@@ -1008,8 +1007,8 @@ public class DebtEquityMutualView extends Div {
 		tradeVO.setQuantity(quantityNumberField.getValue());
 		tradeVO.setPricePerUnit(pricePerUnitNumberField.getValue());
 		tradeVO.setBrokeragePerUnit(brokeragePerUnitNumberField.getValue());
-		tradeVO.setOrderDate(orderDateDatePicker.getValue() == null ? null : java.sql.Date.valueOf(orderDateDatePicker.getValue()));
-		tradeVO.setTradeDate(tradeDateDatePicker.getValue() == null ? null : java.sql.Date.valueOf(tradeDateDatePicker.getValue()));
+		tradeVO.setOrderDate(orderDateDatePicker.getValue());
+		tradeVO.setTradeDate(tradeDateDatePicker.getValue());
 	}
 
 	private void acceptAccountingEntries(List<AccountingIsinActionEntryVO> accountingIAEVOList) {
@@ -1138,11 +1137,6 @@ public class DebtEquityMutualView extends Div {
 		settlementDateDatePicker = new DatePicker();
 		addCloseHandler(settlementDateDatePicker, accountingIAEditor);
 		accountingIABinder.forField(settlementDateDatePicker)
-	    	.withConverter(
-	            localDate -> localDate == null ? null : java.sql.Date.valueOf(localDate),
-	            sqlDate -> sqlDate == null ? null : sqlDate.toLocalDate(),
-	            "Invalid date"
-	        )
 			.bind(AccountingIsinActionEntryVO::getSettlementDate, AccountingIsinActionEntryVO::setSettlementDate);
 		settlementDateColumn.setEditorComponent(settlementDateDatePicker);
 		

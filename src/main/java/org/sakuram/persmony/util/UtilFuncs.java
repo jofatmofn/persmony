@@ -1,9 +1,8 @@
 package org.sakuram.persmony.util;
 
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -21,32 +20,29 @@ import org.sakuram.persmony.valueobject.SearchCriterionVO;
 
 public class UtilFuncs {
 	
-	static SimpleDateFormat format = new SimpleDateFormat(Constants.CSV_DATE_FORMAT);
 	static Pattern rangePattern = Pattern.compile("(\\d*)-(\\d*)");
 	static Pattern schedulePattern = Pattern.compile("\\[((?:\\d|,|-)*)\\]\\[((?:\\d|,|-)*)\\]\\[((?:\\d|,|-)*)\\](\\d*\\.\\d*),?");
 	static final Integer END_DAY_OF_MONTH = 32;
 	
-	public static BigDecimal computeAssessmentYear(Date date) {
-		LocalDate localDate;
+	public static BigDecimal computeAssessmentYear(LocalDate date) {
 		int assessmentYear;
 		
 		if(date == null) {
 			return null;
 		}
 		
-		localDate = date.toLocalDate();
-		assessmentYear = localDate.getYear();
-		if(localDate.getMonthValue() >= Constants.ASSESSMENT_YEAR_START_MONTH) {
+		assessmentYear = date.getYear();
+		if(date.getMonthValue() >= Constants.ASSESSMENT_YEAR_START_MONTH) {
 			assessmentYear++;
 		}
 		
 		return new BigDecimal(assessmentYear);
 	}
 	
-	public static Date createDate(String dateStr) {
+	public static LocalDate createDate(String dateStr) {
 		try {
-			return dateStr == null ? null : new Date(format.parse(dateStr).getTime());
-		} catch (ParseException e) {
+			return (dateStr == null ? null : LocalDate.parse(dateStr, DateTimeFormatter.ofPattern(Constants.CSV_DATE_FORMAT)));
+		} catch (DateTimeParseException e) {
 			throw new AppException("Invalid Date.", e);
 		}
 	}
@@ -61,7 +57,7 @@ public class UtilFuncs {
     	List<Integer> yearsList, monthsList, daysList;
     	Double value;
     	int matcherEnd;
-    	Date dueDate;
+    	LocalDate dueDate;
     	
     	scheduleVOList = new ArrayList<ScheduleVO>();
     	if (inStr == null || inStr.equalsIgnoreCase("None")) {
@@ -83,9 +79,9 @@ public class UtilFuncs {
         		for (Integer month : monthsList) {
         			for (Integer day : daysList) {
         				if (day.equals(END_DAY_OF_MONTH)) {
-        					dueDate = Date.valueOf(YearMonth.of(year, month).atEndOfMonth());
+        					dueDate = YearMonth.of(year, month).atEndOfMonth();
         				} else {
-        					dueDate = Date.valueOf(year + "-" + month + "-" + day);
+        					dueDate = LocalDate.parse(year + "-" + month + "-" + day);
         				}
         				scheduleVOList.add(new ScheduleVO(dueDate, value == 0? null : value, null, null, null));
         			}

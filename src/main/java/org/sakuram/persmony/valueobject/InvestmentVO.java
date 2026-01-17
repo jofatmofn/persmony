@@ -1,8 +1,7 @@
 package org.sakuram.persmony.valueobject;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Date;
+import java.time.LocalDate;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -28,11 +27,11 @@ public class InvestmentVO {
 	private String taxability;
 	private Long previousInvestment;
 	private String newInvestmentReason;
-	private Date investmentStartDate;
-	private Date investmentEndDate;
+	private LocalDate investmentStartDate;
+	private LocalDate investmentEndDate;
 	private boolean isClosed;
 	private String closureType;
-	private Date closureDate;
+	private LocalDate closureDate;
 	private Boolean isAccrualApplicable;
 	private Character dynamicReceiptPeriodicity;	
 	private String providerBranch;
@@ -86,16 +85,16 @@ public class InvestmentVO {
 		this.charges = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
 		this.rateOfInterest = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
 		this.taxability = (String) columns[colPos++];
-		this.previousInvestment = (columns[colPos] == null ? null : ((BigInteger) columns[colPos]).longValue()); colPos++;
+		this.previousInvestment = (columns[colPos] == null ? null : ((Long) columns[colPos]).longValue()); colPos++;
 		this.newInvestmentReason = (String) columns[colPos++];
-		this.investmentStartDate = (Date) columns[colPos++];
-		this.investmentEndDate = (Date) columns[colPos++];
+		this.investmentStartDate = (LocalDate) columns[colPos++];
+		this.investmentEndDate = (LocalDate) columns[colPos++];
 		this.isClosed = (boolean) columns[colPos++];
 		this.closureType = (String) columns[colPos++];
-		this.closureDate = (Date) columns[colPos++];
+		this.closureDate = (LocalDate) columns[colPos++];
 		this.isAccrualApplicable = (Boolean) columns[colPos++];
 		this.dynamicReceiptPeriodicity = (Character) columns[colPos++];
 		this.providerBranch = (String) columns[colPos++];
-		this.investmentId = ((BigInteger) columns[colPos++]).longValue();
+		this.investmentId = ((Long) columns[colPos++]).longValue();
 	}
 }

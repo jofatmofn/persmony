@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,10 +34,10 @@ public class Realisation {
 	private InvestmentTransaction investmentTransaction;
 	
 	@Column(name="realisation_date", nullable=true)
-	private Date realisationDate;
+	private LocalDate realisationDate;
 	
 	@Column(name="accounted_realisation_date", nullable=true)
-	private Date accountedRealisationDate;
+	private LocalDate accountedRealisationDate;
 	
 	@ManyToOne
 	@JoinColumn(name="realisation_type_fk", nullable=true)
@@ -70,9 +70,9 @@ public class Realisation {
 	private Boolean inAis;
 	
 	@Column(name="form26as_booking_date", nullable=true)
-	private Date Form26asBookingDate;
+	private LocalDate Form26asBookingDate;
 	
-	public Realisation(InvestmentTransaction investmentTransaction, Date realisationDate, DomainValue realisationType, SavingsAccountTransaction savingsAccountTransaction, Realisation realisation, Double amount, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount) {
+	public Realisation(InvestmentTransaction investmentTransaction, LocalDate realisationDate, DomainValue realisationType, SavingsAccountTransaction savingsAccountTransaction, Realisation realisation, Double amount, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount) {
 		this.investmentTransaction = investmentTransaction;
 		this.realisationDate = realisationDate;
 		this.realisationType = realisationType;

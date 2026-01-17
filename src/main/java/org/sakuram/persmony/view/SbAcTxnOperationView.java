@@ -3,7 +3,6 @@ package org.sakuram.persmony.view;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.sql.Date;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -235,10 +234,10 @@ public class SbAcTxnOperationView extends Div {
 				savingsAccountTransactionVO =  new SavingsAccountTransactionVO(
 						Constants.DVID_EMPTY_SELECT,
 						bankAccountOrInvestorDvSelect.getValue() == null ? null : new IdValueVO(bankAccountOrInvestorDvSelect.getValue().getId(), null),
-						Date.valueOf(transactionDateDatePicker.getValue()),
+						transactionDateDatePicker.getValue(),
 						(double)amountNumberField.getValue().doubleValue(),
 						new IdValueVO(bookingDvSelect.getValue().getId(), null),
-						valueDateDatePicker.getValue() == null ? null : Date.valueOf(valueDateDatePicker.getValue()),
+						valueDateDatePicker.getValue(),
 						(referenceTextField.getValue() == null || referenceTextField.getValue().equals("") ? null : referenceTextField.getValue()),
 						narrationTextField.getValue(),
 						(balanceNumberField.getValue() == null ? null : (double)balanceNumberField.getValue().doubleValue()),
@@ -479,8 +478,8 @@ public class SbAcTxnOperationView extends Div {
 					return;
 				}
 				if (sbAcTxnFromDatePicker.getValue() != null && sbAcTxnToDatePicker.getValue() != null &&
-						Date.valueOf(sbAcTxnFromDatePicker.getValue()).after(Date.valueOf(sbAcTxnToDatePicker.getValue()))) {
-					ViewFuncs.showError("From Date cannot be after the To Date");
+						sbAcTxnFromDatePicker.getValue().isAfter(sbAcTxnToDatePicker.getValue())) {
+					ViewFuncs.showError("From Date cannot be after the To LocalDate");
 					return;
 				}
 				if (sbAcTxnFromAmoutNumberField.getValue() != null && sbAcTxnToAmoutNumberField.getValue() != null &&
@@ -513,8 +512,8 @@ public class SbAcTxnOperationView extends Div {
 				sbAcTxnCriteriaVO = new SbAcTxnCriteriaVO(
 						sbAcTxnFromIdIntegerField.getValue() == null ? null : (long)sbAcTxnFromIdIntegerField.getValue(),
 						sbAcTxnToIdIntegerField.getValue() == null ? null : (long)sbAcTxnToIdIntegerField.getValue(),
-						sbAcTxnFromDatePicker.getValue() == null ? null : Date.valueOf(sbAcTxnFromDatePicker.getValue()),
-						sbAcTxnToDatePicker.getValue() == null ? null : Date.valueOf(sbAcTxnToDatePicker.getValue()),
+						sbAcTxnFromDatePicker.getValue(),
+						sbAcTxnToDatePicker.getValue(),
 						sbAcTxnFromAmoutNumberField.getValue() == null ? null : (double)sbAcTxnFromAmoutNumberField.getValue().doubleValue(),
 						sbAcTxnToAmoutNumberField.getValue() == null ? null : (double)sbAcTxnToAmoutNumberField.getValue().doubleValue(),
 						narrationTextField.getValue().equals("") ? null : narrationTextField.getValue(),

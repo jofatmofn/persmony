@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.sakuram.persmony.bean.Realisation;
@@ -19,7 +19,7 @@ public interface RealisationRepository extends JpaRepository<Realisation, Long>,
 			+ "	WHERE COALESCE(R.accounted_realisation_date,R.realisation_date) BETWEEN :#{#fromDate} AND :#{#toDate}"
 			+ " AND I.investor_fk IN (:#{#investorId})"
 			+ " ORDER BY COALESCE(R.accounted_realisation_date,R.realisation_date)")
-	public List<Realisation> retrieveRealisationsForIt(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate, @Param("investorId") long[] investorId);
+	public List<Realisation> retrieveRealisationsForIt(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate, @Param("investorId") long[] investorId);
 	
-	List<Realisation> findByRealisationDateBetweenOrderByRealisationDateAscSavingsAccountTransactionIdAsc(Date fromDate, Date toDate);
+	List<Realisation> findByRealisationDateBetweenOrderByRealisationDateAscSavingsAccountTransactionIdAsc(LocalDate fromDate, LocalDate toDate);
 }

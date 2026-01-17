@@ -1,7 +1,7 @@
 package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -45,10 +45,10 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	private DomainValue transactionType;
 	
 	@Column(name="due_date", nullable=true)
-	private Date dueDate;
+	private LocalDate dueDate;
 	
 	@Column(name="accounted_transaction_date", nullable=true)
-	private Date accountedTransactionDate;
+	private LocalDate accountedTransactionDate;
 	
 	@Column(name="due_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private BigDecimal dueAmount;
@@ -77,7 +77,7 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	private Boolean inAis;
 	
 	@Column(name="form26as_booking_date", nullable=true)
-	private Date form26asBookingDate;
+	private LocalDate form26asBookingDate;
 	
 	@Column(name="assessment_year", nullable=true, precision=4, scale=0)
 	private BigDecimal assessmentYear;	/* Why not Short? */
@@ -87,7 +87,7 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	@OrderBy("realisationDate")
 	private List<Realisation> realisationList;
 
-	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, Double dueAmount, DomainValue status, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxGroup, BigDecimal assessmentYear, List<Realisation> realisationList) {
+	public InvestmentTransaction(Investment investment, DomainValue transactionType, LocalDate dueDate, Double dueAmount, DomainValue status, Double returnedPrincipalAmount, Double interestAmount, Double tdsAmount, DomainValue taxGroup, BigDecimal assessmentYear, List<Realisation> realisationList) {
 		this(investment,
 				transactionType,
 				dueDate,
@@ -101,7 +101,7 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 				realisationList);
 	}
 	
-	public InvestmentTransaction(Investment investment, DomainValue transactionType, Date dueDate, BigDecimal dueAmount, DomainValue status, BigDecimal returnedPrincipalAmount, BigDecimal interestAmount, BigDecimal tdsAmount, DomainValue taxGroup, BigDecimal assessmentYear, List<Realisation> realisationList) {
+	public InvestmentTransaction(Investment investment, DomainValue transactionType, LocalDate dueDate, BigDecimal dueAmount, DomainValue status, BigDecimal returnedPrincipalAmount, BigDecimal interestAmount, BigDecimal tdsAmount, DomainValue taxGroup, BigDecimal assessmentYear, List<Realisation> realisationList) {
 		this.investment = investment;
 		this.transactionType = transactionType;
 		this.dueDate = dueDate;

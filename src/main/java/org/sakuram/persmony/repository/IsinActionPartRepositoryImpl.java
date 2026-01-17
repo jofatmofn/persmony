@@ -1,6 +1,6 @@
 package org.sakuram.persmony.repository;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
@@ -17,7 +17,7 @@ public class IsinActionPartRepositoryImpl implements IsinActionPartRepositoryCus
     public EntityManager entityManager;
 
 	@SuppressWarnings("unchecked")
-	public List<IsinActionPart> findMatchingIsinActionParts(String isin, Date sellDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
+	public List<IsinActionPart> findMatchingIsinActionParts(String isin, LocalDate sellDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
     	Query query;
     	StringBuffer mainQueryStringBuffer;
 		String queryString;
@@ -47,7 +47,7 @@ public class IsinActionPartRepositoryImpl implements IsinActionPartRepositoryCus
 		}
 		if (sellDate != null) {
 			mainQueryStringBuffer.append("AND IAP.ownership_change_date <= '");
-			mainQueryStringBuffer.append(Constants.ANSI_DATE_FORMAT.format(sellDate));
+			mainQueryStringBuffer.append(sellDate.toString());
 			mainQueryStringBuffer.append("' ");
 		}
 		mainQueryStringBuffer.append("ORDER BY ");
