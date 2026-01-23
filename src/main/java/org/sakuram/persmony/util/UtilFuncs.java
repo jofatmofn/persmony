@@ -68,7 +68,7 @@ public class UtilFuncs {
     	matcher = schedulePattern.matcher(inStr);
         while (matcher.find()) {
         	if (matcher.start(0) != matcherEnd) {
-            	throw new AppException("Invalid structure for Scheduled-Values.", null);
+            	throw new AppException("Invalid structure for Scheduled-Values ...(1)", null);
         	}
         	try {
         	yearsList = parseListStr(matcher.group(1));
@@ -81,7 +81,7 @@ public class UtilFuncs {
         				if (day.equals(END_DAY_OF_MONTH)) {
         					dueDate = YearMonth.of(year, month).atEndOfMonth();
         				} else {
-        					dueDate = LocalDate.parse(year + "-" + month + "-" + day);
+        					dueDate = LocalDate.of(year, month, day);
         				}
         				scheduleVOList.add(new ScheduleVO(dueDate, value == 0? null : value, null, null, null));
         			}
@@ -89,12 +89,12 @@ public class UtilFuncs {
         	}
         	matcherEnd = matcher.end();
         	} catch (Exception e) {
-            	throw new AppException("Invalid structure for Scheduled-Values.", null);
+            	throw new AppException("Invalid structure for Scheduled-Values ...(2)", null);
         	}
         }
         
         if (inStr != null && inStr != "" && (scheduleVOList.size() == 0 || matcherEnd != inStr.length())) {
-        	throw new AppException("Invalid structure for Scheduled-Values.", null);
+        	throw new AppException("Invalid structure for Scheduled-Values ...(3)", null);
         }
         
     	scheduleVOList.sort(Comparator.comparing(ScheduleVO::getDueDate));
@@ -116,7 +116,7 @@ public class UtilFuncs {
     	        	rangeStart = Integer.valueOf(matcher.group(1));
     	        	rangeEnd = Integer.valueOf(matcher.group(2));
     	            if (rangeStart > rangeEnd) {
-    	            	throw new AppException("Invalid structure for Scheduled-Values.", null);
+    	            	throw new AppException("Invalid structure for Scheduled-Values ...(4)", null);
     	            }
     	            
     	        	for(int inp = rangeStart; inp <= rangeEnd; inp++) {

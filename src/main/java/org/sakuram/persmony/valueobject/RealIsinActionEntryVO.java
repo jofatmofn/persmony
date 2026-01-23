@@ -15,7 +15,7 @@ import lombok.ToString;
 public class RealIsinActionEntryVO {
 	IsinActionEntrySpecVO isinActionEntrySpecVO;
 	LocalDate settlementDate;
-	LocalDate ownershipChangeDate;
+	LocalDate holdingChangeDate;
 	String isin;
 	Double quantity;
 	IdValueVO dematAccount;

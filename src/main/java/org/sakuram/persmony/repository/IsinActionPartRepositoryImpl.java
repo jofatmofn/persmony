@@ -9,7 +9,6 @@ import jakarta.persistence.Query;
 
 import org.apache.logging.log4j.LogManager;
 import org.sakuram.persmony.bean.IsinActionPart;
-import org.sakuram.persmony.util.Constants;
 
 public class IsinActionPartRepositoryImpl implements IsinActionPartRepositoryCustom {
 
@@ -46,13 +45,13 @@ public class IsinActionPartRepositoryImpl implements IsinActionPartRepositoryCus
 			mainQueryStringBuffer.append(" ");
 		}
 		if (sellDate != null) {
-			mainQueryStringBuffer.append("AND IAP.ownership_change_date <= '");
+			mainQueryStringBuffer.append("AND COALESCE(IAP.holding_change_date, IA.settlement_date) <= '");
 			mainQueryStringBuffer.append(sellDate.toString());
 			mainQueryStringBuffer.append("' ");
 		}
 		mainQueryStringBuffer.append("ORDER BY ");
 		if (orderBy.equals("A")) {
-			mainQueryStringBuffer.append("IAP.ownership_change_date");
+			mainQueryStringBuffer.append("COALESCE(IAP.holding_change_date, IA.settlement_date)");
 		} else {
 			mainQueryStringBuffer.append("IA.settlement_date");
 		}

@@ -43,8 +43,8 @@ public class IsinActionPart {
 	@JoinColumn(name="isin_action_fk", nullable=false)
 	private IsinAction isinAction;
 	
-	@Column(name="ownership_change_date", nullable=true)
-	private LocalDate ownershipChangeDate;
+	@Column(name="holding_change_date", nullable=true)
+	private LocalDate holdingChangeDate;
 	
 	@Column(name="quantity", nullable=false, columnDefinition="NUMERIC", precision=11, scale=5)
 	private BigDecimal quantity;
@@ -89,7 +89,7 @@ public class IsinActionPart {
 	}
 	
 	public Double getQuantity() {
-		return quantity.doubleValue();
+		return (quantity == null ? null : quantity.doubleValue());
 	}
 	
 	public void setQuantity(Double quantity) {
@@ -97,7 +97,7 @@ public class IsinActionPart {
 	}
 	
 	public Double getPricePerUnit() {
-		return pricePerUnit.doubleValue();
+		return (pricePerUnit == null ? null : pricePerUnit.doubleValue());
 	}
 	
 	public void setPricePerUnit(Double pricePerUnit) {

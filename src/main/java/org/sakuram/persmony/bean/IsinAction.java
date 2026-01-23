@@ -79,7 +79,7 @@ public class IsinAction {
 	
 	@JsonIgnore
 	@OneToMany(mappedBy="isinAction", cascade=CascadeType.ALL)
-	@OrderBy("ownershipChangeDate")
+	@OrderBy("holdingChangeDate")
 	private List<IsinActionPart> isinActionPartList;
 
 	public double getComputedQuantity() {

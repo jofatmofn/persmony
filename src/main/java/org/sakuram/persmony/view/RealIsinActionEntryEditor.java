@@ -11,6 +11,7 @@ import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
 import org.springframework.context.annotation.Scope;
 
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.select.Select;
@@ -28,7 +29,7 @@ public class RealIsinActionEntryEditor extends FormLayout {
 	private static final long serialVersionUID = 1L;
 	
 	NumberField quantityNumberField, pricePerUnitNumberField;
-	DatePicker settlementDateDatePicker, ownershipChangeDateDatePicker;
+	DatePicker settlementDateDatePicker, holdingChangeDateDatePicker;
 	SecuritySearchComponent securitySearchComponent;
 	Select<IdValueVO> dematAccountSelect;
 	TextField bookingTextField;
@@ -48,7 +49,9 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		
 		bookingTextField = new TextField();
 		settlementDateDatePicker = new DatePicker();
-		ownershipChangeDateDatePicker = new DatePicker();
+        settlementDateDatePicker.setI18n(inputArgs.isoDatePickerI18n);
+		holdingChangeDateDatePicker = new DatePicker();
+        holdingChangeDateDatePicker.setI18n(inputArgs.isoDatePickerI18n);
 		securitySearchComponent = new SecuritySearchComponent(inputArgs.getDebtEquityMutualService(), inputArgs.getMiscService());
 		quantityNumberField = new NumberField();
 		pricePerUnitNumberField = new NumberField();
@@ -61,21 +64,21 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		
 		switch(isinActionEntrySpecVO.getDateType()) {
 		case ACQUISITION:
-			addFormItem(ownershipChangeDateDatePicker, "Acquisition Date");
+			addFormItem(holdingChangeDateDatePicker, "Acquisition Date");
 			break;
 		case DISPOSAL:
-			addFormItem(ownershipChangeDateDatePicker, "Disposal Date");
+			addFormItem(holdingChangeDateDatePicker, "Disposal Date");
 			break;
 		default:
 			break;
 		}
 		
 		addFormItem(securitySearchComponent.getLayout(), "ISIN");
+		realIsinActionEntryVO.setIsin(inputArgs.getEntitledIsin());
 		if (isinActionEntrySpecVO.getIsinInputType() == IsinActionEntrySpecVO.IAIsinType.OTHER_ISIN) {
 			securitySearchComponent.setEnabled(true);
 		} else {
 			securitySearchComponent.setEnabled(false);
-			realIsinActionEntryVO.setIsin(inputArgs.getEntitledIsin());
 		}
 
 		addFormItem(quantityNumberField, "Quantity");
@@ -111,12 +114,14 @@ public class RealIsinActionEntryEditor extends FormLayout {
 			break;
 		}
 		
-		realIsinActionEntryVO.setDematAccount(inputArgs.getDematAccount());
-		dematAccountSelect.setEnabled(false);
         addFormItem(dematAccountSelect, "Demat Account");
 	    // Beware: Special Logic outside configuration
 	    if (inputArgs.isDematInput) {
 			dematAccountSelect.setEnabled(true);
+			realIsinActionEntryVO.setDematAccount(null);
+	    } else {
+			dematAccountSelect.setEnabled(false);
+			realIsinActionEntryVO.setDematAccount(inputArgs.getDematAccount());
 	    }
 	    
 		binder.forField(bookingTextField)
@@ -130,8 +135,8 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		    );
 		binder.forField(settlementDateDatePicker)
 		    .bind("settlementDate");
-		binder.forField(ownershipChangeDateDatePicker)
-	    	.bind("ownershipChangeDate");
+		binder.forField(holdingChangeDateDatePicker)
+	    	.bind("holdingChangeDate");
 		binder.forField(securitySearchComponent)
 	    	.withConverter(
 	    			fieldValue -> fieldValue == null ? null : fieldValue.toUpperCase(),
@@ -189,5 +194,6 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		boolean isDematInput;
 		DebtEquityMutualService debtEquityMutualService;
 		MiscService miscService;
+		DatePickerI18n isoDatePickerI18n;
 	}
 }

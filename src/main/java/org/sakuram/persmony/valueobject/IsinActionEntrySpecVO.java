@@ -68,6 +68,7 @@ public class IsinActionEntrySpecVO {
 		COMPUTED,
 		INPUT,
 		OLD,
+		PLUS,
 		NULL;
 	}
 	

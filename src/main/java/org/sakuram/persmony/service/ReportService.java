@@ -1250,7 +1250,7 @@ public class ReportService {
 
 			// Income
 			forInterestStartDate = (investment.getInvestmentStartDate() == null || investment.getInvestmentStartDate().isBefore(fyStartDate) ? fyStartDate : investment.getInvestmentStartDate());
-			investmentLastDate = Objects.requireNonNullElse(investment.getClosureDate(), investment.getInvestmentEndDate());
+			investmentLastDate = (investment.getClosureDate() == null ? investment.getInvestmentEndDate() : investment.getClosureDate());
 			forInterestEndDate = (investmentLastDate == null || investmentLastDate.isAfter(fyEndDate) ? fyEndDate : investmentLastDate);
 			interestDays = Duration.between(forInterestStartDate.atStartOfDay(), forInterestEndDate.atStartOfDay()).toDays();
 

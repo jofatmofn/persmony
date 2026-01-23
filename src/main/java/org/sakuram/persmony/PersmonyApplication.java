@@ -9,7 +9,7 @@ import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
 
 @Push
-@SpringBootApplication(scanBasePackages = {"org.sakuram.persmony.service", "org.sakuram.persmony.view"})
+@SpringBootApplication(scanBasePackages = {"org.sakuram.persmony.service", "org.sakuram.persmony.system", "org.sakuram.persmony.view"})
 public class PersmonyApplication implements AppShellConfigurator {
 
 	private static final long serialVersionUID = 1L;

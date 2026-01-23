@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
@@ -13,7 +11,7 @@ import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 
 public class Constants {
 
-	public static final DateFormat ANSI_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+	public static final String ISO_LOCAL_DATE = "yyyy-MM-dd";
 	public static final double EPSILON = 0.0000000009D;
 	public static final double TOLERATED_DIFFERENCE_AMOUNT = 20D;	// No specific reason for this value
 	
@@ -102,7 +100,7 @@ public class Constants {
 	public static final long DVID_ISIN_ACTION_TYPE_GIFT_OR_TRANSFER = 323;
 
 	public static final long ACTION_ID_GIFT_OR_TRANSFER = 5;
-	public static final String ACTION_TYPE_GIFT_OR_TRANSFER_ENTRY_SPEC_NAME_RECEIVE = "Receive";
+	public static final String ACTION_TYPE_GIFT_OR_TRANSFER_ENTRY_SPEC_NAME_RECEIVE = "Transfer In";
 	
 	public static final int FLAG_POSITION_ACCOUNT_TYPE = 0;
 	public static final int FLAG_POSITION_SAVINGS_ACCOUNT_BRANCH_DVID = 1;
