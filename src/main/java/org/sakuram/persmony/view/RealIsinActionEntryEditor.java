@@ -10,6 +10,7 @@ import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
 import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
 import org.springframework.context.annotation.Scope;
 
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -28,6 +29,7 @@ import lombok.Getter;
 public class RealIsinActionEntryEditor extends FormLayout {
 	private static final long serialVersionUID = 1L;
 	
+	Checkbox entryApplicabilityCheckbox;
 	NumberField quantityNumberField, pricePerUnitNumberField;
 	DatePicker settlementDateDatePicker, holdingChangeDateDatePicker;
 	SecuritySearchComponent securitySearchComponent;
@@ -47,6 +49,7 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		add(ViewFuncs.newHorizontalLine());
 		addFormItem(new NativeLabel(realIsinActionEntryVO.getIsinActionEntrySpecVO().getEntrySpecName()), "Real Entry");
 		
+		entryApplicabilityCheckbox = new Checkbox();
 		bookingTextField = new TextField();
 		settlementDateDatePicker = new DatePicker();
         settlementDateDatePicker.setI18n(inputArgs.isoDatePickerI18n);
@@ -57,17 +60,37 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		pricePerUnitNumberField = new NumberField();
 	    dematAccountSelect = ViewFuncs.newDvSelect(inputArgs.getMiscService().fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), null, false, false);
 	    
+	    addFormItem(entryApplicabilityCheckbox, "Entry Applicable");
+    	entryApplicabilityCheckbox.setEnabled(!isinActionEntrySpecVO.isMandatory());
+    	entryApplicabilityCheckbox.addValueChangeListener(event -> {
+    		if(entryApplicabilityCheckbox.getValue()) {
+    			setFieldsReady(realIsinActionEntryVO, inputArgs);
+    		} else {
+    			realIsinActionEntryVO.setEmpty();
+    			binder.refreshFields();
+    			settlementDateDatePicker.setEnabled(false);
+    			holdingChangeDateDatePicker.setEnabled(false);
+    			securitySearchComponent.setEnabled(false);
+    			quantityNumberField.setEnabled(false);
+    			pricePerUnitNumberField.setEnabled(false);
+    			dematAccountSelect.setEnabled(false);
+    		}
+		});
+    	entryApplicabilityCheckbox.setValue(true);
+	    
 	    addFormItem(bookingTextField, "Booking");
 	    bookingTextField.setEnabled(false);
 	    
 		addFormItem(settlementDateDatePicker, "Settlement Date");
 		
+		NativeLabel label = new NativeLabel("Date");
+		addFormItem(holdingChangeDateDatePicker, label);
 		switch(isinActionEntrySpecVO.getDateType()) {
 		case ACQUISITION:
-			addFormItem(holdingChangeDateDatePicker, "Acquisition Date");
+			label.setText("Acquisition Date");
 			break;
 		case DISPOSAL:
-			addFormItem(holdingChangeDateDatePicker, "Disposal Date");
+			label.setText("Disposal Date");
 			break;
 		default:
 			break;
@@ -75,17 +98,10 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		
 		addFormItem(securitySearchComponent.getLayout(), "ISIN");
 		realIsinActionEntryVO.setIsin(inputArgs.getEntitledIsin());
-		if (isinActionEntrySpecVO.getIsinInputType() == IsinActionEntrySpecVO.IAIsinType.OTHER_ISIN) {
-			securitySearchComponent.setEnabled(true);
-		} else {
-			securitySearchComponent.setEnabled(false);
-		}
 
 		addFormItem(quantityNumberField, "Quantity");
-		quantityNumberField.setEnabled(false);
 		switch(isinActionEntrySpecVO.getQuantityInputType()) {
 		case INPUT:
-			quantityNumberField.setEnabled(true);
 			break;
 		case BALANCE:
 			realIsinActionEntryVO.setQuantity(inputArgs.getBalance());
@@ -98,12 +114,8 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		}
 		
 		addFormItem(pricePerUnitNumberField, "Price Per Unit");
-		pricePerUnitNumberField.setEnabled(false);
 		switch(isinActionEntrySpecVO.getPriceInputType()) {
 		case INPUT:
-			if (!inputArgs.isTradeApplicable) {
-				pricePerUnitNumberField.setEnabled(true);
-			}
 			break;
 		case NULL:
 		case FACTOR:
@@ -117,10 +129,8 @@ public class RealIsinActionEntryEditor extends FormLayout {
         addFormItem(dematAccountSelect, "Demat Account");
 	    // Beware: Special Logic outside configuration
 	    if (inputArgs.isDematInput) {
-			dematAccountSelect.setEnabled(true);
 			realIsinActionEntryVO.setDematAccount(null);
 	    } else {
-			dematAccountSelect.setEnabled(false);
 			realIsinActionEntryVO.setDematAccount(inputArgs.getDematAccount());
 	    }
 	    
@@ -153,6 +163,36 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		// binder.bindInstanceFields(this);
 		binder.setBean(realIsinActionEntryVO);
 		
+	}
+	
+	private void setFieldsReady(RealIsinActionEntryVO realIsinActionEntryVO, InputArgs inputArgs) {
+		IsinActionEntrySpecVO isinActionEntrySpecVO = realIsinActionEntryVO.getIsinActionEntrySpecVO();
+		settlementDateDatePicker.setEnabled(true);
+		if (isinActionEntrySpecVO.getDateType() == IsinActionEntrySpecVO.IADateType.ACQUISITION || isinActionEntrySpecVO.getDateType() == IsinActionEntrySpecVO.IADateType.DISPOSAL) {
+			holdingChangeDateDatePicker.setEnabled(true);
+		} else {
+			holdingChangeDateDatePicker.setEnabled(false);
+		}
+		if (isinActionEntrySpecVO.getIsinInputType() == IsinActionEntrySpecVO.IAIsinType.OTHER_ISIN) {
+			securitySearchComponent.setEnabled(true);
+		} else {
+			securitySearchComponent.setEnabled(false);
+		}
+		if (isinActionEntrySpecVO.getQuantityInputType() == IsinActionEntrySpecVO.IAQuantityType.INPUT) {
+			quantityNumberField.setEnabled(true);
+		} else {
+			quantityNumberField.setEnabled(false);
+		}
+		if (isinActionEntrySpecVO.getPriceInputType() == IsinActionEntrySpecVO.IAPriceType.INPUT && !inputArgs.isTradeApplicable) {
+			pricePerUnitNumberField.setEnabled(true);
+		} else {
+			pricePerUnitNumberField.setEnabled(false);
+		}
+	    if (inputArgs.isDematInput) {
+			dematAccountSelect.setEnabled(true);
+	    } else {
+			dematAccountSelect.setEnabled(false);
+	    }
 	}
 	
     /* public void setRealIsinActionEntryVO(RealIsinActionEntryVO isinActionEntryVO) {

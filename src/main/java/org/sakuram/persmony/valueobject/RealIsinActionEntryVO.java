@@ -20,4 +20,17 @@ public class RealIsinActionEntryVO {
 	Double quantity;
 	IdValueVO dematAccount;
 	Double pricePerUnit;
+	
+	public boolean isEmpty() {
+		return (settlementDate == null && holdingChangeDate == null && isin == null && quantity == null && dematAccount == null && pricePerUnit == null);
+	}
+	
+	public void setEmpty() {
+		settlementDate = null;
+		holdingChangeDate = null;
+		isin = null;
+		quantity = null;
+		dematAccount = null;
+		pricePerUnit = null;
+	}
 }

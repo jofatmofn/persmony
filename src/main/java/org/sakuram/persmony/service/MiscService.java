@@ -92,6 +92,7 @@ public class MiscService {
     			col = 4;
     			isinActionEntrySpecVO = new IsinActionEntrySpecVO(
     					cellContentList.get(col++),
+    					Boolean.valueOf(cellContentList.get(col++)),
     					Long.valueOf(cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IAIsinType.class, cellContentList.get(col++)),
     					FlaggedEnum.fromFlag(IsinActionEntrySpecVO.IADateType.class, cellContentList.get(col++)),

@@ -73,6 +73,7 @@ public class IsinActionEntrySpecVO {
 	}
 	
 	String entrySpecName;
+	boolean isMandatory;
 	long bookingTypeDvId;
 	IAIsinType isinInputType;
 	IADateType dateType;

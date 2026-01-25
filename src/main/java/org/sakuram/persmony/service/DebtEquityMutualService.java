@@ -166,6 +166,10 @@ public class DebtEquityMutualService {
 			List<LotVO> fifoLotVOList;
 			
 			System.out.println("Now Processing: " + rIAEVO.getIsinActionEntrySpecVO().toString());
+			if (rIAEVO.isEmpty()) {
+				continue;
+			}
+			
 			isin = isinRepository.findByIdCaseInsensitive(rIAEVO.getIsin()).
 					orElseThrow(() -> new AppException("Missing ISIN " + rIAEVO.getIsin(), null));
 			
