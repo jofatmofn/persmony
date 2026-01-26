@@ -9,7 +9,6 @@ import jakarta.persistence.Query;
 
 import org.apache.logging.log4j.LogManager;
 import org.sakuram.persmony.bean.IsinAction;
-import org.sakuram.persmony.util.Constants;
 
 public class IsinActionRepositoryImpl implements IsinActionRepositoryCustom {
 

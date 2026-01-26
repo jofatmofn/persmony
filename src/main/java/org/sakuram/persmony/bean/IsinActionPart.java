@@ -37,7 +37,7 @@ public class IsinActionPart {
 	@SequenceGenerator(name="isin_action_part_seq_generator",sequenceName="isin_action_part_seq", allocationSize=1)
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="isin_action_part_seq_generator")
 	@Column(name="id", nullable=false)
-	private long id;
+	private Long id;
 
 	@ManyToOne
 	@JoinColumn(name="isin_action_fk", nullable=false)
@@ -51,6 +51,10 @@ public class IsinActionPart {
 
 	@Column(name="price_per_unit", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
 	private BigDecimal pricePerUnit;
+	
+	@ManyToOne
+	@JoinColumn(name="overwriting_action_fk", nullable=true)
+	private Action overwritingAction;
 	
 	@JsonIgnore
 	@OneToOne(mappedBy="isinActionPart", cascade=CascadeType.ALL)
@@ -76,14 +80,12 @@ public class IsinActionPart {
                 .sum();
 	}
 	
-	public double getOutQuantity() {
+	public double getOutQuantity(LocalDate outDate) {
 	    return Optional.ofNullable(toIsinActionMatchList)
                 .orElse(Collections.emptyList())
                 .stream()
-                .filter(isinActionMatch -> isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_FIFO &&
-                		isinActionMatch.getToIsinActionPart().getIsinAction().getDematAccount().getId() == this.getIsinAction().getDematAccount().getId() ||
-                		isinActionMatch.getMatchReason().getId() == Constants.DVID_ISIN_ACTION_MATCH_REASON_OTHERS &&
-                		isinActionMatch.getToIsinActionPart().getIsinAction().getDematAccount().getId() != this.getIsinAction().getDematAccount().getId())	// TODO: There should not be a need for demat based criteria
+                .filter(isinActionMatch -> isinActionMatch.getToIsinActionPart().getHoldingChangeDate() == null || outDate == null ||
+                		isinActionMatch.getToIsinActionPart().getHoldingChangeDate().isBefore(outDate) || isinActionMatch.getToIsinActionPart().getHoldingChangeDate().isEqual(outDate))
                 .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity().doubleValue())
                 .sum();
 	}
@@ -103,5 +105,14 @@ public class IsinActionPart {
 	public void setPricePerUnit(Double pricePerUnit) {
 		this.pricePerUnit = (pricePerUnit == null ? null : BigDecimal.valueOf(pricePerUnit));
 	}
-	
+
+	public void copyFrom(IsinActionPart other) {
+		// this.id = other.id;
+		this.isinAction = other.isinAction;
+		this.holdingChangeDate = other.holdingChangeDate;
+		this.quantity = other.quantity;
+		this.pricePerUnit = other.pricePerUnit;
+		// this.overwritingAction = other.overwritingAction;
+		// this.trade = other.trade;
+	}
 }

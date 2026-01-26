@@ -87,9 +87,10 @@ public class MiscService {
     						Boolean.valueOf(cellContentList.get(col++)),
     						Boolean.valueOf(cellContentList.get(col++)),
     						Boolean.valueOf(cellContentList.get(col++)),
+    						Boolean.valueOf(cellContentList.get(col++)),
     						isinActionEntrySpecVOList));
     			}
-    			col = 4;
+    			col = 5;
     			isinActionEntrySpecVO = new IsinActionEntrySpecVO(
     					cellContentList.get(col++),
     					Boolean.valueOf(cellContentList.get(col++)),

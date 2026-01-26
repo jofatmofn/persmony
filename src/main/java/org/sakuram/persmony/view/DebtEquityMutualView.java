@@ -229,6 +229,7 @@ public class DebtEquityMutualView extends Div {
 		DatePicker recordDateDatePicker;
 		IntegerField actionIdIntegerField;	// TODO LongField
 		IntegerField newSharesPerOldIntegerField, oldSharesBaseIntegerField, logicTriggerIntegerField;
+		NumberField costRetainedFractionNumberField;
 		HorizontalLayout hLayout;
 		List<LotVO> fifoLotVOList;
 		IsinActionCreateVO isinActionCreateVO;
@@ -268,7 +269,12 @@ public class DebtEquityMutualView extends Div {
 		oldSharesBaseIntegerField.setEnabled(isinActionSpecVO.isRatioApplicable());
 		hLayout = new HorizontalLayout();
 		hLayout.add(newSharesPerOldIntegerField, new NativeLabel(":"), oldSharesBaseIntegerField);
-		parentFormLayout.addFormItem(hLayout, "Ratio (New:Old)");
+		parentFormLayout.addFormItem(hLayout, "Quantity Ratio (New:Old)");
+
+		costRetainedFractionNumberField = new NumberField();
+		costRetainedFractionNumberField.setMin(0);
+		costRetainedFractionNumberField.setMax(1);
+		parentFormLayout.addFormItem(costRetainedFractionNumberField, "Fraction of Cost Retained");
 		
         dematAccountDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), null, false, false);
         parentFormLayout.addFormItem(dematAccountDvSelect, "Demat Account");
@@ -321,6 +327,11 @@ public class DebtEquityMutualView extends Div {
 					vo -> vo.getActionVO().getOldSharesBase(),
 					(vo, beanValue) -> vo.getActionVO().setOldSharesBase(beanValue)
 			);
+		binder.forField(costRetainedFractionNumberField)
+			.bind(
+				vo -> vo.getActionVO().getCostRetainedFraction(),
+				(vo, beanValue) -> vo.getActionVO().setCostRetainedFraction(beanValue)
+			);
 		binder.forField(dematAccountDvSelect)
 			.bind("dematAccount");
 		binder.setBean(isinActionCreateVO);
@@ -338,6 +349,8 @@ public class DebtEquityMutualView extends Div {
         		newSharesPerOldIntegerField.setEnabled(true);
         		isinActionCreateVO.getActionVO().setOldSharesBase(null);
         		oldSharesBaseIntegerField.setEnabled(true);
+        		isinActionCreateVO.getActionVO().setCostRetainedFraction(null);
+        		costRetainedFractionNumberField.setEnabled(true);
         	} else {
         		isinActionCreateVO.setActionVO(debtEquityMutualService.fetchAction(actionIdIntegerField.getValue().longValue()));
         		actionDvSelect.setEnabled(false);
@@ -345,6 +358,7 @@ public class DebtEquityMutualView extends Div {
         		recordDateDatePicker.setEnabled(false);
         		newSharesPerOldIntegerField.setEnabled(false);
         		oldSharesBaseIntegerField.setEnabled(false);
+        		costRetainedFractionNumberField.setEnabled(false);
         	}
     		binder.refreshFields();
         });
@@ -373,6 +387,12 @@ public class DebtEquityMutualView extends Div {
             		isinActionCreateVO.getActionVO().setOldSharesBase(null);
         			oldSharesBaseIntegerField.setEnabled(false);
         		}
+        		if (isinActionSpecVO.isCostRetainedFractionApplicable()) {
+        			costRetainedFractionNumberField.setEnabled(true);
+        		} else {
+            		isinActionCreateVO.getActionVO().setCostRetainedFraction(null);
+            		costRetainedFractionNumberField.setEnabled(false);
+        		}
         		binder.refreshFields();
 				logicTriggerIntegerField.setValue(logicTriggerIntegerField.getValue() == 0 ? 1 : 0);
         	} else {
@@ -387,7 +407,8 @@ public class DebtEquityMutualView extends Div {
 					(recordDateDatePicker.getValue() != null || !isinActionSpecVO.isRecordDateApplicable())) {
 				fifoLotVOList.addAll(debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), recordDateDatePicker.getValue(), dematAccountDvSelect.getValue().getId(), false, "A")
 						.stream()
-						.filter(lotVO -> lotVO.getBalance() != null && lotVO.getBalance() > 0 && lotVO.getIsinActionVO().getBookingType().getId() == Constants.DVID_BOOKING_CREDIT)
+						.filter(lotVO -> lotVO.getBalance() != null && lotVO.getBalance() > 0 && lotVO.getIsinActionVO().getBookingType().getId() == Constants.DVID_BOOKING_CREDIT &&
+							(lotVO.getHoldingChangeDate() == null || recordDateDatePicker.getValue() == null || lotVO.getHoldingChangeDate().isBefore(recordDateDatePicker.getValue()) || lotVO.getHoldingChangeDate().isEqual(recordDateDatePicker.getValue())))
 						.collect(Collectors.toList())
 					);
 				System.out.println(isinActionCreateVO);

@@ -84,7 +84,7 @@ public class DebtEquityMutualService {
 					(isinActionPart.getTrade() == null ? null : isinActionPart.getTrade().getId()),
 					isinActionPart.getId(),
 					isinActionPart.getQuantity(),
-					isinActionPart.getQuantity() - isinActionPart.getOutQuantity(),
+					isinActionPart.getQuantity() - isinActionPart.getOutQuantity(priorToDate),
 					isinActionPart.getHoldingChangeDate(),
 					isinActionPart.getPricePerUnit()
 					)
@@ -130,6 +130,7 @@ public class DebtEquityMutualService {
 			action.setFractionalEntitlementCash(null);	// TODO: Later enhancement; FractionalEntitlementCash belongs to Demat level action
 			action.setNewSharesPerOld(isinActionCreateVO.getActionVO().getNewSharesPerOld());
 			action.setOldSharesBase(isinActionCreateVO.getActionVO().getOldSharesBase());
+			action.setCostRetainedFraction(isinActionCreateVO.getActionVO().getCostRetainedFraction());
 			action.setRecordDate(isinActionCreateVO.getActionVO().getRecordDate());
 			actionRepository.save(action);
 		} else {
@@ -259,6 +260,22 @@ public class DebtEquityMutualService {
 							oldCostOfNewShares += (isinActionPart.getQuantity() * fifoLotVO.getPricePerUnit());
 							// TODO Handling payout to shareholder
 							isinActionPart.setPricePerUnit(isinActionCreateVO.getActionVO().getOldSharesBase().doubleValue() / isinActionCreateVO.getActionVO().getNewSharesPerOld().doubleValue() * fifoLotVO.getPricePerUnit());
+							break;
+						case SPLIT:
+							// As per Spec for Demerger RESULTING ENTITY
+							double q2 = isinActionCreateVO.getActionVO().getNewSharesPerOld().doubleValue() / isinActionCreateVO.getActionVO().getOldSharesBase().doubleValue() * fifoLotVO.getBalance();
+							isinActionPart.setPricePerUnit(fifoLotVO.getBalance() * fifoLotVO.getPricePerUnit() * (1 - isinActionCreateVO.getActionVO().getCostRetainedFraction()) / (double)(int)q2);
+							// Additional not in Spec, exclusive to Demerger REMAINING ENTITY
+							IsinActionPart remainingEntityIAPOld = isinActionPartRepository.findById(fifoLotVO.getIsinActionPartId()).
+									orElseThrow(() -> new AppException("Missing ISIN Action Part " + fifoLotVO.getIsinActionPartId(), null));
+							IsinActionPart remainingEntityIAPNew = new IsinActionPart();
+							remainingEntityIAPNew.copyFrom(remainingEntityIAPOld);
+							remainingEntityIAPNew.setId(null);
+							remainingEntityIAPNew.setPricePerUnit(isinActionCreateVO.getActionVO().getCostRetainedFraction() * fifoLotVO.getPricePerUnit());
+							isinActionPartRepository.save(remainingEntityIAPNew);
+							
+							remainingEntityIAPOld.setOverwritingAction(action);
+							isinActionPartRepository.save(remainingEntityIAPOld);
 							break;
 						case PLUS:
 							isinActionPart.setPricePerUnit(Objects.requireNonNullElse(fifoLotVO.getPricePerUnit(), 0).doubleValue() + rIAEVO.getPricePerUnit());
@@ -424,7 +441,8 @@ public class DebtEquityMutualService {
 				(action.getEntitledIsin() == null ? null : action.getEntitledIsin().getIsin()),
 				action.getRecordDate(),
 				action.getNewSharesPerOld(),
-				action.getOldSharesBase()
+				action.getOldSharesBase(),
+				action.getCostRetainedFraction()
 				);
 	}
 	

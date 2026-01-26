@@ -46,7 +46,18 @@ public class Action {
 	@Column(name="old_shares_base", nullable=true)
 	private Short oldSharesBase;
 	
+	@Column(name="cost_retained_fraction", nullable=true, columnDefinition="NUMERIC", precision=5, scale=4)
+	private BigDecimal costRetainedFraction;
+	
 	@Column(name="fractional_entitlement_cash", nullable=true, columnDefinition="NUMERIC", precision=8, scale=3)	// TODO Belongs to Demat level Action
 	private BigDecimal fractionalEntitlementCash;
+	
+	public Double getCostRetainedFraction() {
+		return (costRetainedFraction == null ? null : costRetainedFraction.doubleValue());
+	}
+	
+	public void setCostRetainedFraction(Double costRetainedFraction) {
+		this.costRetainedFraction = (costRetainedFraction == null ? null : BigDecimal.valueOf(costRetainedFraction));
+	}
 	
 }

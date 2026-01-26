@@ -39,13 +39,14 @@ public class IsinActionPartRepositoryImpl implements IsinActionPartRepositoryCus
 			mainQueryStringBuffer.append("') ");
 		}
 		mainQueryStringBuffer.append(") ");
+		mainQueryStringBuffer.append("AND IAP.overwriting_action_fk IS NULL ");
 		if (dematAccount != null) {
 			mainQueryStringBuffer.append("AND IA.demat_account_fk = ");
 			mainQueryStringBuffer.append(String.valueOf(dematAccount));
 			mainQueryStringBuffer.append(" ");
 		}
 		if (sellDate != null) {
-			mainQueryStringBuffer.append("AND COALESCE(IAP.holding_change_date, IA.settlement_date) <= '");
+			mainQueryStringBuffer.append("AND IA.settlement_date <= '");
 			mainQueryStringBuffer.append(sellDate.toString());
 			mainQueryStringBuffer.append("' ");
 		}

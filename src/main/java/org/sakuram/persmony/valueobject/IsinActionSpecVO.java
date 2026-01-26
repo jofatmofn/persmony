@@ -17,6 +17,7 @@ public class IsinActionSpecVO {
 	long actionDvId;
 	boolean toGroupIAs;
 	boolean ratioApplicable;
+	boolean costRetainedFractionApplicable;
 	boolean recordDateApplicable;
 	List<IsinActionEntrySpecVO> isinActionEntrySpecVOList;
 	
@@ -24,6 +25,7 @@ public class IsinActionSpecVO {
 		this.actionDvId = other.actionDvId;
 		this.toGroupIAs = other.toGroupIAs;
 		this.ratioApplicable = other.ratioApplicable;
+		this.costRetainedFractionApplicable = other.costRetainedFractionApplicable;
 		this.recordDateApplicable = other.recordDateApplicable;
 		if (other.isinActionEntrySpecVOList == null) {
 			this.isinActionEntrySpecVOList = null;

@@ -18,4 +18,5 @@ public class ActionVO {
 	LocalDate recordDate;
 	Short newSharesPerOld;
 	Short oldSharesBase;
+	Double costRetainedFraction;
 }
