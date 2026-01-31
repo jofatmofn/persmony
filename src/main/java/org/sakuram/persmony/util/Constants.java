@@ -162,6 +162,11 @@ public class Constants {
 		    Map.entry(4L, new long[] {4L})
 	);
 
+	public static final Map<Long, Long> TRANSACTION_CATEGORY_TO_SECURITY_TYPE_MAP = Map.ofEntries(
+			Map.entry(209L, 344L),
+			Map.entry(211L, 345L)
+	);
+	
 	public static final Map<String, Long> DESC_TO_ID_MAP = Map.ofEntries(	// TODO: Should be read from DB
 		    Map.entry(CATEGORY_TRANSACTION_CODE + ":CLR", 224L),
 		    Map.entry(CATEGORY_TRANSACTION_CODE + ":CSH", 225L),

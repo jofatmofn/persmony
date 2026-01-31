@@ -27,6 +27,7 @@ import org.sakuram.persmony.valueobject.AccountingIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.ActionVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.IsinActionCreateVO;
+import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
 import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 import org.sakuram.persmony.valueobject.IsinActionVO;
 import org.sakuram.persmony.valueobject.IsinCriteriaVO;
@@ -212,7 +213,13 @@ public class DebtEquityMutualService {
 				break;
 			}
 			
-			switch(rIAEVO.getIsinActionEntrySpecVO().getLotCreationType()) {
+			IsinActionEntrySpecVO.IALotCreationType effectiveLotCreationType;
+			effectiveLotCreationType = rIAEVO.getIsinActionEntrySpecVO().getLotCreationType();
+			if (rIAEVO.getIsinActionEntrySpecVO().getLotCreationType() == IsinActionEntrySpecVO.IALotCreationType.TRADE &&
+					isinActionCreateVO.getTradeVOList().size() == 0) {
+				effectiveLotCreationType = IsinActionEntrySpecVO.IALotCreationType.ONE;
+			}
+			switch(effectiveLotCreationType) {
 			case TRADE:
 				createLots(isinActionCreateVO.getTradeVOList(), null, fifoLotVOList, isinAction, rIAEVO.getHoldingChangeDate());
 				break;

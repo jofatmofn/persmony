@@ -114,6 +114,7 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		}
 		
 		addFormItem(pricePerUnitNumberField, "Price Per Unit");
+		pricePerUnitNumberField.setHelperText("Required if and only if trade is not applicable");
 		switch(isinActionEntrySpecVO.getPriceInputType()) {
 		case INPUT:
 			break;
@@ -183,7 +184,7 @@ public class RealIsinActionEntryEditor extends FormLayout {
 		} else {
 			quantityNumberField.setEnabled(false);
 		}
-		if (isinActionEntrySpecVO.getPriceInputType() == IsinActionEntrySpecVO.IAPriceType.INPUT && !inputArgs.isTradeApplicable) {
+		if (isinActionEntrySpecVO.getPriceInputType() == IsinActionEntrySpecVO.IAPriceType.INPUT) {
 			pricePerUnitNumberField.setEnabled(true);
 		} else {
 			pricePerUnitNumberField.setEnabled(false);

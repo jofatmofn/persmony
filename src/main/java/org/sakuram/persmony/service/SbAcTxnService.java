@@ -16,6 +16,7 @@ import org.sakuram.persmony.bean.Contract;
 import org.sakuram.persmony.bean.ContractEq;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.IsinAction;
+import org.sakuram.persmony.bean.IsinActionPart;
 import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.bean.SavingsAccountTransaction;
 import org.sakuram.persmony.bean.SbAcTxnCategory;
@@ -407,8 +408,15 @@ public class SbAcTxnService {
 			for (IsinAction isinAction : contract.getIsinActionList()) {
 				if (isinAction.getIsin().getSecurityType().getId() != Constants.DVID_TRANSACTION_CATEGORY_DTI) {
 					amount = 0;
-					for (Trade trade : tradeRepository.findByIsinActionPart_IsinAction(isinAction)) {
-						amount += trade.getIsinActionPart().getQuantity() * (trade.getIsinActionPart().getPricePerUnit() + trade.getBrokeragePerUnit());
+					List<Trade> contractTradeList = tradeRepository.findByIsinActionPart_IsinAction(isinAction);
+					if (contractTradeList.size() > 0) {
+						for (Trade trade : contractTradeList) {
+							amount += trade.getIsinActionPart().getQuantity() * (trade.getIsinActionPart().getPricePerUnit() + trade.getBrokeragePerUnit());
+						}
+					} else {
+						for (IsinActionPart isinActionPart : isinAction.getIsinActionPartList()) {
+							amount += isinActionPart.getQuantity() * isinActionPart.getPricePerUnit();
+						}
 					}
 					sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 							Constants.NON_SATC_ID,

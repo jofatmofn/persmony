@@ -4,6 +4,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,7 @@ import com.vaadin.flow.component.HasValue.ValueChangeEvent;
 import com.vaadin.flow.component.HasValue.ValueChangeListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
@@ -132,7 +134,7 @@ public class DebtEquityMutualView extends Div {
 	}
 	
 	private void handleSearchSecurity(FormLayout formLayout) {
-		HorizontalLayout hLayout;
+		HorizontalLayout hLayout, clientSideControlsLayout;
 		Button historyButton, balancesButton;
 		Grid<LotVO> lotsGrid;
 		SecuritySearchComponent securitySearchComponent;
@@ -156,17 +158,31 @@ public class DebtEquityMutualView extends Div {
 		balancesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		balancesButton.setDisableOnClick(true);
 		
+		clientSideControlsLayout = new HorizontalLayout();
+		formLayout.add(clientSideControlsLayout);
+		
 		lotsGrid = new Grid<>(LotVO.class);
 		formLayout.add(lotsGrid);
 		
 		historyButton.addClickListener(event -> {
-			List<LotVO> lotVOList = null;
+			Checkbox includeInternalCheckbox, includeRelatedIsinsCheckbox;
+			AtomicBoolean includeInternal, includeRelatedIsins;
+			
 			try {
 				if (securitySearchComponent.getIsinTextField() == null || securitySearchComponent.getIsinTextField().isEmpty()) {
 					return;
 				}
-					
-				lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), null, dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "S");
+				
+				includeInternal = new AtomicBoolean(true);
+				includeRelatedIsins = new AtomicBoolean(true);
+				clientSideControlsLayout.remove(clientSideControlsLayout.getChildren().collect(Collectors.toList()));
+				includeInternalCheckbox = new Checkbox("Include Internal Entries");
+				includeInternalCheckbox.setValue(true);
+				includeRelatedIsinsCheckbox = new Checkbox("Include Related ISINs");
+				includeRelatedIsinsCheckbox.setValue(true);
+				clientSideControlsLayout.add(includeInternalCheckbox, includeRelatedIsinsCheckbox);
+				
+				List<LotVO> lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), null, dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "S");
 				Notification.show("No. of Lots fetched: " + lotVOList.size())
 					.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				lotsGrid.setColumns("isinActionVO.internal", "isinActionVO.settlementDate", "holdingChangeDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "isinActionPartId", "tradeId", "isinActionVO.actionType.value", "isinActionVO.bookingType.value", "isinActionVO.dematAccount.value", "pricePerUnit", "transactionQuantity");
@@ -180,6 +196,25 @@ public class DebtEquityMutualView extends Div {
 				}
 				lotsGrid.setItems(lotVOList);
 
+				ValueChangeListener<ValueChangeEvent<?>> filterLogic = e -> {
+					lotsGrid.setItems(lotVOList
+							.stream()
+							.filter(lotVO -> 
+									includeInternal.get() && includeRelatedIsins.get() || 
+									!includeInternal.get() && !includeRelatedIsins.get() && !lotVO.getIsinActionVO().isInternal() && lotVO.getIsinActionVO().getIsin().equals(securitySearchComponent.getIsinTextField().getValue()) ||
+									!includeInternal.get() && includeRelatedIsins.get() && !lotVO.getIsinActionVO().isInternal() ||
+									includeInternal.get() && !includeRelatedIsins.get() && lotVO.getIsinActionVO().getIsin().equals(securitySearchComponent.getIsinTextField().getValue()))
+							.collect(Collectors.toList()));
+				};
+				includeInternalCheckbox.addValueChangeListener(e -> {
+					includeInternal.set(includeInternalCheckbox.getValue());
+					filterLogic.valueChanged(e);
+				});
+				includeRelatedIsinsCheckbox.addValueChangeListener(e -> {
+					includeRelatedIsins.set(includeRelatedIsinsCheckbox.getValue()); 
+					filterLogic.valueChanged(e);
+				});
+				
 			} catch (Exception e) {
 				ViewFuncs.showError("System Error!!! Contact Support.");
 				e.printStackTrace();
@@ -189,13 +224,19 @@ public class DebtEquityMutualView extends Div {
 			}
 		});
 		balancesButton.addClickListener(event -> {
-			List<LotVO> lotVOList = null;
+			Checkbox includeNilBalanceCheckbox;
+			
 			try {
 				if (securitySearchComponent.getIsinTextField() == null || securitySearchComponent.getIsinTextField().isEmpty()) {
 					return;
 				}
 		        
-				lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), null, dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "A")
+				clientSideControlsLayout.remove(clientSideControlsLayout.getChildren().collect(Collectors.toList()));
+				includeNilBalanceCheckbox = new Checkbox("Include Nil Balance Lots");
+				includeNilBalanceCheckbox.setValue(true);
+				clientSideControlsLayout.add(includeNilBalanceCheckbox);
+				
+				List<LotVO> lotVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), null, dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "A")
 						.stream()
 						.filter(lotVO -> lotVO.getIsinActionVO().getBookingType().getId() == Constants.DVID_BOOKING_CREDIT && !lotVO.getIsinActionVO().isInternal())
 						.collect(Collectors.toList());
@@ -212,6 +253,17 @@ public class DebtEquityMutualView extends Div {
 				}
 				lotsGrid.setItems(lotVOList);
 
+				includeNilBalanceCheckbox.addValueChangeListener(e -> {
+					if (includeNilBalanceCheckbox.getValue()) {
+						lotsGrid.setItems(lotVOList);
+					} else {
+						lotsGrid.setItems(lotVOList
+								.stream()
+								.filter(lotVO -> lotVO.getBalance() > 0)
+								.collect(Collectors.toList()));
+					}
+				});
+				
 			} catch (Exception e) {
 				ViewFuncs.showError("System Error!!! Contact Support.");
 				e.printStackTrace();

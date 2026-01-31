@@ -696,10 +696,12 @@ public class SbAcTxnOperationView extends Div {
 						ViewFuncs.showError("Same transaction category cannot be used in multiple groups");
 						return;
 					}
-					if (groupwiseTotalMap.containsKey(sbAcTxnCategoryVO.getGroupId())) {
-						groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()) + sbAcTxnCategoryVO.getAmount());
-					} else {
-						groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), sbAcTxnCategoryVO.getAmount());
+					if (sbAcTxnCategoryVO.getTransactionCategory() == null || sbAcTxnCategoryVO.getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
+						if (groupwiseTotalMap.containsKey(sbAcTxnCategoryVO.getGroupId())) {
+							groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()) + sbAcTxnCategoryVO.getAmount());
+						} else {
+							groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), sbAcTxnCategoryVO.getAmount());
+						}
 					}
 				}
 				for (Map.Entry<Character, Double> groupTotalEntry : groupwiseTotalMap.entrySet()) {
@@ -746,8 +748,8 @@ public class SbAcTxnOperationView extends Div {
 			Button delButton = new Button();
 			delButton.setIcon(new Icon(VaadinIcon.TRASH));
 			delButton.addClickListener(e->{
-				if (sbAcTxnCategoryVO.getTransactionCategory() == null || !sbAcTxnCategoryVO.getTransactionCategory().getId().equals(Constants.DVID_TRANSACTION_CATEGORY_DTI)) {
-					sbAcTxnCategoryGridLDV.removeItem(sbAcTxnCategoryVO);
+				if (sbAcTxnCategoryVO.getTransactionCategory() == null || sbAcTxnCategoryVO.getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
+ 					sbAcTxnCategoryGridLDV.removeItem(sbAcTxnCategoryVO);
 				}
 			});
 			return delButton;
