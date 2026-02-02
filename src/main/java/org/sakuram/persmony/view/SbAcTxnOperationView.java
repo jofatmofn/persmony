@@ -1,14 +1,12 @@
 package org.sakuram.persmony.view;
 
 import java.io.PrintWriter;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.sakuram.persmony.service.MiscService;
@@ -29,7 +27,6 @@ import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -45,7 +42,6 @@ import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -54,6 +50,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -79,64 +77,45 @@ public class SbAcTxnOperationView extends Div {
 	SbAcTxnService sbAcTxnService;
 	MiscService miscService;
 	
+	
 	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService) {
-		Span selectSpan;
-		FormLayout formLayout;
-		Select<Map.Entry<Integer,String>> operationSelect;
-		List<Map.Entry<Integer, String>> operationItemsList;
+		Div content;
+		Tabs tabs;
+		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
+		Component importView, categoriseView, createView;
+		Tab importTab, categoriseTab, createTab;
 		
 		this.sbAcTxnService = sbAcTxnService;
 		this.miscService = miscService;
-
-		operationItemsList = new ArrayList<Map.Entry<Integer,String>>() {
-			private static final long serialVersionUID = 1L;
-
-			{
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(1, "Import"));
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(2, "View/Categorise"));
-				add(new AbstractMap.SimpleImmutableEntry<Integer, String>(3, "Create"));
-			}
-		};
-		selectSpan = new Span();
-		formLayout = new FormLayout();
-		formLayout.setResponsiveSteps(
-                // Use one column by default
-                new ResponsiveStep("0", 1));
 		
-		operationSelect = new Select<Map.Entry<Integer,String>>();
-		operationSelect.setItems(operationItemsList);
-		operationSelect.setItemLabelGenerator(operationItem -> {
-			return operationItem.getValue();
-		});
-		operationSelect.setLabel("Operation");
-		operationSelect.setPlaceholder("Select Operation");
-		operationSelect.addValueChangeListener(event -> {
-			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
-			try {
-	            switch(event.getValue().getKey()) {
-	            case 1:
-	            	handleSbAcTxnImport(formLayout);
-	            	break;
-	            case 2:
-	            	handleSbAcTxnCategorise(formLayout);
-	            	break;
-	            case 3:
-	            	handleSbAcTxnCreate(formLayout);
-	            	break;
-	            }
-			} catch (Exception e) {
-				ViewFuncs.showError("System Error!!! Contact Support.");
-				e.printStackTrace();
-				return;
-			}
+		setSizeFull();
+		
+		content = new Div();
+		
+		importTab = new Tab("Import");
+		importView = createSbAcTxnImportView();
+		tabContent.put(importTab, importView);
+		categoriseTab = new Tab("View/Categorise");
+		categoriseView = createSbAcTxnCategoriseView();
+		tabContent.put(categoriseTab, categoriseView);
+		createTab = new Tab("Create");
+		createView = createSbAcTxnCreateView();
+		tabContent.put(createTab, createView);
+		
+		tabs = new Tabs(importTab, categoriseTab, createTab);
+        tabs.setWidthFull();
+        tabs.addSelectedChangeListener(e -> {
+        	content.removeAll();
+            content.add(tabContent.get(e.getSelectedTab()));
         });
 
-		selectSpan.add(operationSelect);
-		add(selectSpan);
-		add(formLayout);
+        add(tabs, content);
+
+        content.add(importView);
 	}
 	
-	private void handleSbAcTxnCreate(FormLayout formLayout) {
+	private Component createSbAcTxnCreateView() {
+		FormLayout formLayout;
 		Select<IdValueVO> bankAccountOrInvestorDvSelect, bookingDvSelect, transactionCodeDvSelect, costCenterDvSelect, voucherTypeDvSelect;
 		DatePicker transactionDateDatePicker, valueDateDatePicker;
 		NumberField amountNumberField, balanceNumberField;
@@ -144,6 +123,9 @@ public class SbAcTxnOperationView extends Div {
 		IntegerField branchCodeIntegerField;
 		HorizontalLayout hLayout;
 		Button saveButton;
+		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		
 		// UI Elements
 		bankAccountOrInvestorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT + "+" + Constants.CATEGORY_PRIMARY_INVESTOR, null, false, false);
@@ -264,14 +246,20 @@ public class SbAcTxnOperationView extends Div {
 				saveButton.setEnabled(true);
 			}
 		});
+		
+		return formLayout;
 	}
 	
-	private void handleSbAcTxnImport(FormLayout formLayout) {
+	private Component createSbAcTxnImportView() {
+		FormLayout formLayout;
 		Select<IdValueVO> bankAccountDvSelect;
 		Upload upload;
 		Button importButton;
 		ScopeLocalDummy01 uploadedContents;
 		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
+		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		
 		uploadedContents = new ScopeLocalDummy01();
 		
@@ -391,9 +379,11 @@ public class SbAcTxnOperationView extends Div {
 			}
 		});
 
+		return formLayout;
 	}
 	
-	private void handleSbAcTxnCategorise(FormLayout formLayout) {
+	private Component createSbAcTxnCategoriseView() {
+		FormLayout formLayout;
 		DatePicker sbAcTxnFromDatePicker, sbAcTxnToDatePicker;
 		IntegerField sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField;	// TODO: LongField
 		NumberField sbAcTxnFromAmoutNumberField, sbAcTxnToAmoutNumberField;
@@ -406,12 +396,15 @@ public class SbAcTxnOperationView extends Div {
 		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
 		GridContextMenu<SavingsAccountTransactionVO> sATGridContextMenu;
 		Map<Long, String> txnCatToDvCatMap;
+
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		
 		try {
 			txnCatToDvCatMap = miscService.fetchDvCategoriesOfTxnCategories();
 		} catch (Exception e) {
 			ViewFuncs.showError(UtilFuncs.messageFromException(e));
-			return;
+			return null;
 		}
 		
 		sbAcTxnFromIdIntegerField = new IntegerField("From");
@@ -628,6 +621,8 @@ public class SbAcTxnOperationView extends Div {
 	    		realisationComponent.handleRealisation(savingsAccountTransactionVO.get());
 			}
 		});
+		
+		return formLayout;
 	}
 	
 	private void acceptSbAcTxnCategory(long savingsAccountTransactionId, Double sbAcTxnAmount, Map<Long, String> txnCatToDvCatMap) {
