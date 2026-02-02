@@ -59,7 +59,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 
-@Route("operation")
+@Route(value="operation", layout=PersMonyLayout.class)
 public class OperationView extends Div {
 	private static final long serialVersionUID = 6529685098267757690L;
 	

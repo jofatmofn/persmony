@@ -1,7 +1,5 @@
 package org.sakuram.persmony.view;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -31,6 +29,7 @@ import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -59,14 +58,17 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.FileBuffer;
+import com.vaadin.flow.component.upload.UploadI18N;
+import com.vaadin.flow.component.upload.UploadI18N.AddFiles;
+import com.vaadin.flow.component.upload.UploadI18N.DropFiles;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 import lombok.Getter;
 import lombok.Setter;
 
-@Route("sat")
+@Route(value="sat", layout=PersMonyLayout.class)
 public class SbAcTxnOperationView extends Div {
 
 	private static final long serialVersionUID = -335915836819765125L;
@@ -266,7 +268,6 @@ public class SbAcTxnOperationView extends Div {
 	
 	private void handleSbAcTxnImport(FormLayout formLayout) {
 		Select<IdValueVO> bankAccountDvSelect;
-		FileBuffer fileBuffer;
 		Upload upload;
 		Button importButton;
 		ScopeLocalDummy01 uploadedContents;
@@ -299,38 +300,64 @@ public class SbAcTxnOperationView extends Div {
 
 		formLayout.addFormItem(savingsAccountTransactionsGrid, "Last Transaction");
 		
-		fileBuffer = new FileBuffer();
-		upload = new Upload(fileBuffer);
-		formLayout.addFormItem(upload, "Upload CSV");
-		upload.setAcceptedFileTypes("text/csv", ".csv");
-		upload.addFileRejectedListener(event -> {
-			uploadedContents.setMultipartFile(null);
-			ViewFuncs.showError(event.getErrorMessage());
-		});
-		upload.addSucceededListener(event -> {
-		    try (InputStream in = fileBuffer.getInputStream()) {
+        UploadHandler inMemoryUploadHandler = UploadHandler
+                .inMemory((uploadMetadata, bytes) -> {
+    		        MultipartFile multipartFile =
+    			            new MockMultipartFile(
+    			                "file",                       // form field name
+    			                uploadMetadata.fileName(),          // original filename
+    			                uploadMetadata.contentType(),          // content type
+    			                bytes                            // stream
+    			            );
 
-		        MultipartFile multipartFile =
-		            new MockMultipartFile(
-		                "file",                       // form field name
-		                event.getFileName(),          // original filename
-		                event.getMIMEType(),          // content type
-		                in                            // stream
-		            );
+    			        uploadedContents.setMultipartFile(multipartFile);
+                });
 
-		        uploadedContents.setMultipartFile(multipartFile);
+        upload = new Upload(inMemoryUploadHandler);
+        upload.setAcceptedFileTypes(
+                "text/csv", ".csv");
+        upload.setMaxFiles(1);
 
-		    } catch (IOException e) {
-		        ViewFuncs.showError("Upload failed: " + e.getMessage());
-		    }
-		});
+        UploadI18N i18n = new UploadI18N();
+        i18n.setDropFiles(new DropFiles().setOne("Drop CSV Statement here"));
+        i18n.setAddFiles(new AddFiles().setOne("Browse CSV Statement..."));
+        /* i18n.setError(new Error().setTooManyFiles("Too Many Files.")
+                .setFileIsTooBig("File is Too Big.")
+                .setIncorrectFileType("Incorrect File Type."));
+        i18n.setUploading(new Uploading()
+                .setStatus(new Uploading.Status().setConnecting("Connecting...")
+                        .setStalled("Stalled")
+                        .setProcessing("Processing File...").setHeld("Queued"))
+                .setRemainingTime(new Uploading.RemainingTime()
+                        .setPrefix("remaining time: ")
+                        .setUnknown("unknown remaining time"))
+                .setError(new Uploading.Error()
+                        .setServerUnavailable(
+                                "Upload failed, please try again later")
+                        .setUnexpectedServerError(
+                                "Upload failed due to server error")
+                        .setForbidden("Upload forbidden")));
+        i18n.setUnits(new Units().setSize(Arrays.asList("B", "kB", "MB", "GB", "TB",
+                "PB", "EB", "ZB", "YB"))); */
+
+        upload.setI18n(i18n);
+
+        formLayout.add(upload);
+
+        upload.addFileRejectedListener(event -> {
+            String errorMessage = event.getErrorMessage();
+
+            Notification notification = Notification.show(errorMessage, 5000,
+                    Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        });
 		
-		importButton = new Button("Import CSV");
+		importButton = new Button("Upload");
 		formLayout.add(importButton);
 		importButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		importButton.setDisableOnClick(true);
 
-		// On click of Fetch
+		// On click of Upload
 		importButton.addClickListener(event -> {
 			Notification notification;
 			SbAcTxnImportStatsVO sbAcTxnImportStatsVO;
@@ -696,7 +723,7 @@ public class SbAcTxnOperationView extends Div {
 						ViewFuncs.showError("Same transaction category cannot be used in multiple groups");
 						return;
 					}
-					if (sbAcTxnCategoryVO.getTransactionCategory() == null || sbAcTxnCategoryVO.getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
+					if (sbAcTxnCategoryVO.getSbAcTxnCategoryId() == null || sbAcTxnCategoryVO.getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
 						if (groupwiseTotalMap.containsKey(sbAcTxnCategoryVO.getGroupId())) {
 							groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()) + sbAcTxnCategoryVO.getAmount());
 						} else {
@@ -748,7 +775,7 @@ public class SbAcTxnOperationView extends Div {
 			Button delButton = new Button();
 			delButton.setIcon(new Icon(VaadinIcon.TRASH));
 			delButton.addClickListener(e->{
-				if (sbAcTxnCategoryVO.getTransactionCategory() == null || sbAcTxnCategoryVO.getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
+				if (sbAcTxnCategoryVO.getSbAcTxnCategoryId() == null || sbAcTxnCategoryVO.getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
  					sbAcTxnCategoryGridLDV.removeItem(sbAcTxnCategoryVO);
 				}
 			});

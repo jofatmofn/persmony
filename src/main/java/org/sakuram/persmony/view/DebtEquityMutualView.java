@@ -58,7 +58,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 
-@Route("dem")
+@Route(value="dem", layout=PersMonyLayout.class)
 public class DebtEquityMutualView extends Div {
 
 	private static final long serialVersionUID = 7040253088998928399L;

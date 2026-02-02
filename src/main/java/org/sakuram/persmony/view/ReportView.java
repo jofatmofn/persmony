@@ -33,7 +33,7 @@ import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.StreamResourceWriter;
 import com.vaadin.flow.server.VaadinSession;
 
-@Route("report")
+@Route(value="report", layout=PersMonyLayout.class)
 public class ReportView extends VerticalLayout {
 	private static final long serialVersionUID = 7744877036031319646L;
 	int nameReportInd;

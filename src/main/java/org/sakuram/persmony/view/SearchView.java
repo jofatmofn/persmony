@@ -45,7 +45,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 
-@Route("search")
+@Route(value="search", layout=PersMonyLayout.class)
 public class SearchView extends Div {
 	private static final long serialVersionUID = -9072230786957200591L;
 
