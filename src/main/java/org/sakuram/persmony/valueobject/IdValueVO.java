@@ -3,6 +3,7 @@ package org.sakuram.persmony.valueobject;
 import java.util.Objects;
 
 import org.sakuram.persmony.bean.DomainValue;
+import org.sakuram.persmony.util.Constants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,6 +19,11 @@ public class IdValueVO {
 	Long id;
 	String value;
 
+	public IdValueVO(long id) {
+		this.id = id;
+    	this.value = Constants.domainValueCache.get(id).getValue();
+	}
+	
 	public IdValueVO(DomainValue domainValue) {
 		if (domainValue != null) {
 			id = domainValue.getId();

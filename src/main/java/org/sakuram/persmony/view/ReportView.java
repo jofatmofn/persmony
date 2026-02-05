@@ -19,22 +19,23 @@ import org.sakuram.persmony.valueobject.DetailsForTaxFilingRequestVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.PeriodSummaryCriteriaVO;
 
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.StreamResourceWriter;
 import com.vaadin.flow.server.VaadinSession;
 
 @Route(value="report", layout=PersMonyLayout.class)
-public class ReportView extends VerticalLayout {
+@PageTitle("Reports")
+public class ReportView extends Div {
 	private static final long serialVersionUID = 7744877036031319646L;
 	int nameReportInd;
 	List<List<Object[]>> reportList;

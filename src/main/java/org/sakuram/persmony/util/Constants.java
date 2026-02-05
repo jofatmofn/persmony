@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.IsinActionSpecVO;
@@ -162,10 +164,11 @@ public class Constants {
 		    Map.entry(4L, new long[] {4L})
 	);
 
-	public static final Map<Long, Long> TRANSACTION_CATEGORY_TO_SECURITY_TYPE_MAP = Map.ofEntries(
-			Map.entry(209L, 344L),
-			Map.entry(211L, 345L)
-	);
+	public static final BidiMap<Long, Long> TRANSACTION_CATEGORY_AND_SECURITY_TYPE_BIMAP = new DualHashBidiMap<>(Map.of(
+			209L, 344L,
+			211L, 345L,
+			231L, 346L
+	));
 	
 	public static final Map<String, Long> DESC_TO_ID_MAP = Map.ofEntries(	// TODO: Should be read from DB
 		    Map.entry(CATEGORY_TRANSACTION_CODE + ":CLR", 224L),

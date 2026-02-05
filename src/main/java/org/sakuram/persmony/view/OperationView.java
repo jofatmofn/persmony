@@ -57,9 +57,11 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @Route(value="operation", layout=PersMonyLayout.class)
+@PageTitle("Investments Operations")
 public class OperationView extends Div {
 	private static final long serialVersionUID = 6529685098267757690L;
 	

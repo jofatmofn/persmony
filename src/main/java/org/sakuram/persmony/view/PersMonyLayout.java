@@ -6,7 +6,6 @@ import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.theme.lumo.Lumo;
 
@@ -16,8 +15,16 @@ public class PersMonyLayout extends AppLayout {
 	private static final long serialVersionUID = 1L;
 
     public PersMonyLayout() {
+        setPrimarySection(Section.DRAWER);
+        addToDrawer(
+        		new RouterLink("Home", HomeView.class),
+        		new RouterLink("Investments Search", SearchView.class),
+        		new RouterLink("Investments Operations", OperationView.class),
+        		new RouterLink("Reports", ReportView.class),
+        		new RouterLink("Savings Account Transactions", SbAcTxnOperationView.class),
+        		new RouterLink("Debt/Equity/MF", DebtEquityMutualView.class)
+        		);
         createHeader();
-        createDrawer();
     }
 
     private void createHeader() {
@@ -37,25 +44,5 @@ public class PersMonyLayout extends AppLayout {
 
         addToNavbar(header);
     }
-
-    private void createDrawer() {
-        RouterLink searchRL =
-                new RouterLink("Investments Search", SearchView.class);
-        RouterLink operationRL =
-                new RouterLink("Investments Operations", OperationView.class);
-        RouterLink reportRL =
-                new RouterLink("Reports", ReportView.class);
-        RouterLink sbAcTxnOperationRL =
-                new RouterLink("Savings Account Transactions", SbAcTxnOperationView.class);
-        RouterLink debtEquityMutualRL =
-                new RouterLink("Debt Equity MF", DebtEquityMutualView.class);
-
-        VerticalLayout menu = new VerticalLayout(
-                searchRL, operationRL, reportRL, sbAcTxnOperationRL, debtEquityMutualRL);
-        menu.setPadding(false);
-        menu.setSpacing(false);
-
-        addToDrawer(menu);
-    }
+    
 }
-

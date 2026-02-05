@@ -60,6 +60,7 @@ import com.vaadin.flow.component.upload.UploadI18N;
 import com.vaadin.flow.component.upload.UploadI18N.AddFiles;
 import com.vaadin.flow.component.upload.UploadI18N.DropFiles;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.UploadHandler;
 
@@ -67,6 +68,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Route(value="sat", layout=PersMonyLayout.class)
+@PageTitle("Savings Account Transactions")
 public class SbAcTxnOperationView extends Div {
 
 	private static final long serialVersionUID = -335915836819765125L;
@@ -688,21 +690,29 @@ public class SbAcTxnOperationView extends Div {
 			try {
 				Notification notification;
 				Map<Character, Double> groupwiseTotalMap;
+				List<SbAcTxnCategoryVO> toSaveSbAcTxnCategoryVOList;
 				
+				toSaveSbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>(sbAcTxnCategoryVOList.size());
 				for (int i = 0; i < sbAcTxnCategoryVOList.size(); i++) {
 					SbAcTxnCategoryVO sbAcTxnCategoryVO = sbAcTxnCategoryVOList.get(i);
 					if (sbAcTxnCategoryVO.getSbAcTxnCategoryId() == null && sbAcTxnCategoryVO.getTransactionCategory() == null &&
 							sbAcTxnCategoryVO.getEndAccountReference() == null && sbAcTxnCategoryVO.getAmount() == null) {
 						sbAcTxnCategoryGridLDV.removeItem(sbAcTxnCategoryVO);
 						i--;
+					} else if (sbAcTxnCategoryVO.getSbAcTxnCategoryId() != null && sbAcTxnCategoryVO.getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
+						toSaveSbAcTxnCategoryVOList.add(sbAcTxnCategoryVO);
 					}
 				}
 				// Validations
 				groupwiseTotalMap = new HashMap<Character, Double>();
-				for (SbAcTxnCategoryVO sbAcTxnCategoryVO : sbAcTxnCategoryVOList) {
+				for (SbAcTxnCategoryVO sbAcTxnCategoryVO : toSaveSbAcTxnCategoryVOList) {
 					String dvCategory;
-					if (sbAcTxnCategoryVO.getTransactionCategory() == null || sbAcTxnCategoryVO.getAmount() == null || sbAcTxnCategoryVO.getAmount() == 0) {
-						ViewFuncs.showError("Transaction Category and Amount cannot be empty");
+					if (sbAcTxnCategoryVO.getTransactionCategory() == null) {
+						ViewFuncs.showError("Transaction Category cannot be empty");
+						return;
+					}
+					if (sbAcTxnCategoryVO.getAmount() == null || sbAcTxnCategoryVO.getAmount() == 0) {
+						ViewFuncs.showError("Transaction Amount cannot be empty");
 						return;
 					}
 					dvCategory = txnCatToDvCatMap.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
@@ -711,19 +721,21 @@ public class SbAcTxnOperationView extends Div {
 						ViewFuncs.showError("End Account Reference cannot be empty");
 						return;
 					}
-					if (sbAcTxnCategoryVOList.stream().anyMatch(
+					if (sbAcTxnCategoryVO.getGroupId() != null && !Character.isDigit(sbAcTxnCategoryVO.getGroupId())) {
+						ViewFuncs.showError("Group has to be a digit");
+						return;
+					}
+					if (toSaveSbAcTxnCategoryVOList.stream().anyMatch(
 							o -> o != sbAcTxnCategoryVO &&
 							!Objects.equals(o.getGroupId(), sbAcTxnCategoryVO.getGroupId()) &&
 							sbAcTxnCategoryVO.getTransactionCategory().getValue().equals(o.getTransactionCategory().getValue()))) {
 						ViewFuncs.showError("Same transaction category cannot be used in multiple groups");
 						return;
 					}
-					if (sbAcTxnCategoryVO.getSbAcTxnCategoryId() == null || sbAcTxnCategoryVO.getSbAcTxnCategoryId() != Constants.NON_SATC_ID) {
-						if (groupwiseTotalMap.containsKey(sbAcTxnCategoryVO.getGroupId())) {
-							groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()) + sbAcTxnCategoryVO.getAmount());
-						} else {
-							groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), sbAcTxnCategoryVO.getAmount());
-						}
+					if (groupwiseTotalMap.containsKey(sbAcTxnCategoryVO.getGroupId())) {
+						groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), groupwiseTotalMap.get(sbAcTxnCategoryVO.getGroupId()) + sbAcTxnCategoryVO.getAmount());
+					} else {
+						groupwiseTotalMap.put(sbAcTxnCategoryVO.getGroupId(), sbAcTxnCategoryVO.getAmount());
 					}
 				}
 				for (Map.Entry<Character, Double> groupTotalEntry : groupwiseTotalMap.entrySet()) {
@@ -734,7 +746,7 @@ public class SbAcTxnOperationView extends Div {
 				}
 
 				try {
-					sbAcTxnService.saveSbAcTxnCategories(savingsAccountTransactionId, sbAcTxnCategoryVOList);
+					sbAcTxnService.saveSbAcTxnCategories(savingsAccountTransactionId, toSaveSbAcTxnCategoryVOList);
 					notification = Notification.show("Categorised Successfully.");
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				} catch (Exception e) {

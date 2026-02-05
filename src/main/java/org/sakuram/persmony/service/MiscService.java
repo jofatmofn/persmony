@@ -144,7 +144,7 @@ public class MiscService {
         		domainValue = Constants.domainValueCache.get(dvId);
     			dvFlagsInvestorVO = (DvFlagsInvestorVO) DomainValueFlags.getDvFlagsVO(domainValue);
     			if (dvFlagsInvestorVO == null) {
-    				idValueVOList.add(new IdValueVO(domainValue.getId(), domainValue.getValue()));
+    				idValueVOList.add(new IdValueVO(domainValue));
     			}
         	}
     		return idValueVOList;
@@ -257,7 +257,7 @@ public class MiscService {
     			branchDv = Constants.domainValueCache.get(dvId);
     			dvFlagsBranchVO = (DvFlagsBranchVO) DomainValueFlags.getDvFlagsVO(branchDv);
     			if (dvFlagsBranchVO.getPartyDvId() == partyDvId) {
-    				idValueVOList.add(new IdValueVO(branchDv.getId(), branchDv.getValue()));
+    				idValueVOList.add(new IdValueVO(branchDv));
     			}
 			} catch (Exception e) {
 				throw new AppException("Invalid Configuration of Branch " + dvId, null);
@@ -290,7 +290,7 @@ public class MiscService {
     			accountDv = Constants.domainValueCache.get(dvId);
     			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(accountDv);
     			if (LongStream.of(investors).anyMatch(x -> x == dvFlagsAccountVO.getInvestorDvId()) && dvFlagsAccountVO.isOpen()) {
-    				idValueVOList.add(new IdValueVO(accountDv.getId(), accountDv.getValue()));
+    				idValueVOList.add(new IdValueVO(accountDv));
     			}
 			} catch (Exception e) {
 				throw new AppException("Invalid Configuration of Account " + dvId, null);

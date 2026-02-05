@@ -343,7 +343,7 @@ public class SbAcTxnService {
 			savingsAccountTransactionVO.setSavingsAccountTransactionId(savingsAccountTransaction.getId());
 			savingsAccountTransactionVO.setTransactionDate(savingsAccountTransaction.getTransactionDate());
 			savingsAccountTransactionVO.setNarration(savingsAccountTransaction.getNarration());
-			savingsAccountTransactionVO.setBooking(new IdValueVO(savingsAccountTransaction.getBooking().getId(), savingsAccountTransaction.getBooking().getValue()));
+			savingsAccountTransactionVO.setBooking(new IdValueVO(savingsAccountTransaction.getBooking()));
 			savingsAccountTransactionVO.setAmount(savingsAccountTransaction.getAmount());
 			savingsAccountTransactionVO.setBalance(savingsAccountTransaction.getBalance());
 		}
@@ -378,10 +378,10 @@ public class SbAcTxnService {
 				dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(sbAcTxnCategory.getTransactionCategory());
 				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 						sbAcTxnCategory.getId(), 
-						new IdValueVO(sbAcTxnCategory.getTransactionCategory().getId(), sbAcTxnCategory.getTransactionCategory().getValue()),
+						new IdValueVO(sbAcTxnCategory.getTransactionCategory()),
 						(dvFlagsSbAcTxnCategoryVO.getDvCategory() == null || dvFlagsSbAcTxnCategoryVO.getDvCategory().equals(Constants.CATEGORY_NONE)) ?
 								new IdValueVO(null, sbAcTxnCategory.getEndAccountReference()) :
-								new IdValueVO(Long.parseLong(sbAcTxnCategory.getEndAccountReference()), Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()),
+								new IdValueVO(Long.parseLong(sbAcTxnCategory.getEndAccountReference())),
 						sbAcTxnCategory.getGroupId(),
 						sbAcTxnCategory.getAmount()));
 			}
@@ -389,13 +389,13 @@ public class SbAcTxnService {
 		for (Realisation realisation : savingsAccountTransaction.getRealisationList()) {
 			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 					Constants.NON_SATC_ID,
-					new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()),
+					new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI),
 					new IdValueVO(realisation.getInvestmentTransaction().getInvestment().getId(),
 							realisation.getInvestmentTransaction().getInvestment().getId() +
 							"/" + realisation.getInvestmentTransaction().getId() +
 							"/" + realisation.getId() +
 							"/" + realisation.getInvestmentTransaction().getInvestment().getProductName()),
-					null,
+					'R',
 					realisation.getAmount()));
 		}
 		for (Contract contract : savingsAccountTransaction.getContractList()) {
@@ -403,30 +403,28 @@ public class SbAcTxnService {
 					Constants.NON_SATC_ID,
 					new IdValueVO(null, "Security Contract"),
 					new IdValueVO(null, contract.getContractNo()),
-					'A',
+					'C',
 					contract.getNetAmount()));
 			for (IsinAction isinAction : contract.getIsinActionList()) {
-				if (isinAction.getIsin().getSecurityType().getId() != Constants.DVID_TRANSACTION_CATEGORY_DTI) {
-					amount = 0;
-					List<Trade> contractTradeList = tradeRepository.findByIsinActionPart_IsinAction(isinAction);
-					if (contractTradeList.size() > 0) {
-						for (Trade trade : contractTradeList) {
-							amount += trade.getIsinActionPart().getQuantity() * (trade.getIsinActionPart().getPricePerUnit() + trade.getBrokeragePerUnit());
-						}
-					} else {
-						for (IsinActionPart isinActionPart : isinAction.getIsinActionPartList()) {
-							amount += isinActionPart.getQuantity() * isinActionPart.getPricePerUnit();
-						}
+				amount = 0;
+				List<Trade> contractTradeList = tradeRepository.findByIsinActionPart_IsinAction(isinAction);
+				if (contractTradeList.size() > 0) {
+					for (Trade trade : contractTradeList) {
+						amount += trade.getIsinActionPart().getQuantity() * (trade.getIsinActionPart().getPricePerUnit() + trade.getBrokeragePerUnit());
 					}
-					sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-							Constants.NON_SATC_ID,
-							new IdValueVO(isinAction.getIsin().getSecurityType()),
-							new IdValueVO(null,
-									isinAction.getEffectiveActionType().getValue() +
-									"/" + isinAction.getIsin().getIsin()),
-							'B',
-							amount));
+				} else {
+					for (IsinActionPart isinActionPart : isinAction.getIsinActionPartList()) {
+						amount += isinActionPart.getQuantity() * isinActionPart.getPricePerUnit();
+					}
 				}
+				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+						Constants.NON_SATC_ID,
+						new IdValueVO(Constants.TRANSACTION_CATEGORY_AND_SECURITY_TYPE_BIMAP.inverseBidiMap().get(isinAction.getIsin().getSecurityType().getId())),
+						new IdValueVO(null,
+								isinAction.getEffectiveActionType().getValue() +
+								"/" + isinAction.getIsin().getIsin()),
+						'I',
+						amount));
 			}
 		}
 		for (ContractEq contractEq : savingsAccountTransaction.getContractEqList()) {
@@ -434,19 +432,17 @@ public class SbAcTxnService {
 					Constants.NON_SATC_ID,
 					new IdValueVO(null, "Security Contract Equivalent"),
 					new IdValueVO(null, String.valueOf(contractEq.getId())),
-					'A',
+					'E',
 					contractEq.getNetAmount()));
 			for (IsinAction isinAction : contractEq.getIsinActionList()) {
-				if (isinAction.getIsin().getSecurityType().getId() != Constants.DVID_TRANSACTION_CATEGORY_DTI) {
-					sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-							Constants.NON_SATC_ID,
-							new IdValueVO(isinAction.getIsin().getSecurityType()),
-							new IdValueVO(null,
-									isinAction.getEffectiveActionType().getValue() +
-									"/" + isinAction.getIsin().getIsin()),
-							'B',
-							isinAction.getBasePrice()));
-				}
+				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+						Constants.NON_SATC_ID,
+						new IdValueVO(Constants.TRANSACTION_CATEGORY_AND_SECURITY_TYPE_BIMAP.inverseBidiMap().get(isinAction.getIsin().getSecurityType().getId())),
+						new IdValueVO(null,
+								isinAction.getEffectiveActionType().getValue() +
+								"/" + isinAction.getIsin().getIsin()),
+						'I',
+						isinAction.getBasePrice()));
 			}
 		}
 
@@ -473,7 +469,7 @@ public class SbAcTxnService {
 				}
 			}
 			for (SbAcTxnCategoryVO sbAcTxnCategoryVO : sbAcTxnCategoryVOFromUiList) {
-				if (sbAcTxnCategoryVO.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_DTI) {
+				if (sbAcTxnCategoryVO.getSbAcTxnCategoryId() != null && sbAcTxnCategoryVO.getSbAcTxnCategoryId() == Constants.NON_SATC_ID) {
 					continue;
 				}
 				transactionCategoryDvUi = Constants.domainValueCache.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
