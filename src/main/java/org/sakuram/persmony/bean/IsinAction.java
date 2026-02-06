@@ -106,4 +106,18 @@ public class IsinAction {
 		}
 	}
 
+	public IsinAction(IsinAction other) {
+		// All except id and isinActionPartList
+		this.isin = other.isin;
+		this.settlementDate = other.settlementDate;
+		this.settlementSequence = other.settlementSequence;
+		this.contract = other.contract;
+		this.contractEq = other.contractEq;
+		this.dematAccount = other.dematAccount;
+		this.quantityBooking = other.quantityBooking;
+		this.action = other.action;
+		this.actionType = other.actionType;
+		this.isInternal = other.isInternal;
+		this.investment = other.investment;	
+	}
 }

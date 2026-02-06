@@ -1,5 +1,7 @@
 package org.sakuram.persmony.view;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +20,7 @@ import org.sakuram.persmony.valueobject.IsinActionCreateVO;
 import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
 import org.sakuram.persmony.valueobject.LotVO;
+import org.sakuram.persmony.valueobject.NpsActionVO;
 import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.TradeVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,8 +81,8 @@ public class DebtEquityMutualView extends Div {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
-		Component historyView, createView;
-		Tab historyTab, createTab;
+		Component historyView, createView, npsActionView;
+		Tab historyTab, createTab, npsActionTab;
 		
 		this.debtEquityMutualService = debtEquityMutualService;
 		this.miscService = miscService;
@@ -95,8 +98,11 @@ public class DebtEquityMutualView extends Div {
 		createTab = new Tab("Create ISIN Action");
 		createView = createIsinActionsCreateView();
 		tabContent.put(createTab, createView);
+		npsActionTab = new Tab("NPS Actions");
+		npsActionView = createNpsActionView();
+		tabContent.put(npsActionTab, npsActionView);
 		
-		tabs = new Tabs(historyTab, createTab);
+		tabs = new Tabs(historyTab, createTab, npsActionTab);
         tabs.setWidthFull();
         tabs.addSelectedChangeListener(e -> {
         	content.removeAll();
@@ -1253,4 +1259,97 @@ public class DebtEquityMutualView extends Div {
                 .setFilter("event.key === 'Escape' || event.key === 'Esc'");
     }
 
+    private Component createNpsActionView() {
+		FormLayout formLayout, assetFormLayout;
+		Select<IdValueVO> npsAccountDvSelect, npsTierDvSelect, actionDvSelect;
+		NumberField eNavNumberField, eUnitsNumberField, cNavNumberField, cUnitsNumberField, gNavNumberField, gUnitsNumberField, paymentChargeNumberField;
+		DatePicker settlementDateDatePicker;
+		Button saveButton;
+		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		
+        npsAccountDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_NPS_ACCOUNT, true, true), null, false, false);
+        formLayout.addFormItem(npsAccountDvSelect, "Account");
+		
+        npsTierDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_NPS_TIER, true, true), null, false, false);
+        formLayout.addFormItem(npsTierDvSelect, "Tier");
+		
+        actionDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_SECURITY_ACTION, false, true), null, false, false);
+        formLayout.addFormItem(actionDvSelect, "Action");
+        
+        settlementDateDatePicker = new DatePicker();
+        settlementDateDatePicker.setI18n(isoDatePickerI18n);
+        formLayout.addFormItem(settlementDateDatePicker, "Settlement Date");
+        
+        assetFormLayout = new FormLayout();
+        assetFormLayout.setResponsiveSteps(new ResponsiveStep("0", 4));
+        formLayout.add(assetFormLayout);
+		
+		eNavNumberField = new NumberField();
+		eUnitsNumberField = new NumberField();
+		cNavNumberField = new NumberField();
+		cUnitsNumberField = new NumberField();
+		gNavNumberField = new NumberField();
+		gUnitsNumberField = new NumberField();
+        assetFormLayout.add(new NativeLabel("Asset Class"), new NativeLabel("NAV"), new NativeLabel("Units"), new NativeLabel(""));
+		assetFormLayout.add(new NativeLabel("Equity (E)"), eNavNumberField, eUnitsNumberField, new NativeLabel(""));
+		assetFormLayout.add(new NativeLabel("Corporate Debt (C)"), cNavNumberField, cUnitsNumberField, new NativeLabel(""));
+		assetFormLayout.add(new NativeLabel("Government Securities (G)"), gNavNumberField, gUnitsNumberField, new NativeLabel(""));
+		
+		paymentChargeNumberField = new NumberField();
+		formLayout.addFormItem(paymentChargeNumberField, "Payment Charge");
+		
+		saveButton = new Button("Save");
+		formLayout.add(saveButton);
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setDisableOnClick(true);
+		
+		saveButton.addClickListener(event -> {
+			ConfirmDialog confirmDialog;
+			double amount;
+			
+			try {
+				// Validations
+				if (npsAccountDvSelect.getValue() == null || npsTierDvSelect.getValue() == null || actionDvSelect.getValue() == null ||
+						eNavNumberField.getValue() == null || eUnitsNumberField.getValue() == null || cNavNumberField.getValue() == null ||
+						cUnitsNumberField.getValue() == null || gNavNumberField.getValue() == null || gUnitsNumberField.getValue() == null ||
+						paymentChargeNumberField.getValue() == null || settlementDateDatePicker.getValue() == null) {
+					ViewFuncs.showError("None of the fields can be empty");
+					return;
+				}
+				amount = new BigDecimal(
+						eNavNumberField.getValue() * eUnitsNumberField.getValue() +
+						cNavNumberField.getValue() * cUnitsNumberField.getValue() +
+						gNavNumberField.getValue() * gUnitsNumberField.getValue() +
+						paymentChargeNumberField.getValue())
+						.setScale(2, RoundingMode.HALF_UP)
+						.doubleValue();
+				confirmDialog = new ConfirmDialog();
+				confirmDialog.setHeader("Confirm Amount");
+				confirmDialog.setText("Investment Amount = " + amount);
+				confirmDialog.setConfirmButton("Confirm", confirmEvent -> {
+					debtEquityMutualService.createNpsAction(
+					new NpsActionVO(npsAccountDvSelect.getValue().getId(), Integer.valueOf(npsTierDvSelect.getValue().getValue()),
+							actionDvSelect.getValue().getId(), settlementDateDatePicker.getValue(),
+							eNavNumberField.getValue(), eUnitsNumberField.getValue(), cNavNumberField.getValue(), cUnitsNumberField.getValue(),
+							gNavNumberField.getValue(), gUnitsNumberField.getValue(), paymentChargeNumberField.getValue(), amount)
+							);
+					Notification.show("NPS Action created successfully.")
+						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				});
+				confirmDialog.setCancelButton("Cancel", cancelEvent -> {
+				});
+				confirmDialog.open();
+			} catch (Exception e) {
+				ViewFuncs.showError("System Error!!! Contact Support.");
+				e.printStackTrace();
+				return;
+			} finally {
+				saveButton.setEnabled(true);
+			}
+		});
+		
+		return formLayout;
+    }
 }

@@ -1,5 +1,6 @@
 package org.sakuram.persmony.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,12 +11,14 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.sakuram.persmony.bean.Action;
+import org.sakuram.persmony.bean.ContractEq;
 import org.sakuram.persmony.bean.Isin;
 import org.sakuram.persmony.bean.IsinAction;
 import org.sakuram.persmony.bean.IsinActionMatch;
 import org.sakuram.persmony.bean.IsinActionPart;
 import org.sakuram.persmony.bean.Trade;
 import org.sakuram.persmony.repository.ActionRepository;
+import org.sakuram.persmony.repository.ContractEqRepository;
 import org.sakuram.persmony.repository.IsinActionMatchRepository;
 import org.sakuram.persmony.repository.IsinActionPartRepository;
 import org.sakuram.persmony.repository.IsinActionRepository;
@@ -33,6 +36,7 @@ import org.sakuram.persmony.valueobject.IsinActionVO;
 import org.sakuram.persmony.valueobject.IsinCriteriaVO;
 import org.sakuram.persmony.valueobject.IsinVO;
 import org.sakuram.persmony.valueobject.LotVO;
+import org.sakuram.persmony.valueobject.NpsActionVO;
 import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.TradeVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +64,9 @@ public class DebtEquityMutualService {
 	
 	@Autowired
 	IsinActionPartRepository isinActionPartRepository;
+	
+	@Autowired
+	ContractEqRepository contractEqRepository;
 	
 	public List<LotVO> fetchLots(String isinStr, LocalDate priorToDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
 		List<IsinActionPart> isinActionPartList;
@@ -499,5 +506,77 @@ public class DebtEquityMutualService {
 				}
 			}
 		}
+	}
+	
+	public void createNpsAction(NpsActionVO npsActionVO) {
+		Action action;
+		Isin isin;
+		IsinAction templateIsinAction, isinAction;
+		ContractEq contractEq;
+		IsinActionPart isinActionPart;
+		String isinStrStart;
+		
+		// Action
+		action = new Action();
+		action.setActionType(Constants.domainValueCache.get(npsActionVO.getActionTypeDvId()));
+		actionRepository.save(action);
+		
+		// ContractEq
+		contractEq = new ContractEq();
+		contractEq.setNetAmount(BigDecimal.valueOf(npsActionVO.getAmount()));
+		contractEq.setStampDuty(BigDecimal.valueOf(npsActionVO.getPaymentCharge()));
+		contractEqRepository.save(contractEq);
+		
+		templateIsinAction = new IsinAction();
+		templateIsinAction.setInternal(false);
+		templateIsinAction.setSettlementDate(npsActionVO.getSettlementDate());
+		templateIsinAction.setAction(action);
+		templateIsinAction.setContractEq(contractEq);
+		templateIsinAction.setDematAccount(Constants.domainValueCache.get(npsActionVO.getNpsAccountDvId()));
+		isinStrStart = "NPS-HDFC-" + npsActionVO.getTier() + "-";  // TODO Hardcoded fund administrator To be taken from DB based on the given NPS Account
+		
+		// IsinAction E
+		isin = isinRepository.findByIdCaseInsensitive(isinStrStart + "E").
+				orElseThrow(() -> new AppException("Missing ISIN " + isinStrStart + "E", null));
+		isinAction = new IsinAction(templateIsinAction);
+		isinAction.setIsin(isin);
+		isinAction.setQuantityBooking(Constants.domainValueCache.get(npsActionVO.getEUnits() > 0 ? Constants.DVID_BOOKING_CREDIT : Constants.DVID_BOOKING_DEBIT));
+		isinActionRepository.save(isinAction);
+		// IsinActionPart E
+		isinActionPart = new IsinActionPart();
+		isinActionPart.setPricePerUnit(npsActionVO.getENav());
+		isinActionPart.setQuantity(Math.abs(npsActionVO.getEUnits()));
+		isinActionPart.setIsinAction(isinAction);
+		isinActionPartRepository.save(isinActionPart);
+		
+		// IsinAction C
+		isin = isinRepository.findByIdCaseInsensitive(isinStrStart + "C").
+				orElseThrow(() -> new AppException("Missing ISIN " + isinStrStart + "C", null));
+		isinAction = new IsinAction(templateIsinAction);
+		isinAction.setIsin(isin);
+		isinAction.setQuantityBooking(Constants.domainValueCache.get(npsActionVO.getCUnits() > 0 ? Constants.DVID_BOOKING_CREDIT : Constants.DVID_BOOKING_DEBIT));
+		isinActionRepository.save(isinAction);
+		// IsinActionPart C
+		isinActionPart = new IsinActionPart();
+		isinActionPart.setPricePerUnit(npsActionVO.getCNav());
+		isinActionPart.setQuantity(Math.abs(npsActionVO.getCUnits()));
+		isinActionPart.setIsinAction(isinAction);
+		isinActionPartRepository.save(isinActionPart);
+		
+		// IsinAction G
+		isin = isinRepository.findByIdCaseInsensitive(isinStrStart + "G").
+				orElseThrow(() -> new AppException("Missing ISIN " + isinStrStart + "G", null));
+		isinAction = new IsinAction(templateIsinAction);
+		isinAction.setIsin(isin);
+		isinAction.setQuantityBooking(Constants.domainValueCache.get(npsActionVO.getGUnits() > 0 ? Constants.DVID_BOOKING_CREDIT : Constants.DVID_BOOKING_DEBIT));
+		isinActionRepository.save(isinAction);
+		// IsinActionPart G
+		isinActionPart = new IsinActionPart();
+		isinActionPart.setPricePerUnit(npsActionVO.getGNav());
+		isinActionPart.setQuantity(Math.abs(npsActionVO.getGUnits()));
+		isinActionPart.setIsinAction(isinAction);
+		isinActionPartRepository.save(isinActionPart);
+		
+		// TODO Mapping between ContractEq and SavingsAccountTransaction
 	}
 }

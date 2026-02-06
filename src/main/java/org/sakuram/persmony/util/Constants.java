@@ -42,6 +42,8 @@ public class Constants {
 	public static final String CATEGORY_SECURITY_TYPE = "ScrtTyp";
 	public static final String CATEGORY_SECURITY_ACTION = "ScrtAct";
 	public static final String CATEGORIES_USED_BY_CATEGORY_TRANSACTION_CATEGORY = "CatList01";
+	public static final String CATEGORY_NPS_ACCOUNT = "NPSAc";
+	public static final String CATEGORY_NPS_TIER = "NPSTier";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
@@ -123,6 +125,7 @@ public class Constants {
 	public static final String ACCOUNT_TYPE_FUNDS = "Funds";
 	public static final String ACCOUNT_TYPE_DEMAT = "Demat";
 	public static final String ACCOUNT_TYPE_PPF = "PPF";
+	public static final String ACCOUNT_TYPE_NPS = "NPS";
 
 	public static final String END_ACCOUNT_REFERENCE_HEALTH_INSURANCE = "Health Insurance";
 	

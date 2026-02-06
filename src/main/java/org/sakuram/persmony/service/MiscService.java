@@ -138,7 +138,9 @@ public class MiscService {
     private List<IdValueVO> fetchDvsOfOneCategory(String category, boolean enhanced, boolean isOpenOnly) {
     	List<IdValueVO> idValueVOList;
     	DomainValue domainValue;
+    	boolean isNps;
     	
+    	isNps = false;
     	idValueVOList = new ArrayList<IdValueVO>();
     	if (category.equals(Constants.CATEGORY_PRIMARY_INVESTOR)) {
         	for (Long dvId : Constants.categoryDvIdCache.get(Constants.CATEGORY_INVESTOR)) {
@@ -166,7 +168,11 @@ public class MiscService {
     			}
         	}
     		return idValueVOList;
+    	} else if (category.equals(Constants.CATEGORY_NPS_ACCOUNT)) {
+    		category = Constants.CATEGORY_DEMAT_ACCOUNT;
+    		isNps = true;
 		}
+    	
     	for (Long dvId : Optional.ofNullable(Constants.categoryDvIdCache.get(category)).orElse(Collections.emptyList())) {
     		String label;
     		domainValue = Constants.domainValueCache.get(dvId);
@@ -187,7 +193,7 @@ public class MiscService {
 		    			labelSB.append(label);
 		    			labelSB.append("::");
 		    			dvFlagsAccountVO = (DvFlagsAccountVO) DomainValueFlags.getDvFlagsVO(domainValue);
-		    			if (isOpenOnly && !dvFlagsAccountVO.isOpen())
+		    			if (isOpenOnly && !dvFlagsAccountVO.isOpen() || isNps && !dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_NPS))
 		    				continue;
 		    			investorDv = Constants.domainValueCache.get(dvFlagsAccountVO.getInvestorDvId());
 		    			dvFlagsInvestorVO = (DvFlagsInvestorVO) DomainValueFlags.getDvFlagsVO(investorDv);
