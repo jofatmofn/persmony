@@ -4,10 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.LongStream;
 
 import org.apache.commons.csv.CSVFormat;
@@ -148,8 +150,24 @@ public class MiscService {
     			}
         	}
     		return idValueVOList;
-    	}
-    	for (Long dvId : Constants.categoryDvIdCache.get(category)) {
+    	} else if (category.equals(Constants.CATEGORIES_USED_BY_CATEGORY_TRANSACTION_CATEGORY)) {
+    		List<String> processedCategoryList = new ArrayList<String>();
+        	for (Long dvId : Constants.categoryDvIdCache.get(Constants.CATEGORY_TRANSACTION_CATEGORY)) {
+        		DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
+        		domainValue = Constants.domainValueCache.get(dvId);
+        		dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(domainValue);
+    			if (dvFlagsSbAcTxnCategoryVO.getDvCategory() != null) {
+    		    	for (String oneCategory : dvFlagsSbAcTxnCategoryVO.getDvCategory().split("\\+")) {
+    		    		if (!processedCategoryList.contains(oneCategory)) {
+        		    		idValueVOList.addAll(fetchDvsOfOneCategory(oneCategory, enhanced, isOpenOnly));
+        		    		processedCategoryList.add(oneCategory);
+    		    		}
+    		    	}
+    			}
+        	}
+    		return idValueVOList;
+		}
+    	for (Long dvId : Optional.ofNullable(Constants.categoryDvIdCache.get(category)).orElse(Collections.emptyList())) {
     		String label;
     		domainValue = Constants.domainValueCache.get(dvId);
 			label = domainValue.getValue();

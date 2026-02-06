@@ -41,6 +41,7 @@ public class Constants {
 	public static final String CATEGORY_BOOKING = "Booking";
 	public static final String CATEGORY_SECURITY_TYPE = "ScrtTyp";
 	public static final String CATEGORY_SECURITY_ACTION = "ScrtAct";
+	public static final String CATEGORIES_USED_BY_CATEGORY_TRANSACTION_CATEGORY = "CatList01";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
