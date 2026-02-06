@@ -10,7 +10,6 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.theme.lumo.Lumo;
 
 @StyleSheet(Lumo.STYLESHEET)
-@StyleSheet("styles.css")
 public class PersMonyLayout extends AppLayout {
 	private static final long serialVersionUID = 1L;
 
