@@ -41,13 +41,15 @@ public class RealisationComponent extends VerticalLayout {
 	MiscService miscService;
 	MoneyTransactionService moneyTransactionService;
 	SbAcTxnService sbAcTxnService;
+	InvestmentDetailComponent investmentDetailComponent;
 	@Getter
 	Button saveButton;
 	
-	public RealisationComponent(MiscService miscService, MoneyTransactionService moneyTransactionService, SbAcTxnService sbAcTxnService) {
+	public RealisationComponent(MiscService miscService, MoneyTransactionService moneyTransactionService, SbAcTxnService sbAcTxnService, InvestmentDetailComponent investmentDetailComponent) {
 		this.miscService = miscService;
 		this.moneyTransactionService = moneyTransactionService;
 		this.sbAcTxnService = sbAcTxnService;
+		this.investmentDetailComponent = investmentDetailComponent;
 		saveButton = new Button("Save");
 		this.removeAll();
 	}
@@ -113,7 +115,8 @@ public class RealisationComponent extends VerticalLayout {
 		topPaneHorizontalLayout.add(outFields3FormLayout);
 		
 		investmentTransactionIdIntegerField.addValueChangeListener(event -> {
-			NativeLabel investmentIdLabel, transactionTypeLabel, dueAmountLabel, statusLabel, investorLabel, productProviderLabel, productTypeLabel;
+			NativeLabel transactionTypeLabel, dueAmountLabel, statusLabel, investorLabel, productProviderLabel, productTypeLabel;
+			Button investmentIdButton;
 			InvestmentTransaction2VO investmentTransaction2VOL;
 			
 			inFields2FormLayout.remove(inFields2FormLayout.getChildren().collect(Collectors.toList()));
@@ -129,8 +132,11 @@ public class RealisationComponent extends VerticalLayout {
 			}
 			
 			investmentTransaction2VOL.copyTo(investmentTransaction2VO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
-			investmentIdLabel = new NativeLabel(String.valueOf(investmentTransaction2VOL.getInvestmentId()));
-			outFields1FormLayout.addFormItem(investmentIdLabel, "Investment Id");
+			investmentIdButton = new Button(String.valueOf(investmentTransaction2VOL.getInvestmentId()));
+			investmentIdButton.addClickListener(e -> {
+				investmentDetailComponent.showDetail(investmentTransaction2VOL.getInvestmentId());
+			});
+			outFields1FormLayout.addFormItem(investmentIdButton, "Investment Id");
 			investorLabel = new NativeLabel(investmentTransaction2VOL.getInvestor());
 			outFields1FormLayout.addFormItem(investorLabel, "Investor");
 			productProviderLabel = new NativeLabel(investmentTransaction2VOL.getProductProvider());

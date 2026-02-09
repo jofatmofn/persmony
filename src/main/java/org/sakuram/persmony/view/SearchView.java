@@ -14,11 +14,7 @@ import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
-import org.sakuram.persmony.valueobject.InvestmentDetailsVO;
-import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
 import org.sakuram.persmony.valueobject.InvestmentVO;
-import org.sakuram.persmony.valueobject.RealisationVO;
-import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SearchCriterionVO;
 import org.vaadin.firitin.components.DynamicFileDownloader;
 
@@ -27,19 +23,16 @@ import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -55,7 +48,7 @@ public class SearchView extends Div {
 	MiscService miscService;
 	SearchService searchService;
 
-	public SearchView(MoneyTransactionService moneyTransactionService, MiscService miscService, SearchService searchService) {
+	public SearchView(MoneyTransactionService moneyTransactionService, MiscService miscService, SearchService searchService, InvestmentDetailComponent investmentDetailComponent) {
 		Select<String> fieldNameSelect, operatorSelect;
 		Grid<SearchCriterionVO> searchCriteriaGrid;
 		Binder<SearchCriterionVO> searchCriteriaBinder;
@@ -222,82 +215,7 @@ public class SearchView extends Div {
 		});
 		
 		investmentsGrid.addItemDoubleClickListener(event -> {
-			InvestmentDetailsVO investmentDetailsVO;
-			Notification notification;
-			Dialog dialog;
-			VerticalLayout verticalLayout;
-			Grid<InvestmentTransactionVO> investmentTransactionsGrid;
-			Grid<RealisationVO> realisationGrid;
-			Grid<SavingsAccountTransactionVO> savingsAccountTransactionGrid;
-			Button closeButton;
-			NativeLabel investmentLabel;
-			
-			try {
-				dialog = new Dialog();
-				dialog.setHeaderTitle("Investment Details");
-				closeButton = new Button(new Icon("lumo", "cross"),
-				        (e) -> dialog.close());
-				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-				dialog.getHeader().add(closeButton);
-				verticalLayout = new VerticalLayout();
-				verticalLayout.getStyle().set("width", "90rem");
-				dialog.add(verticalLayout);
-				
-				investmentLabel = new NativeLabel("Investment: <" + event.getItem().getInvestmentId() + "> / <" + event.getItem().getProductProvider() + "> / <" + event.getItem().getProductName() + "> / <" + event.getItem().getInvestmentIdWithProvider() + ">");
-				verticalLayout.add(investmentLabel);
-
-				investmentTransactionsGrid = new Grid<>(InvestmentTransactionVO.class);
-				investmentTransactionsGrid.setColumns("investmentTransactionId", "transactionType", "dueDate", "assessmentYear", "dueAmount", "status", "settledAmount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "accrualTdsReference", "taxGroup");
-				for (Column<InvestmentTransactionVO> column : investmentTransactionsGrid.getColumns()) {
-					column.setResizable(true);
-				}
-				verticalLayout.add("Investment Transactions");
-				verticalLayout.add(investmentTransactionsGrid);
-				
-				realisationGrid = new Grid<>(RealisationVO.class);
-				realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "amount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "tdsReference");
-				realisationGrid.addColumn(realisationVO -> realisationVO.getSavingsAccountTransactionId() == null ? realisationVO.getReferredRealisationId() : realisationVO.getSavingsAccountTransactionId())
-					.setHeader("Referred SAT/Realisation");
-				for (Column<RealisationVO> column : realisationGrid.getColumns()) {
-					column.setResizable(true);
-				}
-				verticalLayout.add("Realisations");
-				verticalLayout.add(realisationGrid);
-				verticalLayout.add(new DynamicFileDownloader("Download as CSV...", "realisations.csv", out -> {
-					Stream<RealisationVO> realisationVOStream = null;
-					realisationVOStream = realisationGrid.getGenericDataView().getItems();
-
-					PrintWriter writer = new PrintWriter(out);
-					writer.println("realisationId,investmentTransactionId,realisationDate,realisationType,amount,returnedPrincipalAmount,interestAmount,tdsAmount,tdsReference,Referred SAT/Realisation");
-					realisationVOStream.forEach(realisationVO -> {
-						writer.println(realisationVO.toString());
-					});
-					writer.close();
-				}));
-				
-				savingsAccountTransactionGrid = new Grid<>(SavingsAccountTransactionVO.class);
-				savingsAccountTransactionGrid.setColumns("savingsAccountTransactionId", "bankAccountOrInvestor.value", "transactionDate", "amount", "booking.value");
-				for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionGrid.getColumns()) {
-					column.setResizable(true);
-				}
-				verticalLayout.add("Savings Account Transactions");
-				verticalLayout.add(savingsAccountTransactionGrid);
-				
-    			investmentDetailsVO = moneyTransactionService.fetchInvestmentDetails(event.getItem().getInvestmentId());
-    			
-    			investmentTransactionsGrid.setItems(investmentDetailsVO.getInvestmentTransactionVOList());
-    			realisationGrid.setItems(investmentDetailsVO.getRealisationVOList());
-    			savingsAccountTransactionGrid.setItems(investmentDetailsVO.getSavingsAccountTransactionVOList());
-    			
-    			dialog.open();
-			} catch (Exception e) {
-				showError(UtilFuncs.messageFromException(e));
-				return;
-			}
-			notification = Notification.show("No. of investment transactions: " + investmentDetailsVO.getInvestmentTransactionVOList().size() +
-					"\nNo. of realisations: " + investmentDetailsVO.getRealisationVOList().size() +
-					"\nNo. of savings account transactions: " + investmentDetailsVO.getSavingsAccountTransactionVOList().size());
-			notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+			investmentDetailComponent.showDetail(event.getItem().getInvestmentId());
 		});
 		
 	}
