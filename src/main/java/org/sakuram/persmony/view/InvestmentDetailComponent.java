@@ -27,6 +27,7 @@ import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -72,6 +73,7 @@ public class InvestmentDetailComponent extends Div {
 			verticalLayout.getStyle().set("width", "90rem");
 			dialog.add(verticalLayout);
 			
+			verticalLayout.add(new H4("Investment"));
 			verticalLayout.add(createInvestmentForm(searchService.searchInvestments(List.of(
 					new SearchCriterionVO("I.id", FieldSpecVO.SeqOperator.EQ.name(), String.valueOf(investmentId))
 					)).get(0)));
@@ -82,7 +84,7 @@ public class InvestmentDetailComponent extends Div {
 			for (Column<InvestmentTransactionVO> column : investmentTransactionsGrid.getColumns()) {
 				column.setResizable(true);
 			}
-			verticalLayout.add("Investment Transactions");
+			verticalLayout.add(new H4("Investment Transactions"));
 			verticalLayout.add(investmentTransactionsGrid);
 			
 			realisationGrid = new Grid<>(RealisationVO.class);
@@ -92,7 +94,7 @@ public class InvestmentDetailComponent extends Div {
 			for (Column<RealisationVO> column : realisationGrid.getColumns()) {
 				column.setResizable(true);
 			}
-			verticalLayout.add("Realisations");
+			verticalLayout.add(new H4("Realisations"));
 			verticalLayout.add(realisationGrid);
 			verticalLayout.add(new DynamicFileDownloader("Download as CSV...", "realisations.csv", out -> {
 				Stream<RealisationVO> realisationVOStream = null;
@@ -111,7 +113,7 @@ public class InvestmentDetailComponent extends Div {
 			for (Column<SavingsAccountTransactionVO> column : savingsAccountTransactionGrid.getColumns()) {
 				column.setResizable(true);
 			}
-			verticalLayout.add("Savings Account Transactions");
+			verticalLayout.add(new H4("Savings Account Transactions"));
 			verticalLayout.add(savingsAccountTransactionGrid);
 			
 			investmentTransactionsGrid.setItems(investmentDetailsVO.getInvestmentTransactionVOList());
@@ -134,88 +136,88 @@ public class InvestmentDetailComponent extends Div {
 		FormLayout formLayout;
 		
 		formLayout = new FormLayout();
-		formLayout.setResponsiveSteps(new ResponsiveStep("0", 4));
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 3));
 		
 		IntegerField investmentIdIntegerField = new IntegerField();
-		investmentIdIntegerField.setEnabled(false);
+		investmentIdIntegerField.setReadOnly(true);
 		investmentIdIntegerField.setValue((int)investmentVO.getInvestmentId());
 		TextField investorTextField = new TextField();
-		investorTextField.setEnabled(false);
+		investorTextField.setReadOnly(true);
 		investorTextField.setValue(investmentVO.getInvestor() == null ? "" : investmentVO.getInvestor());
 		TextField productProviderTextField = new TextField();
-		productProviderTextField.setEnabled(false);
+		productProviderTextField.setReadOnly(true);
 		productProviderTextField.setValue(investmentVO.getProductProvider() == null ? "" : investmentVO.getProductProvider());
 		TextField dematAccountTextField = new TextField();
-		dematAccountTextField.setEnabled(false);
+		dematAccountTextField.setReadOnly(true);
 		dematAccountTextField.setValue(investmentVO.getDematAccount() == null ? "" : investmentVO.getDematAccount());
 		TextField facilitatorTextField = new TextField();
-		facilitatorTextField.setEnabled(false);
+		facilitatorTextField.setReadOnly(true);
 		facilitatorTextField.setValue(investmentVO.getFacilitator() == null ? "" : investmentVO.getFacilitator());
 		TextField investorIdWithProviderTextField = new TextField();
-		investorIdWithProviderTextField.setEnabled(false);
+		investorIdWithProviderTextField.setReadOnly(true);
 		investorIdWithProviderTextField.setValue(investmentVO.getInvestorIdWithProvider() == null ? "" : investmentVO.getInvestorIdWithProvider());
 		TextField productIdOfProviderTextField = new TextField();
-		productIdOfProviderTextField.setEnabled(false);
+		productIdOfProviderTextField.setReadOnly(true);
 		productIdOfProviderTextField.setValue(investmentVO.getProductIdOfProvider() == null ? "" : investmentVO.getProductIdOfProvider());
 		TextField investmentIdWithProviderTextField = new TextField();
-		investmentIdWithProviderTextField.setEnabled(false);
+		investmentIdWithProviderTextField.setReadOnly(true);
 		investmentIdWithProviderTextField.setValue(investmentVO.getInvestmentIdWithProvider() == null ? "" : investmentVO.getInvestmentIdWithProvider());
 		TextField productNameTextField = new TextField();
-		productNameTextField.setEnabled(false);
+		productNameTextField.setReadOnly(true);
 		productNameTextField.setValue(investmentVO.getProductName() == null ? "" : investmentVO.getProductName());
 		TextField productTypeTextField = new TextField();
-		productTypeTextField.setEnabled(false);
+		productTypeTextField.setReadOnly(true);
 		productTypeTextField.setValue(investmentVO.getProductType() == null ? "" : investmentVO.getProductType());
 		NumberField unitsNumberField = new NumberField();
-		unitsNumberField.setEnabled(false);
+		unitsNumberField.setReadOnly(true);
 		unitsNumberField.setValue(investmentVO.getUnits());
 		NumberField worthNumberField = new NumberField();
-		worthNumberField.setEnabled(false);
+		worthNumberField.setReadOnly(true);
 		worthNumberField.setValue(investmentVO.getWorth());
 		NumberField cleanPriceNumberField = new NumberField();
-		cleanPriceNumberField.setEnabled(false);
+		cleanPriceNumberField.setReadOnly(true);
 		cleanPriceNumberField.setValue(investmentVO.getCleanPrice());
 		NumberField accruedInterestNumberField = new NumberField();
-		accruedInterestNumberField.setEnabled(false);
+		accruedInterestNumberField.setReadOnly(true);
 		accruedInterestNumberField.setValue(investmentVO.getAccruedInterest());
 		NumberField chargesNumberField = new NumberField();
-		chargesNumberField.setEnabled(false);
+		chargesNumberField.setReadOnly(true);
 		chargesNumberField.setValue(investmentVO.getCharges());
 		NumberField rateOfInterestNumberField = new NumberField();
-		rateOfInterestNumberField.setEnabled(false);
+		rateOfInterestNumberField.setReadOnly(true);
 		rateOfInterestNumberField.setValue(investmentVO.getRateOfInterest());
 		TextField taxabilityTextField = new TextField();
-		taxabilityTextField.setEnabled(false);
+		taxabilityTextField.setReadOnly(true);
 		taxabilityTextField.setValue(investmentVO.getTaxability() == null ? "" : investmentVO.getTaxability());
 		IntegerField previousInvestmentIntegerField = new IntegerField();
-		previousInvestmentIntegerField.setEnabled(false);
+		previousInvestmentIntegerField.setReadOnly(true);
 		previousInvestmentIntegerField.setValue(investmentVO.getPreviousInvestment() == null ? null : investmentVO.getPreviousInvestment().intValue());
 		TextField newInvestmentReasonTextField = new TextField();
-		newInvestmentReasonTextField.setEnabled(false);
+		newInvestmentReasonTextField.setReadOnly(true);
 		newInvestmentReasonTextField.setValue(investmentVO.getNewInvestmentReason() == null ? "" : investmentVO.getNewInvestmentReason());
 		DatePicker investmentStartDateDatePicker = new DatePicker();
-		investmentStartDateDatePicker.setEnabled(false);
+		investmentStartDateDatePicker.setReadOnly(true);
 		investmentStartDateDatePicker.setValue(investmentVO.getInvestmentStartDate());
 		DatePicker investmentEndDateDatePicker = new DatePicker();
-		investmentEndDateDatePicker.setEnabled(false);
+		investmentEndDateDatePicker.setReadOnly(true);
 		investmentEndDateDatePicker.setValue(investmentVO.getInvestmentEndDate());
 		Checkbox isClosedCheckbox = new Checkbox();
-		isClosedCheckbox.setEnabled(false);
+		isClosedCheckbox.setReadOnly(true);
 		isClosedCheckbox.setValue(investmentVO.isClosed());
 		TextField closureTypeTextField = new TextField();
-		closureTypeTextField.setEnabled(false);
+		closureTypeTextField.setReadOnly(true);
 		closureTypeTextField.setValue(investmentVO.getClosureType() == null ? "" : investmentVO.getClosureType());
 		DatePicker closureDateDatePicker = new DatePicker();
-		closureDateDatePicker.setEnabled(false);
+		closureDateDatePicker.setReadOnly(true);
 		closureDateDatePicker.setValue(investmentVO.getClosureDate());
 		Checkbox isAccrualApplicableCheckbox = new Checkbox();
-		isAccrualApplicableCheckbox.setEnabled(false);
+		isAccrualApplicableCheckbox.setReadOnly(true);
 		isAccrualApplicableCheckbox.setValue(investmentVO.getIsAccrualApplicable());
 		TextField dynamicReceiptPeriodicityTextField = new TextField();
-		dynamicReceiptPeriodicityTextField.setEnabled(false);
+		dynamicReceiptPeriodicityTextField.setReadOnly(true);
 		dynamicReceiptPeriodicityTextField.setValue(investmentVO.getDynamicReceiptPeriodicity() == null ? "" : investmentVO.getDynamicReceiptPeriodicity().toString());
 		TextField providerBranchTextField = new TextField();
-		providerBranchTextField.setEnabled(false);
+		providerBranchTextField.setReadOnly(true);
 		providerBranchTextField.setValue(investmentVO.getProviderBranch() == null ? "" : investmentVO.getProviderBranch());
 
 		formLayout.addFormItem(investmentIdIntegerField, "Investment Id");

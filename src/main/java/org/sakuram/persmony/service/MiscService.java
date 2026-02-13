@@ -344,17 +344,22 @@ public class MiscService {
     }
     
     public RealisationVO fetchRealisationAmountSummary(InvestmentTransaction investmentTransaction) {
-    	double returnedPrincipalAmount, interestAmount, tdsAmount, amount;
+    	double returnedPrincipalAmount, interestAmount, tdsAmount, amount, sign;
     	
     	returnedPrincipalAmount = 0;
     	interestAmount = 0;
     	tdsAmount = 0;
     	amount = 0;
 		for (Realisation realisation : investmentTransaction.getRealisationList()) {
-			returnedPrincipalAmount += Objects.requireNonNullElse(realisation.getReturnedPrincipalAmount(), 0).doubleValue();
-			interestAmount += Objects.requireNonNullElse(realisation.getInterestAmount(), 0).doubleValue();
-			tdsAmount += Objects.requireNonNullElse(realisation.getTdsAmount(), 0).doubleValue();
-			amount += Objects.requireNonNullElse(realisation.getAmount(), 0).doubleValue();
+			if (realisation.getRealisationType() == null || realisation.getRealisationType().getId() != Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
+				sign = realisation.getInvestmentTransaction().getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_PAYMENT ? -1 : 1;
+			} else {
+				sign = realisation.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1;
+			}
+			returnedPrincipalAmount += sign * Objects.requireNonNullElse(realisation.getReturnedPrincipalAmount(), 0).doubleValue();
+			interestAmount += sign * Objects.requireNonNullElse(realisation.getInterestAmount(), 0).doubleValue();
+			tdsAmount += sign * Objects.requireNonNullElse(realisation.getTdsAmount(), 0).doubleValue();
+			amount += sign * Objects.requireNonNullElse(realisation.getAmount(), 0).doubleValue();
 		}
 		return new RealisationVO(
 				0,
@@ -363,10 +368,10 @@ public class MiscService {
 				null,
 				null,
 				null,
-				amount,
-				returnedPrincipalAmount,
-				interestAmount,
-				tdsAmount,
+				Math.abs(amount),
+				Math.abs(returnedPrincipalAmount),
+				Math.abs(interestAmount),
+				Math.abs(tdsAmount),
 				null
 				);
     }

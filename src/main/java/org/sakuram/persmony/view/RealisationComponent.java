@@ -133,6 +133,7 @@ public class RealisationComponent extends VerticalLayout {
 			
 			investmentTransaction2VOL.copyTo(investmentTransaction2VO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
 			investmentIdButton = new Button(String.valueOf(investmentTransaction2VOL.getInvestmentId()));
+			investmentIdButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
 			investmentIdButton.addClickListener(e -> {
 				investmentDetailComponent.showDetail(investmentTransaction2VOL.getInvestmentId());
 			});

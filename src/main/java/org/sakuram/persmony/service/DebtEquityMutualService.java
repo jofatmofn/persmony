@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.sakuram.persmony.bean.Action;
+import org.sakuram.persmony.bean.Contract;
 import org.sakuram.persmony.bean.ContractEq;
 import org.sakuram.persmony.bean.Isin;
 import org.sakuram.persmony.bean.IsinAction;
@@ -28,14 +29,17 @@ import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.AccountingIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.ActionVO;
+import org.sakuram.persmony.valueobject.ContractVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.IsinActionCreateVO;
 import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
 import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 import org.sakuram.persmony.valueobject.IsinActionVO;
+import org.sakuram.persmony.valueobject.IsinActionWithCVO;
 import org.sakuram.persmony.valueobject.IsinCriteriaVO;
 import org.sakuram.persmony.valueobject.IsinVO;
 import org.sakuram.persmony.valueobject.LotVO;
+import org.sakuram.persmony.valueobject.LotWithPVO;
 import org.sakuram.persmony.valueobject.NpsActionVO;
 import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.TradeVO;
@@ -68,37 +72,17 @@ public class DebtEquityMutualService {
 	@Autowired
 	ContractEqRepository contractEqRepository;
 	
-	public List<LotVO> fetchLots(String isinStr, LocalDate priorToDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
+	public List<LotWithPVO> fetchLots(String isinStr, LocalDate priorToDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
 		List<IsinActionPart> isinActionPartList;
-		List<LotVO> lotVOList;
+		List<LotWithPVO> lotWithPVOList;
 		
 		isinActionPartList = isinActionPartRepository.findMatchingIsinActionParts(isinStr, priorToDate, dematAccount, isIsinIndependent, orderBy);
 		
-		lotVOList = new ArrayList<LotVO>(isinActionPartList.size());
+		lotWithPVOList = new ArrayList<LotWithPVO>(isinActionPartList.size());
 		for(IsinActionPart isinActionPart : isinActionPartList) {
-			IsinAction isinAction;
-			
-			isinAction = isinActionPart.getIsinAction();
-			lotVOList.add(new LotVO(
-					new IsinActionVO(
-						isinAction.getId(),
-						isinAction.getSettlementDate(),
-						isinAction.getIsin().getIsin(),
-						isinAction.getIsin().getSecurityName(),
-						new IdValueVO(isinAction.getEffectiveActionType().getId(), isinAction.getEffectiveActionType().getValue()),
-						new IdValueVO(isinAction.getQuantityBooking().getId(), isinAction.getQuantityBooking().getValue()),
-						new IdValueVO(isinAction.getDematAccount().getId(), isinAction.getDematAccount().getValue()),
-						isinAction.isInternal()),
-					(isinActionPart.getTrade() == null ? null : isinActionPart.getTrade().getId()),
-					isinActionPart.getId(),
-					isinActionPart.getQuantity(),
-					isinActionPart.getQuantity() - isinActionPart.getOutQuantity(priorToDate),
-					isinActionPart.getHoldingChangeDate(),
-					isinActionPart.getPricePerUnit()
-					)
-					);
+			lotWithPVOList.add(isinActionPartToWithPVo(isinActionPart, priorToDate));
 		}
-		return lotVOList;
+		return lotWithPVOList;
 	}
 	
 	public List<IsinVO> searchSecurities(IsinCriteriaVO isinCriteriaVO) {
@@ -172,7 +156,7 @@ public class DebtEquityMutualService {
 		
 		// IsinAction - Real
 		for (RealIsinActionEntryVO rIAEVO : isinActionCreateVO.getRealIAEVOList()) {
-			List<LotVO> fifoLotVOList;
+			List<LotWithPVO> fifoLotWithPVOList;
 			
 			System.out.println("Now Processing: " + rIAEVO.getIsinActionEntrySpecVO().toString());
 			if (rIAEVO.isEmpty()) {
@@ -206,17 +190,17 @@ public class DebtEquityMutualService {
 			switch(rIAEVO.getIsinActionEntrySpecVO().getFifoMappingType()) {
 			case USER_CHOICE:
 			case PREVIOUS_USER_CHOICE:
-				fifoLotVOList = isinActionCreateVO.getFifoLotVOList();
+				fifoLotWithPVOList = isinActionCreateVO.getFifoLotWithPVOList();
 				break;
 			case FULL_BALANCE:
 				// Take care that this fresh fetching does not include lots inserted within this transaction
-				fifoLotVOList = fetchLots(isinActionCreateVO.getActionVO().getEntitledIsin(), isinActionCreateVO.getActionVO().getRecordDate(), isinActionCreateVO.getDematAccount().getId(), false, "A")
+				fifoLotWithPVOList = fetchLots(isinActionCreateVO.getActionVO().getEntitledIsin(), isinActionCreateVO.getActionVO().getRecordDate(), isinActionCreateVO.getDematAccount().getId(), false, "A")
 					.stream()
-					.filter(lotVO -> lotVO.getBalance() != null && lotVO.getBalance() > 0)
+					.filter(lotWithPVO -> lotWithPVO.getLotVO().getBalance() != null && lotWithPVO.getLotVO().getBalance() > 0)
 					.collect(Collectors.toList());
 				break;
 			default:	// NOT_APPLICABLE:
-				fifoLotVOList = null;
+				fifoLotWithPVOList = null;
 				break;
 			}
 			
@@ -228,24 +212,24 @@ public class DebtEquityMutualService {
 			}
 			switch(effectiveLotCreationType) {
 			case TRADE:
-				createLots(isinActionCreateVO.getTradeVOList(), null, fifoLotVOList, isinAction, rIAEVO.getHoldingChangeDate());
+				createLots(isinActionCreateVO.getTradeVOList(), null, fifoLotWithPVOList, isinAction, rIAEVO.getHoldingChangeDate());
 				break;
 			case PROPAGATION:
 				// TODO Rounding quantities should NOT be done for Mutual Funds
-				if (fifoLotVOList != null) {
+				if (fifoLotWithPVOList != null) {
 					double oldCostOfNewShares = 0;
 					int computedQuantitySum = 0;
 					
 					isinActionPart = null;
-					for (LotVO fifoLotVO : fifoLotVOList) {
-						if (fifoLotVO.getBalance() <= 0) {
+					for (LotWithPVO fifoLotWithPVO : fifoLotWithPVOList) {
+						if (fifoLotWithPVO.getLotVO().getBalance() <= 0) {
 							continue;
 						}
 						// IsinActionPart
 						isinActionPart = new IsinActionPart();
 						switch(rIAEVO.getIsinActionEntrySpecVO().getLotDateType()) {
 						case OLD:
-							isinActionPart.setHoldingChangeDate(fifoLotVO.getHoldingChangeDate());
+							isinActionPart.setHoldingChangeDate(fifoLotWithPVO.getLotVO().getHoldingChangeDate());
 							break;
 						default:
 							throw new AppException("Application not ready to handle the type of Lot Date " + rIAEVO.getIsinActionEntrySpecVO().getLotDateType().getFlag(), null);
@@ -254,10 +238,10 @@ public class DebtEquityMutualService {
 						
 						switch(rIAEVO.getIsinActionEntrySpecVO().getLotQuantityType()) {
 						case BALANCE:
-							isinActionPart.setQuantity(fifoLotVO.getBalance());
+							isinActionPart.setQuantity(fifoLotWithPVO.getLotVO().getBalance());
 							break;
 						case FACTOR_OF_BALANCE:
-							isinActionPart.setQuantity((double)(int)(isinActionCreateVO.getActionVO().getNewSharesPerOld().doubleValue() / isinActionCreateVO.getActionVO().getOldSharesBase().doubleValue() * fifoLotVO.getBalance()));
+							isinActionPart.setQuantity((double)(int)(isinActionCreateVO.getActionVO().getNewSharesPerOld().doubleValue() / isinActionCreateVO.getActionVO().getOldSharesBase().doubleValue() * fifoLotWithPVO.getLotVO().getBalance()));
 							break;
 						default:
 							throw new AppException("Application not ready to handle the type of Lot Quantity " + rIAEVO.getIsinActionEntrySpecVO().getLotQuantityType().getFlag(), null);
@@ -265,34 +249,34 @@ public class DebtEquityMutualService {
 						computedQuantitySum += isinActionPart.getQuantity().intValue();
 						switch(rIAEVO.getIsinActionEntrySpecVO().getLotPriceType()) {
 						case OLD:
-							isinActionPart.setPricePerUnit(fifoLotVO.getPricePerUnit());
+							isinActionPart.setPricePerUnit(fifoLotWithPVO.getLotVO().getPricePerUnit());
 							break;
 						case ZERO:
 							isinActionPart.setPricePerUnit(0D);
 							break;
 						case COMPUTED:
-							oldCostOfNewShares += (isinActionPart.getQuantity() * fifoLotVO.getPricePerUnit());
+							oldCostOfNewShares += (isinActionPart.getQuantity() * fifoLotWithPVO.getLotVO().getPricePerUnit());
 							// TODO Handling payout to shareholder
-							isinActionPart.setPricePerUnit(isinActionCreateVO.getActionVO().getOldSharesBase().doubleValue() / isinActionCreateVO.getActionVO().getNewSharesPerOld().doubleValue() * fifoLotVO.getPricePerUnit());
+							isinActionPart.setPricePerUnit(isinActionCreateVO.getActionVO().getOldSharesBase().doubleValue() / isinActionCreateVO.getActionVO().getNewSharesPerOld().doubleValue() * fifoLotWithPVO.getLotVO().getPricePerUnit());
 							break;
 						case SPLIT:
 							// As per Spec for Demerger RESULTING ENTITY
-							double q2 = isinActionCreateVO.getActionVO().getNewSharesPerOld().doubleValue() / isinActionCreateVO.getActionVO().getOldSharesBase().doubleValue() * fifoLotVO.getBalance();
-							isinActionPart.setPricePerUnit(fifoLotVO.getBalance() * fifoLotVO.getPricePerUnit() * (1 - isinActionCreateVO.getActionVO().getCostRetainedFraction()) / (double)(int)q2);
+							double q2 = isinActionCreateVO.getActionVO().getNewSharesPerOld().doubleValue() / isinActionCreateVO.getActionVO().getOldSharesBase().doubleValue() * fifoLotWithPVO.getLotVO().getBalance();
+							isinActionPart.setPricePerUnit(fifoLotWithPVO.getLotVO().getBalance() * fifoLotWithPVO.getLotVO().getPricePerUnit() * (1 - isinActionCreateVO.getActionVO().getCostRetainedFraction()) / (double)(int)q2);
 							// Additional not in Spec, exclusive to Demerger REMAINING ENTITY
-							IsinActionPart remainingEntityIAPOld = isinActionPartRepository.findById(fifoLotVO.getIsinActionPartId()).
-									orElseThrow(() -> new AppException("Missing ISIN Action Part " + fifoLotVO.getIsinActionPartId(), null));
+							IsinActionPart remainingEntityIAPOld = isinActionPartRepository.findById(fifoLotWithPVO.getLotVO().getIsinActionPartId()).
+									orElseThrow(() -> new AppException("Missing ISIN Action Part " + fifoLotWithPVO.getLotVO().getIsinActionPartId(), null));
 							IsinActionPart remainingEntityIAPNew = new IsinActionPart();
 							remainingEntityIAPNew.copyFrom(remainingEntityIAPOld);
 							remainingEntityIAPNew.setId(null);
-							remainingEntityIAPNew.setPricePerUnit(isinActionCreateVO.getActionVO().getCostRetainedFraction() * fifoLotVO.getPricePerUnit());
+							remainingEntityIAPNew.setPricePerUnit(isinActionCreateVO.getActionVO().getCostRetainedFraction() * fifoLotWithPVO.getLotVO().getPricePerUnit());
 							isinActionPartRepository.save(remainingEntityIAPNew);
 							
 							remainingEntityIAPOld.setOverwritingAction(action);
 							isinActionPartRepository.save(remainingEntityIAPOld);
 							break;
 						case PLUS:
-							isinActionPart.setPricePerUnit(Objects.requireNonNullElse(fifoLotVO.getPricePerUnit(), 0).doubleValue() + rIAEVO.getPricePerUnit());
+							isinActionPart.setPricePerUnit(Objects.requireNonNullElse(fifoLotWithPVO.getLotVO().getPricePerUnit(), 0).doubleValue() + rIAEVO.getPricePerUnit());
 							break;
 						default:
 							throw new AppException("Application not ready to handle the type of Lot Price " + rIAEVO.getIsinActionEntrySpecVO().getLotPriceType().getFlag(), null);
@@ -345,9 +329,9 @@ public class DebtEquityMutualService {
 					isinActionPart.setQuantity(rIAEVO.getQuantity());
 					break;
 				case BALANCE:
-					isinActionPart.setQuantity(fifoLotVOList
+					isinActionPart.setQuantity(fifoLotWithPVOList
 							.stream()
-							.mapToDouble(balanceIAVO -> balanceIAVO.getBalance())
+							.mapToDouble(balanceIAVO -> balanceIAVO.getLotVO().getBalance())
 							.sum()
 					);
 					break;
@@ -359,7 +343,7 @@ public class DebtEquityMutualService {
 				tradeVOList = new ArrayList<TradeVO>();
 				// TODO Enhancement to accept BrokeragePerUnit in the UI
 				tradeVOList.add(new TradeVO(null, rIAEVO.getQuantity(), rIAEVO.getPricePerUnit(), null, null, null, null, null, null, null));
-				createLots(tradeVOList, isinActionPart, fifoLotVOList, isinAction, rIAEVO.getHoldingChangeDate());
+				createLots(tradeVOList, isinActionPart, fifoLotWithPVOList, isinAction, rIAEVO.getHoldingChangeDate());
 				break;
 			}
 			
@@ -367,7 +351,7 @@ public class DebtEquityMutualService {
 		
 	}
 
-	private void createLots(List<TradeVO> tradeVOList, IsinActionPart isinActionPartInserted, List<LotVO> fifoLotVOList, IsinAction isinAction, LocalDate holdingChangeDate) {
+	private void createLots(List<TradeVO> tradeVOList, IsinActionPart isinActionPartInserted, List<LotWithPVO> fifoLotWithPVOList, IsinAction isinAction, LocalDate holdingChangeDate) {
 		int fifoInd;
 		double currentFifoBalance, lotBalance;
 		
@@ -375,9 +359,9 @@ public class DebtEquityMutualService {
 		currentFifoBalance = 0;
 		lotBalance = 0;
 		
-		if (fifoLotVOList != null && fifoLotVOList.size() > 0) {
-			fifoInd = getNextLotWithBalance(fifoLotVOList, fifoInd);
-			currentFifoBalance = fifoLotVOList.get(fifoInd).getBalance();
+		if (fifoLotWithPVOList != null && fifoLotWithPVOList.size() > 0) {
+			fifoInd = getNextLotWithBalance(fifoLotWithPVOList, fifoInd);
+			currentFifoBalance = fifoLotWithPVOList.get(fifoInd).getLotVO().getBalance();
 		}
 
 		for (TradeVO tradeVO : tradeVOList) {
@@ -411,16 +395,16 @@ public class DebtEquityMutualService {
 			}
 			
 			// IsinActionMatch
-			if (fifoLotVOList != null) {
+			if (fifoLotWithPVOList != null) {
 				lotBalance = tradeVO.getQuantity();
 				while(lotBalance > 0) {
 					IsinActionPart fromIsinActionPart;
 					
-					fifoInd = getNextLotWithBalance(fifoLotVOList, fifoInd);
-					currentFifoBalance = fifoLotVOList.get(fifoInd).getBalance();
+					fifoInd = getNextLotWithBalance(fifoLotWithPVOList, fifoInd);
+					currentFifoBalance = fifoLotWithPVOList.get(fifoInd).getLotVO().getBalance();
 					
 					isinActionMatch = new IsinActionMatch();
-					fromIsinActionPart = isinActionPartRepository.findById(fifoLotVOList.get(fifoInd).getIsinActionPartId()).
+					fromIsinActionPart = isinActionPartRepository.findById(fifoLotWithPVOList.get(fifoInd).getLotVO().getIsinActionPartId()).
 							orElseThrow(() -> new AppException("Missing From Isin Action", null));
 					isinActionMatch.setFromIsinActionPart(fromIsinActionPart);
 					isinActionMatch.setMatchReason(Constants.domainValueCache.get(Constants.DVID_ISIN_ACTION_MATCH_REASON_FIFO));
@@ -460,10 +444,10 @@ public class DebtEquityMutualService {
 				);
 	}
 	
-	public int getNextLotWithBalance(List<LotVO> fifoLotVOList, int fifoInd) {
-		while (fifoLotVOList.get(fifoInd).getBalance() <= 0) {
+	public int getNextLotWithBalance(List<LotWithPVO> fifoLotWithPVOList, int fifoInd) {
+		while (fifoLotWithPVOList.get(fifoInd).getLotVO().getBalance() <= 0) {
 			fifoInd++;
-			if (fifoInd >= fifoLotVOList.size()) {
+			if (fifoInd >= fifoLotWithPVOList.size()) {
 				throw new AppException("Insufficient balance to map from Credits to Debits", null);
 			}
 		}
@@ -579,4 +563,98 @@ public class DebtEquityMutualService {
 		
 		// TODO Mapping between ContractEq and SavingsAccountTransaction
 	}
+	
+	public IsinActionWithCVO fetchIsinAction(long isinActionId) {
+		IsinAction isinAction;
+		isinAction = isinActionRepository.findById(isinActionId).
+				orElseThrow(() -> new AppException("Missing Action " + isinActionId, null));
+		return isinActionToWithCVo(isinAction);
+		
+	}
+	
+	private IsinActionVO isinActionToVo(IsinAction isinAction) {
+		return new IsinActionVO(
+				isinAction.getId(),
+				isinAction.getSettlementDate(),
+				isinAction.getIsin().getIsin(),
+				isinAction.getIsin().getSecurityName(),
+				new IdValueVO(isinAction.getEffectiveActionType().getId(), isinAction.getEffectiveActionType().getValue()),
+				new IdValueVO(isinAction.getQuantityBooking().getId(), isinAction.getQuantityBooking().getValue()),
+				new IdValueVO(isinAction.getDematAccount().getId(), isinAction.getDematAccount().getValue()),
+				isinAction.isInternal());
+	}
+	
+	private LotVO isinActionPartToVo(IsinActionPart isinActionPart) {
+		return isinActionPartToVo(isinActionPart, null);
+	}
+	
+	private LotVO isinActionPartToVo(IsinActionPart isinActionPart, LocalDate priorToDate) {
+		return new LotVO(
+				(isinActionPart.getTrade() == null ? null : isinActionPart.getTrade().getId()),
+				isinActionPart.getId(),
+				isinActionPart.getQuantity(),
+				isinActionPart.getQuantity() - isinActionPart.getOutQuantity(priorToDate),
+				isinActionPart.getHoldingChangeDate(),
+				isinActionPart.getPricePerUnit()
+				);
+	}
+	
+	private ContractVO contractToVo(Contract contract) {
+		return new ContractVO(
+				contract.getId(),
+				contract.getNetAmount().doubleValue(),
+				contract.getStampDuty().doubleValue(),
+				contract.getBrokerage().doubleValue(),
+				contract.getClearingCharge().doubleValue(),
+				contract.getContractDate(),
+				contract.getContractNo(),
+				contract.getExchangeTransactionCharge().doubleValue(),
+				contract.getGst().doubleValue(),
+				contract.getSebiTurnoverFee().doubleValue(),
+				contract.getSettlementNo(),
+				contract.getStt().doubleValue()
+				);
+	}
+	
+	private ContractVO contractEqToVo(ContractEq contractEq) {
+		return new ContractVO(
+				contractEq.getId(),
+				contractEq.getNetAmount().doubleValue(),
+				(contractEq.getStampDuty() == null ? null : contractEq.getStampDuty().doubleValue()),
+				contractEq.getAllotmentDate()
+				);
+	}
+	
+	/* private LotWithPVO isinActionPartToWithPVo(IsinActionPart isinActionPart) {
+		return isinActionPartToWithPVo(isinActionPart, null);
+	} */
+	
+	private LotWithPVO isinActionPartToWithPVo(IsinActionPart isinActionPart, LocalDate priorToDate) {
+		return new LotWithPVO(
+				isinActionToVo(isinActionPart.getIsinAction()),
+				isinActionPartToVo(isinActionPart, priorToDate)
+				);
+	}
+
+	private IsinActionWithCVO isinActionToWithCVo(IsinAction isinAction) {
+		IsinActionWithCVO isinActionWithCVO;
+		List<LotVO> lotVOList;
+		
+		isinActionWithCVO = new IsinActionWithCVO();
+		isinActionWithCVO.setIsinActionVO(isinActionToVo(isinAction));
+		lotVOList = new ArrayList<LotVO>();
+		isinActionWithCVO.setLotVOList(lotVOList);
+		for(IsinActionPart isinActionPart : isinAction.getIsinActionPartList()) {
+			lotVOList.add(isinActionPartToVo(isinActionPart));
+		}
+		
+		if (isinAction.getContract() != null) {
+			isinActionWithCVO.setContractVO(contractToVo(isinAction.getContract()));
+		} else if (isinAction.getContractEq() != null) {
+			isinActionWithCVO.setContractVO(contractEqToVo(isinAction.getContractEq()));
+		}
+
+		return isinActionWithCVO;
+	}
+	
 }

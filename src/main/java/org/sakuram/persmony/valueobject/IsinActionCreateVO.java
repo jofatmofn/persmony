@@ -21,7 +21,7 @@ public class IsinActionCreateVO {
 	IdValueVO dematAccount;
 	List<RealIsinActionEntryVO> realIAEVOList;
 
-	List<LotVO> fifoLotVOList;
+	List<LotWithPVO> fifoLotWithPVOList;
 	List<TradeVO> tradeVOList;
 	List<AccountingIsinActionEntryVO> accountingIAEVOList;
 	
