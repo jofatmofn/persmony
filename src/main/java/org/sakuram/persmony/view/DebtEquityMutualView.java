@@ -73,11 +73,12 @@ public class DebtEquityMutualView extends Div {
 	MiscService miscService;
 	DatePickerI18n isoDatePickerI18n;
 	IsinActionShowComponent isinActionShowComponent;
+	LotShowComponent lotShowComponent;
 	
 	@Autowired
 	private ApplicationContext context;
 		
-	public DebtEquityMutualView(DebtEquityMutualService debtEquityMutualService, MiscService miscService, DatePickerI18n isoDatePickerI18n, IsinActionShowComponent isinActionShowComponent) {
+	public DebtEquityMutualView(DebtEquityMutualService debtEquityMutualService, MiscService miscService, DatePickerI18n isoDatePickerI18n, IsinActionShowComponent isinActionShowComponent, LotShowComponent lotShowComponent) {
 		
 		Div content;
 		Tabs tabs;
@@ -89,6 +90,7 @@ public class DebtEquityMutualView extends Div {
 		this.miscService = miscService;
 		this.isoDatePickerI18n = isoDatePickerI18n;
 		this.isinActionShowComponent = isinActionShowComponent;
+		this.lotShowComponent = lotShowComponent;
 
 		setSizeFull();
 		
@@ -265,8 +267,7 @@ public class DebtEquityMutualView extends Div {
 		});
 
 		lotsGrid.addItemClickListener(e -> {
-			System.out.println("Grid ItemClickListener");
-		    if ("isinActionVO.isinActionId".equals(e.getColumn().getKey())) {
+		    if ("isinActionVO.isinActionId".equals(e.getColumn().getKey()) || "lotVO.isinActionPartId".equals(e.getColumn().getKey())) {
 				Dialog dialog;
 				Button closeButton;
 
@@ -279,12 +280,10 @@ public class DebtEquityMutualView extends Div {
 				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 				dialog.getHeader().add(closeButton);
 				
-				/* verticalLayout = new VerticalLayout();
-				verticalLayout.getStyle().set("width", "75rem");
-				dialog.add(verticalLayout); */
-		    	
 			    if ("isinActionVO.isinActionId".equals(e.getColumn().getKey())) {
 			    	dialog.add(isinActionShowComponent.showForm(e.getItem().getIsinActionVO().getIsinActionId()));
+			    } else if ("lotVO.isinActionPartId".equals(e.getColumn().getKey())) {
+			    	dialog.add(lotShowComponent.showForm(e.getItem().getLotVO().getIsinActionPartId()));
 			    }
 			    
 			    dialog.open();

@@ -13,7 +13,6 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class LotVO {
-	Long tradeId;
 	Long isinActionPartId;
 	Double transactionQuantity;
 	Double balance;
@@ -21,7 +20,7 @@ public class LotVO {
 	Double pricePerUnit;
 
 	public static String[] gridColumns() {
-		return new String[] {"isinActionPartId", "holdingChangeDate", "tradeId", "pricePerUnit", "transactionQuantity"};
+		return new String[] {"isinActionPartId", "holdingChangeDate", "pricePerUnit", "transactionQuantity"};
 	}
 	
 }

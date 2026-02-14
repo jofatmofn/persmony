@@ -19,7 +19,6 @@ public class LotWithPVO {
 	// For cloning during .addAll to beforeChange backup list
 	public LotWithPVO(LotWithPVO lotWithPVO) {
 		this.isinActionVO = lotWithPVO.isinActionVO; // This is still a reference, not a copy. As isinActionVO is read-only, this is fine.
-		this.lotVO.tradeId = lotWithPVO.lotVO.tradeId;
 		this.lotVO.isinActionPartId = lotWithPVO.lotVO.isinActionPartId;
 		this.lotVO.transactionQuantity = lotWithPVO.lotVO.transactionQuantity;
 		this.lotVO.balance = lotWithPVO.lotVO.balance;
@@ -28,11 +27,11 @@ public class LotWithPVO {
 	}
 	
 	public static String[] gridColumnsH() {
-		return new String[] {"isinActionVO.internal", "isinActionVO.settlementDate", "lotVO.holdingChangeDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "lotVO.isinActionPartId", "lotVO.tradeId", "isinActionVO.actionType.value", "isinActionVO.bookingType.value", "isinActionVO.dematAccount.value", "lotVO.pricePerUnit", "lotVO.transactionQuantity"};
+		return new String[] {"isinActionVO.internal", "isinActionVO.settlementDate", "lotVO.holdingChangeDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "lotVO.isinActionPartId", "isinActionVO.actionType.value", "isinActionVO.bookingType.value", "isinActionVO.dematAccount.value", "lotVO.pricePerUnit", "lotVO.transactionQuantity"};
 	}
 	
 	public static String[] gridColumnsB() {
-		return new String[] {"isinActionVO.settlementDate", "lotVO.holdingChangeDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "lotVO.isinActionPartId", "lotVO.tradeId", "isinActionVO.actionType.value", "isinActionVO.dematAccount.value", "lotVO.pricePerUnit", "lotVO.transactionQuantity", "lotVO.balance"};
+		return new String[] {"isinActionVO.settlementDate", "lotVO.holdingChangeDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "lotVO.isinActionPartId", "isinActionVO.actionType.value", "isinActionVO.dematAccount.value", "lotVO.pricePerUnit", "lotVO.transactionQuantity", "lotVO.balance"};
 	}
 	
 }

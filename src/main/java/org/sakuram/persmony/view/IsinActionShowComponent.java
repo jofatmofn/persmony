@@ -5,13 +5,17 @@ import org.sakuram.persmony.valueobject.IsinActionWithCVO;
 import org.sakuram.persmony.valueobject.LotVO;
 import org.springframework.context.annotation.Scope;
 
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -24,9 +28,11 @@ import com.vaadin.flow.spring.annotation.SpringComponent;
 public class IsinActionShowComponent {
 
 	DebtEquityMutualService debtEquityMutualService;
+	LotShowComponent lotShowComponent;
 	
-	public IsinActionShowComponent(DebtEquityMutualService debtEquityMutualService) {
+	public IsinActionShowComponent(DebtEquityMutualService debtEquityMutualService, LotShowComponent lotShowComponent) {
 		this.debtEquityMutualService = debtEquityMutualService;
+		this.lotShowComponent = lotShowComponent;
 	}
 	
 	public FormLayout showForm(long isinActionId) {
@@ -187,6 +193,24 @@ public class IsinActionShowComponent {
 			column.setResizable(true);
 		}
 		lotsGrid.setItems(isinActionWithCVO.getLotVOList());
+		lotsGrid.addItemClickListener(e -> {
+			Dialog dialog;
+			Button closeButton;
+
+			dialog = new Dialog();
+			dialog.setHeaderTitle("DEM Details");
+			closeButton = new Button(new Icon("lumo", "cross"),
+			        (eventCloseButton) -> {
+			        	dialog.close();
+			        });
+			closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+			dialog.getHeader().add(closeButton);
+			
+	    	dialog.add(lotShowComponent.showForm(e.getItem().getIsinActionPartId()));
+		    
+		    dialog.open();
+		});
+		
 		
 		return formLayout;
 	}

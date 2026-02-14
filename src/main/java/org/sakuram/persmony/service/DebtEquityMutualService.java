@@ -38,7 +38,9 @@ import org.sakuram.persmony.valueobject.IsinActionVO;
 import org.sakuram.persmony.valueobject.IsinActionWithCVO;
 import org.sakuram.persmony.valueobject.IsinCriteriaVO;
 import org.sakuram.persmony.valueobject.IsinVO;
+import org.sakuram.persmony.valueobject.LotMatchVO;
 import org.sakuram.persmony.valueobject.LotVO;
+import org.sakuram.persmony.valueobject.LotWithCVO;
 import org.sakuram.persmony.valueobject.LotWithPVO;
 import org.sakuram.persmony.valueobject.NpsActionVO;
 import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
@@ -572,6 +574,14 @@ public class DebtEquityMutualService {
 		
 	}
 	
+	public LotWithCVO fetchLot(long isinActionPartId) {
+		IsinActionPart isinActionPart;
+		isinActionPart = isinActionPartRepository.findById(isinActionPartId).
+				orElseThrow(() -> new AppException("Missing Action " + isinActionPartId, null));
+		return lotToWithCVo(isinActionPart);
+		
+	}
+	
 	private IsinActionVO isinActionToVo(IsinAction isinAction) {
 		return new IsinActionVO(
 				isinAction.getId(),
@@ -590,7 +600,6 @@ public class DebtEquityMutualService {
 	
 	private LotVO isinActionPartToVo(IsinActionPart isinActionPart, LocalDate priorToDate) {
 		return new LotVO(
-				(isinActionPart.getTrade() == null ? null : isinActionPart.getTrade().getId()),
 				isinActionPart.getId(),
 				isinActionPart.getQuantity(),
 				isinActionPart.getQuantity() - isinActionPart.getOutQuantity(priorToDate),
@@ -625,9 +634,28 @@ public class DebtEquityMutualService {
 				);
 	}
 	
-	/* private LotWithPVO isinActionPartToWithPVo(IsinActionPart isinActionPart) {
-		return isinActionPartToWithPVo(isinActionPart, null);
-	} */
+	private LotMatchVO isinActionMatchToVo(IsinActionMatch isinActionMatch) {
+		return new LotMatchVO(
+				isinActionMatch.getFromIsinActionPart().getId(),
+				isinActionMatch.getToIsinActionPart().getId(),
+				isinActionMatch.getQuantity()
+				);
+	}
+	
+	private TradeVO tradeToVo(Trade trade) {
+		return new TradeVO(
+				trade.getId(),
+				null,
+				null,
+				trade.getBrokeragePerUnit(),
+				trade.getOrderDate(),
+				trade.getOrderTime(),
+				trade.getOrderNo(),
+				trade.getTradeDate(),
+				trade.getTradeTime(),
+				trade.getTradeNo()
+				);
+	}
 	
 	private LotWithPVO isinActionPartToWithPVo(IsinActionPart isinActionPart, LocalDate priorToDate) {
 		return new LotWithPVO(
@@ -657,4 +685,33 @@ public class DebtEquityMutualService {
 		return isinActionWithCVO;
 	}
 	
+	private LotWithCVO lotToWithCVo(IsinActionPart isinActionPart) {
+		LotWithCVO lotWithCVO;
+		List<IsinActionMatch> isinActionMatchList;
+		List<LotMatchVO> lotMatchVOList;
+		
+		lotWithCVO = new LotWithCVO();
+		lotWithCVO.setLotVO(isinActionPartToVo(isinActionPart));
+		isinActionMatchList = isinActionPart.getFromIsinActionMatchList();
+		if (isinActionMatchList.size() > 0) {
+			lotMatchVOList = new ArrayList<LotMatchVO>();
+			lotWithCVO.setReceivedFromLotMatchVOList(lotMatchVOList);
+			for(IsinActionMatch isinActionMatch : isinActionMatchList) {
+				lotMatchVOList.add(isinActionMatchToVo(isinActionMatch));
+			}
+		}
+		isinActionMatchList = isinActionPart.getToIsinActionMatchList();
+		if (isinActionMatchList.size() > 0) {
+			lotMatchVOList = new ArrayList<LotMatchVO>();
+			lotWithCVO.setSentToLotMatchVOList(lotMatchVOList);
+			for(IsinActionMatch isinActionMatch : isinActionMatchList) {
+				lotMatchVOList.add(isinActionMatchToVo(isinActionMatch));
+			}
+		}
+		
+		if (isinActionPart.getTrade() != null) {
+			lotWithCVO.setTradeVO(tradeToVo(isinActionPart.getTrade()));
+		}
+		return lotWithCVO;
+	}
 }
