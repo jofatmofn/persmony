@@ -19,7 +19,6 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 
@@ -98,7 +97,7 @@ public class IsinActionShowComponent {
 		childFormLayout.addFormItem(isInternalCheckbox, "Accounting?");
 
 
-		if (isinActionWithCVO.getContractVO() != null) {
+		/* if (isinActionWithCVO.getContractVO() != null) {
 			H4 section;
 			if (isinActionWithCVO.getContractVO().getContractNo() != null) {
 				section = new H4("Contract");
@@ -176,7 +175,7 @@ public class IsinActionShowComponent {
 				childFormLayout.addFormItem(sttNumberField, "STT");
 
 			}
-		}
+		} */
 		
 		childFormLayout = new FormLayout();
 		formLayout.add(childFormLayout);

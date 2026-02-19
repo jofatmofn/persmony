@@ -15,5 +15,4 @@ import lombok.ToString;
 public class IsinActionWithCVO {
 	IsinActionVO isinActionVO;
 	List<LotVO> lotVOList;
-	ContractVO contractVO;	// Remarks: Strictly speaking the ContractVO should not be part of WithC
 }

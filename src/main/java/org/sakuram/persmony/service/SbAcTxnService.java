@@ -12,8 +12,7 @@ import java.util.Objects;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.sakuram.persmony.bean.Contract;
-import org.sakuram.persmony.bean.ContractEq;
+import org.sakuram.persmony.bean.Action;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.IsinAction;
 import org.sakuram.persmony.bean.IsinActionPart;
@@ -398,14 +397,16 @@ public class SbAcTxnService {
 					'R',
 					realisation.getAmount()));
 		}
-		for (Contract contract : savingsAccountTransaction.getContractList()) {
-			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-					Constants.NON_SATC_ID,
-					new IdValueVO(null, "Security Contract"),
-					new IdValueVO(null, contract.getContractNo()),
-					'C',
-					contract.getNetAmount()));
-			for (IsinAction isinAction : contract.getIsinActionList()) {
+		for (Action action : savingsAccountTransaction.getActionList()) {
+			if (action.getContract() != null) {
+				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+						Constants.NON_SATC_ID,
+						new IdValueVO(null, "Contract"),
+						new IdValueVO(null, action.getContract().getContractNo()),
+						'C',
+						action.getContract().getNetAmount()));
+			}
+			for (IsinAction isinAction : action.getIsinActionList()) {
 				amount = 0;
 				List<Trade> contractTradeList = tradeRepository.findByIsinActionPart_IsinAction(isinAction);
 				if (contractTradeList.size() > 0) {
@@ -421,28 +422,10 @@ public class SbAcTxnService {
 						Constants.NON_SATC_ID,
 						new IdValueVO(Constants.TRANSACTION_CATEGORY_AND_SECURITY_TYPE_BIMAP.inverseBidiMap().get(isinAction.getIsin().getSecurityType().getId())),
 						new IdValueVO(null,
-								isinAction.getEffectiveActionType().getValue() +
+								isinAction.getAction().getActionType().getValue() +
 								"/" + isinAction.getIsin().getIsin()),
 						'I',
 						amount));
-			}
-		}
-		for (ContractEq contractEq : savingsAccountTransaction.getContractEqList()) {
-			sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-					Constants.NON_SATC_ID,
-					new IdValueVO(null, "Security Contract Equivalent"),
-					new IdValueVO(null, String.valueOf(contractEq.getId())),
-					'E',
-					contractEq.getNetAmount()));
-			for (IsinAction isinAction : contractEq.getIsinActionList()) {
-				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-						Constants.NON_SATC_ID,
-						new IdValueVO(Constants.TRANSACTION_CATEGORY_AND_SECURITY_TYPE_BIMAP.inverseBidiMap().get(isinAction.getIsin().getSecurityType().getId())),
-						new IdValueVO(null,
-								isinAction.getEffectiveActionType().getValue() +
-								"/" + isinAction.getIsin().getIsin()),
-						'I',
-						isinAction.getBasePrice()));
 			}
 		}
 

@@ -10,9 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
@@ -68,13 +66,8 @@ public class Contract {
 	private BigDecimal netAmount;
 
 	@JsonIgnore
-	@ManyToMany(mappedBy="contractList")
-	@OrderBy("transaction_date")
-	private List<SavingsAccountTransaction> savingsAccountTransactionList;
-	
-	@JsonIgnore
 	@OneToMany(mappedBy = "contract", cascade = CascadeType.ALL)
-	private List<IsinAction> isinActionList;
+	private List<Action> actionList;
 
 	public Double getNetAmount() {
 		return (netAmount == null ? null : netAmount.doubleValue());

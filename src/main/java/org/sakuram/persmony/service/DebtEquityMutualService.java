@@ -1,6 +1,5 @@
 package org.sakuram.persmony.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,15 +10,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.sakuram.persmony.bean.Action;
-import org.sakuram.persmony.bean.Contract;
-import org.sakuram.persmony.bean.ContractEq;
 import org.sakuram.persmony.bean.Isin;
 import org.sakuram.persmony.bean.IsinAction;
 import org.sakuram.persmony.bean.IsinActionMatch;
 import org.sakuram.persmony.bean.IsinActionPart;
 import org.sakuram.persmony.bean.Trade;
 import org.sakuram.persmony.repository.ActionRepository;
-import org.sakuram.persmony.repository.ContractEqRepository;
 import org.sakuram.persmony.repository.IsinActionMatchRepository;
 import org.sakuram.persmony.repository.IsinActionPartRepository;
 import org.sakuram.persmony.repository.IsinActionRepository;
@@ -29,11 +25,9 @@ import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.AccountingIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.ActionVO;
-import org.sakuram.persmony.valueobject.ContractVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.IsinActionCreateVO;
 import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
-import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 import org.sakuram.persmony.valueobject.IsinActionVO;
 import org.sakuram.persmony.valueobject.IsinActionWithCVO;
 import org.sakuram.persmony.valueobject.IsinCriteriaVO;
@@ -71,9 +65,6 @@ public class DebtEquityMutualService {
 	@Autowired
 	IsinActionPartRepository isinActionPartRepository;
 	
-	@Autowired
-	ContractEqRepository contractEqRepository;
-	
 	public List<LotWithPVO> fetchLots(String isinStr, LocalDate priorToDate, Long dematAccount, boolean isIsinIndependent, String orderBy) {
 		List<IsinActionPart> isinActionPartList;
 		List<LotWithPVO> lotWithPVOList;
@@ -105,17 +96,11 @@ public class DebtEquityMutualService {
 		IsinAction isinAction;
 		IsinActionPart isinActionPart;
 		
-		IsinActionSpecVO isinActionSpecVO;
-		
-		isinActionSpecVO = Constants.ISIN_ACTION_SPEC_MAP.get(isinActionCreateVO.getActionVO().getActionType().getId());
-		
 		// Action
 		if (isinActionCreateVO.getActionId() != null) {
 			action = actionRepository.findById(isinActionCreateVO.getActionId()).
 					orElseThrow(() -> new AppException("Missing Action " + isinActionCreateVO.getActionId(), null));
-		} else if (isinActionCreateVO.getAccountingIAEVOList().size() + isinActionCreateVO.getRealIAEVOList().size() > 1 &&
-				isinActionCreateVO.getActionVO().getActionType().getId() != Constants.DVID_ISIN_ACTION_TYPE_GIFT_OR_TRANSFER ||
-				isinActionSpecVO.isToGroupIAs()) {
+		} else {
 			isin = isinRepository.findByIdCaseInsensitive(isinActionCreateVO.getActionVO().getEntitledIsin()).
 					orElseThrow(() -> new AppException("Missing ISIN " + isinActionCreateVO.getActionVO().getEntitledIsin(), null));
 			action = new Action();
@@ -127,8 +112,6 @@ public class DebtEquityMutualService {
 			action.setCostRetainedFraction(isinActionCreateVO.getActionVO().getCostRetainedFraction());
 			action.setRecordDate(isinActionCreateVO.getActionVO().getRecordDate());
 			actionRepository.save(action);
-		} else {
-			action = null;
 		}
 		
 		// IsinAction - Accounting
@@ -137,12 +120,7 @@ public class DebtEquityMutualService {
 					orElseThrow(() -> new AppException("Missing ISIN " + aIAEVO.getIsin(), null));
 			
 			isinAction = new IsinAction();
-			if (action == null) {
-				// isinAction.setActionType(Constants.domainValueCache.get(isinActionCreateVO.getActionVO().getActionType().getId()));
-				throw new AppException("Unhandled scenario - Internal entry without Action", null);
-			} else {
-				isinAction.setAction(action);
-			}
+			isinAction.setAction(action);
 			isinAction.setDematAccount(Constants.domainValueCache.get(isinActionCreateVO.getDematAccount().getId()));
 			isinAction.setInternal(true);
 			isinAction.setIsin(isin);
@@ -169,11 +147,7 @@ public class DebtEquityMutualService {
 					orElseThrow(() -> new AppException("Missing ISIN " + rIAEVO.getIsin(), null));
 			
 			isinAction = new IsinAction();
-			if (action == null) {
-				isinAction.setActionType(Constants.domainValueCache.get(isinActionCreateVO.getActionVO().getActionType().getId()));
-			} else {
-				isinAction.setAction(action);
-			}
+			isinAction.setAction(action);
 			
 	        if (isinActionCreateVO.getActionVO().getActionType().getId() == Constants.DVID_ISIN_ACTION_TYPE_GIFT_OR_TRANSFER &&
 	        		rIAEVO.getIsinActionEntrySpecVO().getEntrySpecName().equals(Constants.ACTION_TYPE_GIFT_OR_TRANSFER_ENTRY_SPEC_NAME_RECEIVE)) {
@@ -436,14 +410,7 @@ public class DebtEquityMutualService {
 		action = actionRepository.findById(actionId).
 				orElseThrow(() -> new AppException("Missing Action " + actionId, null));
 		
-		return new ActionVO(
-				new IdValueVO(action.getActionType().getId(), action.getActionType().getValue()),
-				(action.getEntitledIsin() == null ? null : action.getEntitledIsin().getIsin()),
-				action.getRecordDate(),
-				action.getNewSharesPerOld(),
-				action.getOldSharesBase(),
-				action.getCostRetainedFraction()
-				);
+		return actionToVo(action);
 	}
 	
 	public int getNextLotWithBalance(List<LotWithPVO> fifoLotWithPVOList, int fifoInd) {
@@ -498,7 +465,6 @@ public class DebtEquityMutualService {
 		Action action;
 		Isin isin;
 		IsinAction templateIsinAction, isinAction;
-		ContractEq contractEq;
 		IsinActionPart isinActionPart;
 		String isinStrStart;
 		
@@ -507,17 +473,10 @@ public class DebtEquityMutualService {
 		action.setActionType(Constants.domainValueCache.get(npsActionVO.getActionTypeDvId()));
 		actionRepository.save(action);
 		
-		// ContractEq
-		contractEq = new ContractEq();
-		contractEq.setNetAmount(BigDecimal.valueOf(npsActionVO.getAmount()));
-		contractEq.setStampDuty(BigDecimal.valueOf(npsActionVO.getPaymentCharge()));
-		contractEqRepository.save(contractEq);
-		
 		templateIsinAction = new IsinAction();
 		templateIsinAction.setInternal(false);
 		templateIsinAction.setSettlementDate(npsActionVO.getSettlementDate());
 		templateIsinAction.setAction(action);
-		templateIsinAction.setContractEq(contractEq);
 		templateIsinAction.setDematAccount(Constants.domainValueCache.get(npsActionVO.getNpsAccountDvId()));
 		isinStrStart = "NPS-HDFC-" + npsActionVO.getTier() + "-";  // TODO Hardcoded fund administrator To be taken from DB based on the given NPS Account
 		
@@ -582,15 +541,26 @@ public class DebtEquityMutualService {
 		
 	}
 	
+	private ActionVO actionToVo(Action action) {
+		return new ActionVO(
+				new IdValueVO(action.getActionType().getId(), action.getActionType().getValue()),
+				(action.getEntitledIsin() == null ? null : action.getEntitledIsin().getIsin()),
+				action.getRecordDate(),
+				action.getNewSharesPerOld(),
+				action.getOldSharesBase(),
+				action.getCostRetainedFraction()
+				);
+	}
+	
 	private IsinActionVO isinActionToVo(IsinAction isinAction) {
 		return new IsinActionVO(
 				isinAction.getId(),
 				isinAction.getSettlementDate(),
 				isinAction.getIsin().getIsin(),
 				isinAction.getIsin().getSecurityName(),
-				new IdValueVO(isinAction.getEffectiveActionType().getId(), isinAction.getEffectiveActionType().getValue()),
-				new IdValueVO(isinAction.getQuantityBooking().getId(), isinAction.getQuantityBooking().getValue()),
-				new IdValueVO(isinAction.getDematAccount().getId(), isinAction.getDematAccount().getValue()),
+				new IdValueVO(isinAction.getAction().getActionType()),
+				new IdValueVO(isinAction.getQuantityBooking()),
+				new IdValueVO(isinAction.getDematAccount()),
 				isinAction.isInternal());
 	}
 	
@@ -608,7 +578,7 @@ public class DebtEquityMutualService {
 				);
 	}
 	
-	private ContractVO contractToVo(Contract contract) {
+	/* private ContractVO contractToVo(Contract contract) {
 		return new ContractVO(
 				contract.getId(),
 				contract.getNetAmount().doubleValue(),
@@ -623,16 +593,7 @@ public class DebtEquityMutualService {
 				contract.getSettlementNo(),
 				contract.getStt().doubleValue()
 				);
-	}
-	
-	private ContractVO contractEqToVo(ContractEq contractEq) {
-		return new ContractVO(
-				contractEq.getId(),
-				contractEq.getNetAmount().doubleValue(),
-				(contractEq.getStampDuty() == null ? null : contractEq.getStampDuty().doubleValue()),
-				contractEq.getAllotmentDate()
-				);
-	}
+	} */
 	
 	private LotMatchVO isinActionMatchToVo(IsinActionMatch isinActionMatch) {
 		return new LotMatchVO(
@@ -657,6 +618,13 @@ public class DebtEquityMutualService {
 				);
 	}
 	
+	/* private ActionWithPVO actionToWithPVo(Action action) {
+		return new ActionWithPVO(
+				actionToVo(action),
+				contractToVo(action.getContract())
+				);
+	} */
+	
 	private LotWithPVO isinActionPartToWithPVo(IsinActionPart isinActionPart, LocalDate priorToDate) {
 		return new LotWithPVO(
 				isinActionToVo(isinActionPart.getIsinAction()),
@@ -676,12 +644,6 @@ public class DebtEquityMutualService {
 			lotVOList.add(isinActionPartToVo(isinActionPart));
 		}
 		
-		if (isinAction.getContract() != null) {
-			isinActionWithCVO.setContractVO(contractToVo(isinAction.getContract()));
-		} else if (isinAction.getContractEq() != null) {
-			isinActionWithCVO.setContractVO(contractEqToVo(isinAction.getContractEq()));
-		}
-
 		return isinActionWithCVO;
 	}
 	

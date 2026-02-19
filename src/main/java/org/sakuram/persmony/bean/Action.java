@@ -2,14 +2,21 @@ package org.sakuram.persmony.bean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
@@ -37,6 +44,10 @@ public class Action {
 	@JoinColumn(name="action_type_fk", nullable=false)
 	private DomainValue actionType;
 	
+	@ManyToOne
+	@JoinColumn(name="contract_fk", nullable=true)
+	private Contract contract;
+	
 	@Column(name="record_date", nullable=true)	// TODO: Nullable false
 	private LocalDate recordDate;
 	
@@ -51,6 +62,15 @@ public class Action {
 	
 	@Column(name="fractional_entitlement_cash", nullable=true, columnDefinition="NUMERIC", precision=8, scale=3)	// TODO Belongs to Demat level Action
 	private BigDecimal fractionalEntitlementCash;
+	
+	@JsonIgnore
+	@OneToMany(mappedBy="action", cascade=CascadeType.ALL)
+	private List<IsinAction> isinActionList;
+
+	@JsonIgnore
+	@ManyToMany(mappedBy="actionList")
+	@OrderBy("transaction_date")
+	private List<SavingsAccountTransaction> savingsAccountTransactionList;
 	
 	public Double getCostRetainedFraction() {
 		return (costRetainedFraction == null ? null : costRetainedFraction.doubleValue());

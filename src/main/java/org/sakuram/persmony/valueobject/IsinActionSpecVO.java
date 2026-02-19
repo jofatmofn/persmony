@@ -15,7 +15,6 @@ import lombok.Setter;
 @Builder(toBuilder=true)
 public class IsinActionSpecVO {
 	long actionDvId;
-	boolean toGroupIAs;
 	boolean ratioApplicable;
 	boolean costRetainedFractionApplicable;
 	boolean recordDateApplicable;
@@ -23,7 +22,6 @@ public class IsinActionSpecVO {
 	
 	public void copyFrom(IsinActionSpecVO other) {
 		this.actionDvId = other.actionDvId;
-		this.toGroupIAs = other.toGroupIAs;
 		this.ratioApplicable = other.ratioApplicable;
 		this.costRetainedFractionApplicable = other.costRetainedFractionApplicable;
 		this.recordDateApplicable = other.recordDateApplicable;

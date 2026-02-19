@@ -584,7 +584,7 @@ public class SbAcTxnOperationView extends Div {
 				}
 				if (sbAcTxnFromDatePicker.getValue() != null && sbAcTxnToDatePicker.getValue() != null &&
 						sbAcTxnFromDatePicker.getValue().isAfter(sbAcTxnToDatePicker.getValue())) {
-					ViewFuncs.showError("From Date cannot be after the To LocalDate");
+					ViewFuncs.showError("From Date cannot be after the To Date");
 					return;
 				}
 				if (sbAcTxnFromAmoutNumberField.getValue() != null && sbAcTxnToAmoutNumberField.getValue() != null &&
@@ -624,7 +624,7 @@ public class SbAcTxnOperationView extends Div {
 						narrationTextField.getValue().equals("") ? null : narrationTextField.getValue(),
 						narrationOperatorSelect.getValue() == null ? null : narrationOperatorSelect.getValue().getValue(),
 						bankAccountOrInvestorDvSelect.getValue() == null ? null : bankAccountOrInvestorDvSelect.getValue().getId(),
-						bookingRadioButtonGroup.getValue().equals("Both") ? null : (bookingRadioButtonGroup.getValue().equals("Credit Only") ? 222L : 223),
+						bookingRadioButtonGroup.getValue().equals("Both") ? null : (bookingRadioButtonGroup.getValue().equals("Credit Only") ? Constants.DVID_BOOKING_CREDIT : Constants.DVID_BOOKING_DEBIT),
 						transactionCategoryDvSelect.getValue() == null ? null : transactionCategoryDvSelect.getValue().getId(),
 						isEarSelectEnabled.get() ? (endAccountReferenceDvSelect.getValue() == null ? null : endAccountReferenceDvSelect.getValue().getId().toString()) : (endAccountReferenceTextField.getValue().equals("") ? null : endAccountReferenceTextField.getValue()),
 						isEarSelectEnabled.get() ? (endAccountReferenceDvSelect.getValue() == null ? null : FieldSpecVO.TxtOperator.EQ.name()) : (endAccountReferenceOperatorSelect.getValue() == null ? null : endAccountReferenceOperatorSelect.getValue().getValue())

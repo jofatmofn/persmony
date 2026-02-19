@@ -108,19 +108,10 @@ public class SavingsAccountTransaction {
 	@JsonIgnore
 	@ManyToMany
 	@JoinTable(
-			  name = "contract_join_sb_ac_txn",
+			  name = "action_join_sb_ac_txn",
 			  joinColumns = @JoinColumn(name = "savings_account_transaction_fk"),
-			  inverseJoinColumns = @JoinColumn(name = "contract_fk"))
-	@OrderBy("contract_date")
-	private List<Contract> contractList;
-
-	@JsonIgnore
-	@ManyToMany
-	@JoinTable(
-			  name = "contract_eq_join_sb_ac_txn",
-			  joinColumns = @JoinColumn(name = "savings_account_transaction_fk"),
-			  inverseJoinColumns = @JoinColumn(name = "contract_eq_fk"))
-	private List<ContractEq> contractEqList;
+			  inverseJoinColumns = @JoinColumn(name = "action_fk"))
+	private List<Action> actionList;
 
     @OneToOne(mappedBy="savingsAccountTransaction", fetch=FetchType.LAZY)
     private SbAcTxnTax sbAcTxnTax;
