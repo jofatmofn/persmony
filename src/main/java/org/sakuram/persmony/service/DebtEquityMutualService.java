@@ -27,6 +27,7 @@ import org.sakuram.persmony.valueobject.AccountingIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.ActionVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.IsinActionCreateVO;
+import org.sakuram.persmony.valueobject.IsinActionCriteriaVO;
 import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
 import org.sakuram.persmony.valueobject.IsinActionVO;
 import org.sakuram.persmony.valueobject.IsinActionWithCVO;
@@ -88,6 +89,18 @@ public class DebtEquityMutualService {
 			isinVOList.add(new IsinVO(columns));
 		}
 		return isinVOList;
+	}
+	
+	public List<IsinActionVO> searchIsinActions(IsinActionCriteriaVO isinActionCriteriaVO) {
+		List<Object[]> isinActionList;
+		List<IsinActionVO> isinActionVOList;
+		
+		isinActionList = isinActionRepository.searchIsinActions(isinActionCriteriaVO);
+		isinActionVOList = new ArrayList<IsinActionVO>(isinActionList.size());
+		for(Object[] columns : isinActionList) {
+			isinActionVOList.add(new IsinActionVO(columns));
+		}
+		return isinActionVOList;
 	}
 	
 	public void createIsinActions(IsinActionCreateVO isinActionCreateVO) {

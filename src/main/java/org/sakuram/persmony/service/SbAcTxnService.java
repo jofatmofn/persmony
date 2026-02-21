@@ -12,6 +12,7 @@ import java.util.Objects;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.hibernate.exception.ConstraintViolationException;
 import org.sakuram.persmony.bean.Action;
 import org.sakuram.persmony.bean.DomainValue;
 import org.sakuram.persmony.bean.IsinAction;
@@ -20,6 +21,7 @@ import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.bean.SavingsAccountTransaction;
 import org.sakuram.persmony.bean.SbAcTxnCategory;
 import org.sakuram.persmony.bean.Trade;
+import org.sakuram.persmony.repository.IsinActionRepository;
 import org.sakuram.persmony.repository.RealisationRepository;
 import org.sakuram.persmony.repository.SavingsAccountTransactionRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
@@ -34,6 +36,7 @@ import org.sakuram.persmony.valueobject.SbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 import org.sakuram.persmony.valueobject.SbAcTxnImportStatsVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,6 +52,8 @@ public class SbAcTxnService {
 	RealisationRepository realisationRepository;
 	@Autowired
 	TradeRepository tradeRepository;
+	@Autowired
+	IsinActionRepository isinActionRepository;
 		
 	public SbAcTxnImportStatsVO importSavingsAccountTransactions(long bankAccountDvId, MultipartFile multipartFile) throws IOException, ParseException {
     	List<String> cellContentList;
@@ -509,6 +514,31 @@ public class SbAcTxnService {
 				savingsAccountTransactionVO.getCostCenter() == null ? null : savingsAccountTransactionVO.getCostCenter().getId(),
 				savingsAccountTransactionVO.getVoucherType() == null ? null : savingsAccountTransactionVO.getVoucherType().getId()
 		));
+	}
+	
+	public void mapSbAcTxnToAction(long savingsAccountTransactionId, long isinActionId) {
+		SavingsAccountTransaction savingsAccountTransaction;
+		IsinAction isinAction;
+		savingsAccountTransaction = savingsAccountTransactionRepository.findById(savingsAccountTransactionId)
+				.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + savingsAccountTransactionId, null));
+		isinAction = isinActionRepository.findById(isinActionId)
+				.orElseThrow(() -> new AppException("Invalid Isin Action Id " + isinActionId, null));
+		try {
+			savingsAccountTransaction.getActionList().add(isinAction.getAction());
+			savingsAccountTransactionRepository.save(savingsAccountTransaction);
+			savingsAccountTransactionRepository.flush(); // Required to get the Duplicate key value violation exception
+		} catch(DataIntegrityViolationException dive) {
+			System.out.println(dive.getClass().getName() + " " + dive.getCause().getClass().getName());
+			if (dive.getCause() instanceof ConstraintViolationException cve) {
+				System.out.println(cve.getClass().getName() + " " + dive.getCause().getClass().getName());
+				System.out.println(cve.getSQLException() == null ? "Null!!!" : cve.getSQLException().getSQLState());
+				if ("23505".equals(cve.getSQLException().getSQLState())) {
+					throw new AppException("Action had already been mapped to the SAT!!!", null);
+				} else {
+					throw dive;
+				}
+			}
+		}
 	}
 	
 	private String endAccountReferenceUiToDb(IdValueVO idValueVO) {

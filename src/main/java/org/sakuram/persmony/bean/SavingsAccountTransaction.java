@@ -21,6 +21,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import org.sakuram.persmony.util.Constants;
 
@@ -110,7 +111,10 @@ public class SavingsAccountTransaction {
 	@JoinTable(
 			  name = "action_join_sb_ac_txn",
 			  joinColumns = @JoinColumn(name = "savings_account_transaction_fk"),
-			  inverseJoinColumns = @JoinColumn(name = "action_fk"))
+			  inverseJoinColumns = @JoinColumn(name = "action_fk"),
+		      uniqueConstraints = @UniqueConstraint(columnNames = {"savings_account_transaction_fk", "action_fk"}
+		            )
+)
 	private List<Action> actionList;
 
     @OneToOne(mappedBy="savingsAccountTransaction", fetch=FetchType.LAZY)

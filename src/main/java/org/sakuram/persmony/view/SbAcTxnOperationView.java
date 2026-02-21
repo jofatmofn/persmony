@@ -83,8 +83,9 @@ public class SbAcTxnOperationView extends Div {
 	SbAcTxnService sbAcTxnService;
 	MiscService miscService;
 	
+	IsinActionSearchComponent isinActionSearchComponent;
 	
-	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService) {
+	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent) {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
@@ -93,6 +94,7 @@ public class SbAcTxnOperationView extends Div {
 		
 		this.sbAcTxnService = sbAcTxnService;
 		this.miscService = miscService;
+		this.isinActionSearchComponent = isinActionSearchComponent;
 		
 		setSizeFull();
 		
@@ -704,6 +706,41 @@ public class SbAcTxnOperationView extends Div {
 	    			dialog.close();
 	    		});
 	    		realisationComponent.handleRealisation(savingsAccountTransactionVO.get());
+			}
+		});
+		sATGridContextMenu.addItem("ISIN Action", event -> {
+			Optional<SavingsAccountTransactionVO> savingsAccountTransactionVO;
+			
+			savingsAccountTransactionVO = event.getItem();
+			if (savingsAccountTransactionVO.isPresent()) {
+				Dialog dialog;
+				Button closeButton;
+				
+				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
+				dialog = new Dialog();
+				dialog.setHeaderTitle("ISIN Action");
+				closeButton = new Button(new Icon("lumo", "cross"),
+				        (e) -> {
+				        	dialog.close();
+				        });
+				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+				dialog.getHeader().add(closeButton);
+				
+	    		dialog.add(isinActionSearchComponent.showForm());
+	    		dialog.open();
+	    		isinActionSearchComponent.getIsinActionsGrid().addItemDoubleClickListener(dcEvent -> {
+	    			Notification notification;
+					try {
+		    			sbAcTxnService.mapSbAcTxnToAction(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), dcEvent.getItem().getIsinActionId());
+					} catch (Exception e) {
+						ViewFuncs.showError(UtilFuncs.messageFromException(e));
+						return;
+					} finally {
+		    			dialog.close();
+					}
+					notification = Notification.show("Mapped to Action Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+	    		});
 			}
 		});
 		
