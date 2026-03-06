@@ -78,13 +78,13 @@ public class DebtEquityMutualView extends Div {
 	@Autowired
 	private ApplicationContext context;
 		
-	public DebtEquityMutualView(DebtEquityMutualService debtEquityMutualService, MiscService miscService, DatePickerI18n isoDatePickerI18n, IsinActionShowComponent isinActionShowComponent, LotShowComponent lotShowComponent) {
+	public DebtEquityMutualView(DebtEquityMutualService debtEquityMutualService, MiscService miscService, DatePickerI18n isoDatePickerI18n, IsinActionShowComponent isinActionShowComponent, LotShowComponent lotShowComponent, IsinActionSearchComponent isinActionSearchComponent) {
 		
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
-		Component historyView, createView, npsActionView;
-		Tab historyTab, createTab, npsActionTab;
+		Component historyView, createView, npsActionView, iaSearchView;
+		Tab historyTab, createTab, npsActionTab, iaSearchTab;
 		
 		this.debtEquityMutualService = debtEquityMutualService;
 		this.miscService = miscService;
@@ -105,8 +105,11 @@ public class DebtEquityMutualView extends Div {
 		npsActionTab = new Tab("NPS Actions");
 		npsActionView = createNpsActionView();
 		tabContent.put(npsActionTab, npsActionView);
+		iaSearchTab = new Tab("IA Search");
+		iaSearchView = isinActionSearchComponent.showForm();
+		tabContent.put(iaSearchTab, iaSearchView);
 		
-		tabs = new Tabs(historyTab, createTab, npsActionTab);
+		tabs = new Tabs(historyTab, createTab, npsActionTab, iaSearchTab);
         tabs.setWidthFull();
         tabs.addSelectedChangeListener(e -> {
         	content.removeAll();

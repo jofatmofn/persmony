@@ -611,6 +611,7 @@ public class DebtEquityMutualService {
 	private LotMatchVO isinActionMatchToVo(IsinActionMatch isinActionMatch) {
 		return new LotMatchVO(
 				isinActionMatch.getFromIsinActionPart().getId(),
+				isinActionMatch.getFromIsinActionPart().getPricePerUnit(),
 				isinActionMatch.getToIsinActionPart().getId(),
 				isinActionMatch.getQuantity()
 				);

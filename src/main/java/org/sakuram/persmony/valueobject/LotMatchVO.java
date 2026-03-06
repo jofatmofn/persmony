@@ -8,6 +8,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LotMatchVO {
 	long fromLotId;
+	Double acquistionPpu;
 	long toLotId;
 	double quantity;
 }

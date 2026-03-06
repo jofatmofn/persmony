@@ -120,15 +120,15 @@ public class LotShowComponent {
 		}
 		
 		if (lotWithCVO.getReceivedFromLotMatchVOList() != null) {
-			showFifoMatches(formLayout, lotWithCVO.getReceivedFromLotMatchVOList(), "Received From Other Lots", "fromLotId");
+			showFifoMatches(formLayout, lotWithCVO.getReceivedFromLotMatchVOList(), "Received From Other Lots", "fromLotId", "acquistionPpu", "quantity");
 		}
 		if (lotWithCVO.getSentToLotMatchVOList() != null) {
-			showFifoMatches(formLayout, lotWithCVO.getSentToLotMatchVOList(), "Sent To Other Lots", "toLotId");
+			showFifoMatches(formLayout, lotWithCVO.getSentToLotMatchVOList(), "Sent To Other Lots", "toLotId", "quantity");
 		}
 		return formLayout;
 	}
 
-	private void showFifoMatches(FormLayout formLayout, List<LotMatchVO> lotMatchVOList, String sectionTitle, String lotIdColumn) {
+	private void showFifoMatches(FormLayout formLayout, List<LotMatchVO> lotMatchVOList, String sectionTitle, String... lotColumns) {
 		H4 section;
 		Grid<LotMatchVO> lotMatchGrid;
 		
@@ -137,7 +137,7 @@ public class LotShowComponent {
 		formLayout.setColspan(section, 3);
 		
 		lotMatchGrid = new Grid<>(LotMatchVO.class);
-		lotMatchGrid.setColumns(lotIdColumn, "quantity");
+		lotMatchGrid.setColumns(lotColumns);
 		formLayout.add(lotMatchGrid);
 		for (Column<LotMatchVO> column : lotMatchGrid.getColumns()) {
 			column.setResizable(true);
@@ -156,7 +156,7 @@ public class LotShowComponent {
 			closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 			dialog.getHeader().add(closeButton);
 			
-	    	dialog.add(this.showForm(lotIdColumn.equals("fromLotId") ? e.getItem().getFromLotId() : e.getItem().getToLotId()));
+	    	dialog.add(this.showForm(lotColumns[0].equals("fromLotId") ? e.getItem().getFromLotId() : e.getItem().getToLotId()));
 		    
 		    dialog.open();
 		});
