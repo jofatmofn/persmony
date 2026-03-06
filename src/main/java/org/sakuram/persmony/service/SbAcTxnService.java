@@ -412,6 +412,9 @@ public class SbAcTxnService {
 						action.getContract().getNetAmount()));
 			}
 			for (IsinAction isinAction : action.getIsinActionList()) {
+				if (isinAction.isInternal()) {
+					continue;
+				}
 				amount = 0;
 				List<Trade> contractTradeList = tradeRepository.findByIsinActionPart_IsinAction(isinAction);
 				if (contractTradeList.size() > 0) {
@@ -435,6 +438,24 @@ public class SbAcTxnService {
 		}
 
 		return sbAcTxnCategoryVOList;
+	}
+	
+	public void saveSbAcTxnsCategory(List<Long> savingsAccountTransactionIdList, long transactionCategoryDvId, String endAccountReference) {
+		SavingsAccountTransaction savingsAccountTransaction;
+		SbAcTxnCategory sbAcTxnCategory;
+		for (long savingsAccountTransactionId : savingsAccountTransactionIdList) {
+			savingsAccountTransaction = savingsAccountTransactionRepository.findById(savingsAccountTransactionId)
+					.orElseThrow(() -> new AppException("Invalid Savings Account Transaction Id " + savingsAccountTransactionId, null));
+			savingsAccountTransaction.getSbAcTxnCategoryList().clear();
+			sbAcTxnCategory = new SbAcTxnCategory(
+					savingsAccountTransaction,
+					Constants.domainValueCache.get(transactionCategoryDvId),
+					endAccountReference,
+					null,
+					savingsAccountTransaction.getAmount()
+					);
+			sbAcTxnCategoryRepository.save(sbAcTxnCategory);
+		}
 	}
 	
 	public void saveSbAcTxnCategories(long savingsAccountTransactionId, List<SbAcTxnCategoryVO> sbAcTxnCategoryVOFromUiList) {

@@ -211,8 +211,12 @@ public class InvestmentDetailComponent extends Div {
 		closureDateDatePicker.setReadOnly(true);
 		closureDateDatePicker.setValue(investmentVO.getClosureDate());
 		Checkbox isAccrualApplicableCheckbox = new Checkbox();
-		isAccrualApplicableCheckbox.setReadOnly(true);
-		isAccrualApplicableCheckbox.setValue(investmentVO.getIsAccrualApplicable());
+		if (investmentVO.getIsAccrualApplicable() == null) {
+			isAccrualApplicableCheckbox.setVisible(false);
+		} else {
+			isAccrualApplicableCheckbox.setReadOnly(true);
+			isAccrualApplicableCheckbox.setValue(investmentVO.getIsAccrualApplicable());
+		}
 		TextField dynamicReceiptPeriodicityTextField = new TextField();
 		dynamicReceiptPeriodicityTextField.setReadOnly(true);
 		dynamicReceiptPeriodicityTextField.setValue(investmentVO.getDynamicReceiptPeriodicity() == null ? "" : investmentVO.getDynamicReceiptPeriodicity().toString());

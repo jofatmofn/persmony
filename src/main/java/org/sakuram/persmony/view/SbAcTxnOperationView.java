@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.sakuram.persmony.service.MiscService;
@@ -45,7 +46,9 @@ import com.vaadin.flow.component.grid.Grid.NestedNullBehavior;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -64,6 +67,7 @@ import com.vaadin.flow.component.upload.UploadI18N;
 import com.vaadin.flow.component.upload.UploadI18N.AddFiles;
 import com.vaadin.flow.component.upload.UploadI18N.DropFiles;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.UploadHandler;
@@ -390,6 +394,7 @@ public class SbAcTxnOperationView extends Div {
 		return formLayout;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Component createSbAcTxnCategoriseView() {
 		FormLayout formLayout;
 		DatePicker sbAcTxnFromDatePicker, sbAcTxnToDatePicker;
@@ -478,11 +483,23 @@ public class SbAcTxnOperationView extends Div {
 					isEarSelectEnabled.set(true);
 					endAccountReferenceDvSelect.clear();
 					ViewFuncs.newDvSelect(endAccountReferenceDvSelect, miscService, Constants.CATEGORIES_USED_BY_CATEGORY_TRANSACTION_CATEGORY, null, true, false);
+				} else if(transactionCategoryDvSelect.getValue().getId() == Constants.DVID_EMPTY_SELECT) {
+					isEarTextEnabled.set(false);
+					isEarSelectEnabled.set(false);
+					endAccountReferenceTextField.setValue("");
+					endAccountReferenceOperatorSelect.setValue(null);
+					endAccountReferenceDvSelect.clear();
 				} else {
 					dvCategory = txnCatToDvCatMap.get(transactionCategoryDvSelect.getValue().getId());
-					if (dvCategory == null || dvCategory.equals("") || dvCategory.equals(Constants.CATEGORY_NONE)) {
+					if (dvCategory == null || dvCategory.equals("")) {
 						isEarTextEnabled.set(true);
 						isEarSelectEnabled.set(false);
+						endAccountReferenceDvSelect.clear();
+					} else if (dvCategory.equals(Constants.CATEGORY_NONE)) {
+						isEarTextEnabled.set(false);
+						isEarSelectEnabled.set(false);
+						endAccountReferenceTextField.setValue("");
+						endAccountReferenceOperatorSelect.setValue(null);
 						endAccountReferenceDvSelect.clear();
 					} else {
 						isEarTextEnabled.set(false);
@@ -628,8 +645,8 @@ public class SbAcTxnOperationView extends Div {
 						bankAccountOrInvestorDvSelect.getValue() == null ? null : bankAccountOrInvestorDvSelect.getValue().getId(),
 						bookingRadioButtonGroup.getValue().equals("Both") ? null : (bookingRadioButtonGroup.getValue().equals("Credit Only") ? Constants.DVID_BOOKING_CREDIT : Constants.DVID_BOOKING_DEBIT),
 						transactionCategoryDvSelect.getValue() == null ? null : transactionCategoryDvSelect.getValue().getId(),
-						isEarSelectEnabled.get() ? (endAccountReferenceDvSelect.getValue() == null ? null : endAccountReferenceDvSelect.getValue().getId().toString()) : (endAccountReferenceTextField.getValue().equals("") ? null : endAccountReferenceTextField.getValue()),
-						isEarSelectEnabled.get() ? (endAccountReferenceDvSelect.getValue() == null ? null : FieldSpecVO.TxtOperator.EQ.name()) : (endAccountReferenceOperatorSelect.getValue() == null ? null : endAccountReferenceOperatorSelect.getValue().getValue())
+						(endAccountReferenceDvSelect.getValue() == null ? (endAccountReferenceTextField.getValue().equals("") ? null : endAccountReferenceTextField.getValue()) : endAccountReferenceDvSelect.getValue().getId().toString()),
+						(endAccountReferenceDvSelect.getValue() == null ? (endAccountReferenceOperatorSelect.getValue() == null ? null : endAccountReferenceOperatorSelect.getValue().getValue()) : FieldSpecVO.TxtOperator.EQ.name())
 						);
 				try {
 					recordList = sbAcTxnService.searchSavingsAccountTransactions(sbAcTxnCriteriaVO);
@@ -659,6 +676,12 @@ public class SbAcTxnOperationView extends Div {
 				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
 				acceptSbAcTxnCategory(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), savingsAccountTransactionVO.get().getAmount(), txnCatToDvCatMap);
 			}
+		});
+		sATGridContextMenu.addItem("Categorise ALL", event -> {
+			acceptSbAcTxnCategory(((ListDataProvider<SavingsAccountTransactionVO>) savingsAccountTransactionsGrid.getDataProvider()).getItems().stream()
+					.map(savingsAccountTransactionVO -> savingsAccountTransactionVO.getSavingsAccountTransactionId())
+					.collect(Collectors.toList()),
+					txnCatToDvCatMap);
 		});
 		sATGridContextMenu.addItem("No Category", event -> {
 			Optional<SavingsAccountTransactionVO> savingsAccountTransactionVO;
@@ -745,6 +768,106 @@ public class SbAcTxnOperationView extends Div {
 		});
 		
 		return formLayout;
+	}
+	
+	private void acceptSbAcTxnCategory(List<Long> savingsAccountTransactionIdList, Map<Long, String> txnCatToDvCatMap) {
+		Dialog dialog;
+		FormLayout formLayout;
+		Select<IdValueVO> transactionCategoryDvSelect, endAccountReferenceDvSelect;
+		Div editorWrapper;
+		TextField endAccountReferenceTextField;
+		Button closeButton, applyButton;
+
+		dialog = new Dialog();
+		dialog.setHeaderTitle("Categories");
+		closeButton = new Button(new Icon("lumo", "cross"),
+		        (e) -> {
+		        	dialog.close();
+		        });
+		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		dialog.getHeader().add(closeButton);
+		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		formLayout.getStyle().set("width", "50rem");
+		dialog.add(formLayout);
+		
+		transactionCategoryDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_TRANSACTION_CATEGORY + "+" + Constants.CATEGORY_TRANSACTION_CATEGORY_2, null, false, false);
+		formLayout.addFormItem(transactionCategoryDvSelect, "Transaction Category");
+
+		editorWrapper = new Div();
+		formLayout.addFormItem(editorWrapper, "End Account Reference");
+		endAccountReferenceDvSelect = new Select<>();
+		endAccountReferenceDvSelect.setVisible(false);
+		endAccountReferenceTextField = new TextField();
+		endAccountReferenceTextField.setVisible(false);
+		editorWrapper.add(endAccountReferenceDvSelect, endAccountReferenceTextField);
+
+		formLayout.add(new UnorderedList(
+				new ListItem("Applies a SINGLE category to EACH of the transactions on the screen."),
+				new ListItem("Apportions the entire transaction amount to that category."),
+				new ListItem("Removes the existing categories of those transactions, if any.")));
+		
+		transactionCategoryDvSelect.addValueChangeListener(e -> {
+			String dvCategory;
+			
+			endAccountReferenceDvSelect.clear();
+			endAccountReferenceDvSelect.setVisible(false);
+			endAccountReferenceTextField.setValue("");
+			endAccountReferenceTextField.setVisible(false);
+			
+			dvCategory = txnCatToDvCatMap.get(transactionCategoryDvSelect.getValue().getId());
+			if (dvCategory == null || dvCategory.equals("")) {
+				endAccountReferenceTextField.setVisible(true);
+			} else if (dvCategory.equals(Constants.CATEGORY_NONE)) {
+			} else {
+				ViewFuncs.newDvSelect(endAccountReferenceDvSelect, miscService, dvCategory, null, false, false);
+				endAccountReferenceDvSelect.setVisible(true);
+			}
+		});
+
+		applyButton = new Button("Apply");
+		applyButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		formLayout.add(applyButton);
+		applyButton.setDisableOnClick(true);
+		applyButton.addClickListener(event -> {
+			try {
+				Notification notification;
+				String dvCategory;
+				// Validations
+				if (transactionCategoryDvSelect.getValue() == null) {
+					ViewFuncs.showError("Transaction Category cannot be empty");
+					return;
+				}
+				dvCategory = txnCatToDvCatMap.get(transactionCategoryDvSelect.getValue().getId());
+				if ((dvCategory == null || dvCategory.equals("")) && endAccountReferenceTextField.isEmpty() ||
+						dvCategory != null && !dvCategory.equals(Constants.CATEGORY_NONE) && endAccountReferenceDvSelect.getValue() == null) {
+					ViewFuncs.showError("End Account Reference cannot be empty");
+					return;
+				}
+				// Service
+				try {
+					String endAccountReference;
+					if (dvCategory == null || dvCategory.equals("")) {
+						endAccountReference = endAccountReferenceTextField.getValue();
+					} else if (dvCategory.equals(Constants.CATEGORY_NONE)) {
+						endAccountReference = null;
+					} else {
+						endAccountReference = String.valueOf(endAccountReferenceDvSelect.getValue().getId());
+					}
+					sbAcTxnService.saveSbAcTxnsCategory(savingsAccountTransactionIdList, transactionCategoryDvSelect.getValue().getId(), endAccountReference);
+					notification = Notification.show("Categorised Successfully.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					dialog.close();
+				} catch (Exception e) {
+					ViewFuncs.showError(UtilFuncs.messageFromException(e));
+					return;
+				}
+			} finally {
+				applyButton.setEnabled(true);
+			}
+		});
+		dialog.open();
 	}
 	
 	private void acceptSbAcTxnCategory(long savingsAccountTransactionId, Double sbAcTxnAmount, Map<Long, String> txnCatToDvCatMap) {
