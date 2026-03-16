@@ -917,8 +917,13 @@ public class SbAcTxnOperationView extends Div {
 		addButton.setDisableOnClick(true);
 		// On click of Add Row
 		addButton.addClickListener(event -> {
+			SbAcTxnCategoryVO sbAcTxnCategoryVO;
 			try {
-				sbAcTxnCategoryGridLDV.addItem(new SbAcTxnCategoryVO());
+				sbAcTxnCategoryVO = new SbAcTxnCategoryVO();
+				if (sbAcTxnCategoryGridLDV.getItemCount() == 0) {
+					sbAcTxnCategoryVO.setAmount(sbAcTxnAmount);
+				}
+				sbAcTxnCategoryGridLDV.addItem(sbAcTxnCategoryVO);
 			} finally {
 				addButton.setEnabled(true);
 			}

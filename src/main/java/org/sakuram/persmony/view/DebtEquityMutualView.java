@@ -128,6 +128,7 @@ public class DebtEquityMutualView extends Div {
 		Grid<LotWithPVO> lotsGrid;
 		SecuritySearchComponent securitySearchComponent;
 		Select<IdValueVO> dematAccountDvSelect;
+		NumberField balanceNumberField;
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
@@ -149,6 +150,11 @@ public class DebtEquityMutualView extends Div {
 		hLayout.add(balancesButton);
 		balancesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		balancesButton.setDisableOnClick(true);
+		
+		formLayout.add(ViewFuncs.newHorizontalLine());
+		
+		balanceNumberField = new NumberField();
+		formLayout.addFormItem(balanceNumberField, "All ISIN Balance");
 		
 		clientSideControlsLayout = new HorizontalLayout();
 		formLayout.add(clientSideControlsLayout);
@@ -177,6 +183,7 @@ public class DebtEquityMutualView extends Div {
 				List<LotWithPVO> lotWithPVOList = debtEquityMutualService.fetchLots(securitySearchComponent.getIsinTextField().getValue(), null, dematAccountDvSelect.getValue() == null ? null : dematAccountDvSelect.getValue().getId(), true, "S");
 				Notification.show("No. of Lots fetched: " + lotWithPVOList.size())
 					.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				balanceNumberField.setValue(lotWithPVOList.stream().mapToDouble(vo -> vo.getLotVO().getBalance()).sum());
 				lotsGrid.setColumns(LotWithPVO.gridColumnsH());
 				lotsGrid.getColumnByKey("lotVO.holdingChangeDate").setHeader("Acq/Disp. Date");
 				lotsGrid.getColumnByKey("lotVO.isinActionPartId").setHeader("Lot Id");
@@ -238,6 +245,7 @@ public class DebtEquityMutualView extends Div {
 						.collect(Collectors.toList());
 				Notification.show("No. of Credit Lots: " + lotWithPVOList.size())
 					.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				balanceNumberField.setValue(lotWithPVOList.stream().mapToDouble(vo -> vo.getLotVO().getBalance()).sum());
 				lotsGrid.setColumns(LotWithPVO.gridColumnsB());
 				lotsGrid.getColumnByKey("lotVO.holdingChangeDate").setHeader("Acq/Disp. Date");
 				lotsGrid.getColumnByKey("lotVO.isinActionPartId").setHeader("Lot Id");

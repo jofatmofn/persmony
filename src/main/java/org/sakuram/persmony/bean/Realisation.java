@@ -51,7 +51,7 @@ public class Realisation {
 	@JoinColumn(name="referred_realisation_fk", nullable=true)
 	private Realisation referredRealisation;
 	
-	@Column(name="amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)
+	@Column(name="amount", nullable=false, columnDefinition="NUMERIC", precision=13, scale=4)
 	private BigDecimal amount;
 
 	@Column(name="returned_principal_amount", nullable=true, columnDefinition="NUMERIC", precision=13, scale=4)

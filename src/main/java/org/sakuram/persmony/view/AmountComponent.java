@@ -75,12 +75,14 @@ public class AmountComponent {
 	}
 
 	public boolean isInputValid() {
-		double netAmountL, returnedPrincipalAmountL, interestAmountL, tdsAmountL;
-		netAmountL = Objects.requireNonNullElse(netAmount, 0).doubleValue();
+		double returnedPrincipalAmountL, interestAmountL, tdsAmountL;
+		if (netAmount == null) {
+			return false;
+		}
 		returnedPrincipalAmountL = Objects.requireNonNullElse(returnedPrincipalAmount, 0).doubleValue();
 		interestAmountL = Objects.requireNonNullElse(interestAmount, 0).doubleValue();
 		tdsAmountL = Objects.requireNonNullElse(tdsAmount, 0).doubleValue();
-		if ((netAmountL <= 0 && transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_PAYMENT) || returnedPrincipalAmountL < 0 || tdsAmountL < 0 || amountsToAddup && netAmountL != (returnedPrincipalAmountL + interestAmountL - tdsAmountL)) {
+		if ((netAmount <= 0 && transactionTypeDvId == Constants.DVID_TRANSACTION_TYPE_PAYMENT) || returnedPrincipalAmountL < 0 || tdsAmountL < 0 || amountsToAddup && netAmount != (returnedPrincipalAmountL + interestAmountL - tdsAmountL)) {
 			return false;
 		}
 		return true;

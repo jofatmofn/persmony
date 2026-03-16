@@ -81,13 +81,17 @@ public class IsinActionPart {
 	}
 	
 	public double getOutQuantity(LocalDate outDate) {
-	    return Optional.ofNullable(toIsinActionMatchList)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(isinActionMatch -> isinActionMatch.getToIsinActionPart().getHoldingChangeDate() == null || outDate == null ||
-                		isinActionMatch.getToIsinActionPart().getHoldingChangeDate().isBefore(outDate) || isinActionMatch.getToIsinActionPart().getHoldingChangeDate().isEqual(outDate))
-                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity().doubleValue())
-                .sum();
+		if (isinAction.getQuantityBooking().getId() == Constants.DVID_BOOKING_CREDIT && !isinAction.isInternal()) {
+		    return Optional.ofNullable(toIsinActionMatchList)
+	                .orElse(Collections.emptyList())
+	                .stream()
+	                .filter(isinActionMatch -> isinActionMatch.getToIsinActionPart().getHoldingChangeDate() == null || outDate == null ||
+	                		isinActionMatch.getToIsinActionPart().getHoldingChangeDate().isBefore(outDate) || isinActionMatch.getToIsinActionPart().getHoldingChangeDate().isEqual(outDate))
+	                .mapToDouble(isinActionMatch -> isinActionMatch.getQuantity().doubleValue())
+	                .sum();
+		} else {
+			return getQuantity(); // Entire quantity is out quantity
+		}
 	}
 	
 	public Double getQuantity() {
