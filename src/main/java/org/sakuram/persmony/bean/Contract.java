@@ -3,6 +3,7 @@ package org.sakuram.persmony.bean;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -73,4 +74,14 @@ public class Contract {
 		return (netAmount == null ? null : netAmount.doubleValue());
 	}
 	
+	public Double getExtraAmount() {
+		return Optional.ofNullable(brokerage).orElse(BigDecimal.ZERO)
+				.add(Optional.ofNullable(exchangeTransactionCharge).orElse(BigDecimal.ZERO))
+				.add(Optional.ofNullable(clearingCharge).orElse(BigDecimal.ZERO))
+				.add(Optional.ofNullable(gst).orElse(BigDecimal.ZERO))
+				.add(Optional.ofNullable(stt).orElse(BigDecimal.ZERO))
+				.add(Optional.ofNullable(sebiTurnoverFee).orElse(BigDecimal.ZERO))
+				.add(Optional.ofNullable(stampDuty).orElse(BigDecimal.ZERO))
+				.doubleValue();
+	}
 }

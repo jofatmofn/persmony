@@ -114,7 +114,7 @@ public class OperationView extends Div {
 			try {
 	            switch(event.getValue().getKey()) {
 	            case 1:
-	        		add(realisationComponent);
+	            	formLayout.add(realisationComponent);
 	        		realisationComponent.handleRealisation();
 	            	break;
 	            case 2:
@@ -946,7 +946,7 @@ public class OperationView extends Div {
 		FormLayout formLayout;
 		RetrieveAccrualsRealisationsResponseVO retrieveAccrualsRealisationsResponseVO;
 		Button proceedButton;
-		RadioButtonGroup<Boolean> inForm26asRBG, inAisRBG, withInterestRBG, withTdsRBG;
+		TriStateBooleanRadioButtonGroup inForm26asRBG, inAisRBG, withBreakupRBG;
 		
 		retrieveAccrualsRealisationsResponseVO = new RetrieveAccrualsRealisationsResponseVO();
 		
@@ -964,21 +964,17 @@ public class OperationView extends Div {
 		productProviderDvSelect.setLabel("Provider");
 		hLayout.add(productProviderDvSelect);
 		
-		inForm26asRBG = ViewFuncs.newTriStateRBG();
+		inForm26asRBG = new TriStateBooleanRadioButtonGroup();
 		inForm26asRBG.setLabel("In Form 26AS");
 		hLayout.add(inForm26asRBG);
 
-		inAisRBG = ViewFuncs.newTriStateRBG();
+		inAisRBG = new TriStateBooleanRadioButtonGroup();
 		inAisRBG.setLabel("In AIS");
 		hLayout.add(inAisRBG);
 
-		withInterestRBG = ViewFuncs.newTriStateRBG();
-		withInterestRBG.setLabel("With Interest");
-		hLayout.add(withInterestRBG);
-
-		withTdsRBG = ViewFuncs.newTriStateRBG();
-		withTdsRBG.setLabel("With TDS");
-		hLayout.add(withTdsRBG);
+		withBreakupRBG = new TriStateBooleanRadioButtonGroup();
+		withBreakupRBG.setLabel("With Breakup");
+		hLayout.add(withBreakupRBG);
 
 		proceedButton = new Button("Proceed");
 		hLayout.add(proceedButton);
@@ -1018,8 +1014,7 @@ public class OperationView extends Div {
 									productProviderDvSelect.getValue() == null ? null : productProviderDvSelect.getValue().getId(),
 									inForm26asRBG.getValue(),
 									inAisRBG.getValue(),
-									withInterestRBG.getValue(),
-									withTdsRBG.getValue()
+									withBreakupRBG.getValue()
 								));
 						retrieveAccrualsRealisationsResponseVOL.copyTo(retrieveAccrualsRealisationsResponseVO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
 						handleUpdateTaxDetail2(formLayout, retrieveAccrualsRealisationsResponseVO);

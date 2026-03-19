@@ -64,13 +64,12 @@ public class RealisationRepositoryImpl implements RealisationRepositoryCustom {
 			queryStringBuffer.append(" AND ");
 			queryStringBuffer.append(presenceAbsenceCheck(retrieveAccrualsRealisationsRequestVO.getInAis(), "in_ais"));
 		}
-		if (retrieveAccrualsRealisationsRequestVO.getWithInterest() != null) {
+		if (retrieveAccrualsRealisationsRequestVO.getWithBreakup() != null) {
 			queryStringBuffer.append(" AND ");
-			queryStringBuffer.append(presenceAbsenceCheck(retrieveAccrualsRealisationsRequestVO.getWithInterest(), "interest_amount"));
-		}
-		if (retrieveAccrualsRealisationsRequestVO.getWithTds() != null) {
-			queryStringBuffer.append(" AND ");
-			queryStringBuffer.append(presenceAbsenceCheck(retrieveAccrualsRealisationsRequestVO.getWithTds(), "tds_amount"));
+			if (!retrieveAccrualsRealisationsRequestVO.getWithBreakup()) {
+				queryStringBuffer.append("NOT ");				
+			}
+			queryStringBuffer.append("(R.amount = COALESCE(R.returned_principal_amount, 0) + COALESCE(R.interest_amount, 0) - COALESCE(R.tds_amount, 0))");
 		}
 
 		queryString = queryStringBuffer.toString();

@@ -35,6 +35,7 @@ import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
 import org.sakuram.persmony.valueobject.DvFlagsSbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.DvFlagsVO;
+import org.sakuram.persmony.valueobject.InvestmentTransactionCriteriaVO;
 import org.sakuram.persmony.valueobject.PeriodSummaryCriteriaVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,9 +130,9 @@ public class ReportService {
 	public List<List<Object[]>> pendingTransactions() {
 		List<Object[]> recordList;
 		
-		recordList = investmentTransactionRepository.findPendingTransactions();
+		recordList = investmentTransactionRepository.findPendingTransactions(new InvestmentTransactionCriteriaVO(null, true, false, false, true, true, false));
 		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Based On", "Returned Principal"});
-		return listTransactions(recordList);
+		return listTransactions(recordList, true);
 	}
 	
 	public List<List<Object[]>> receiptTransactions(PeriodSummaryCriteriaVO periodSummaryCriteriaVO) {
@@ -139,10 +140,10 @@ public class ReportService {
 		
 		recordList = investmentTransactionRepository.findReceiptTransactionsWithinPeriod(periodSummaryCriteriaVO.getFromDate(), periodSummaryCriteriaVO.getToDate());
 		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Based On", "Returned Principal", "Realised Date", "Realised Amount", "Realised Principal"});
-		return listTransactions(recordList);
+		return listTransactions(recordList, true);
 	}
 	
-	public List<List<Object[]>> listTransactions(List<Object[]> recordList) {
+	public List<List<Object[]>> listTransactions(List<Object[]> recordList, boolean isHeaderPresent) {
 		List<List<Object[]>> reportList;
 		Map<Long, Pair<String, Double>> lastCompletedReceiptsMap;
 		Long investmentId;
@@ -151,7 +152,7 @@ public class ReportService {
 		reportList.add(recordList);
 
 		lastCompletedReceiptsMap = fetchLastCompletedReceipts();
-		for (Object[] fields : recordList.subList(1, recordList.size())) {
+		for (Object[] fields : (isHeaderPresent ? recordList.subList(1, recordList.size()) : recordList)) {
 			if (fields[7] == null) {
 				investmentId = ((Long) fields[2]).longValue();
 				if (lastCompletedReceiptsMap.containsKey(investmentId)) {

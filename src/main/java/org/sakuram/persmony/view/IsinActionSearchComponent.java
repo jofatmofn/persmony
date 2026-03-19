@@ -134,7 +134,7 @@ public class IsinActionSearchComponent extends Div {
 									isInternalRadioButtonGroup.getValue().equals("Both") ? null : (isInternalRadioButtonGroup.getValue().equals("Real Only") ? false : true)
 									)
 							);
-					notification = Notification.show("No. of ISIN ctions fetched: " + recordList.size());
+					notification = Notification.show("No. of ISIN Actions fetched: " + recordList.size());
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 					isinActionsGrid.setItems(recordList);
 				} catch (Exception e) {

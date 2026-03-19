@@ -48,6 +48,7 @@ import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -885,6 +886,7 @@ public class SbAcTxnOperationView extends Div {
 		NumberField amountNumberField;
 		Grid.Column<SbAcTxnCategoryVO> transactionCategoryColumn, endAccountReferenceColumn, amountColumn, groupIdColumn;
 		NativeLabel txnAmountLabel;
+		Span notesSpan;
 		
 		sbAcTxnCategoryVOList = sbAcTxnService.fetchSbAcTxnCategories(savingsAccountTransactionId);
 		
@@ -909,6 +911,10 @@ public class SbAcTxnOperationView extends Div {
 		sbAcTxnCategoryGridLDV = sbAcTxnCategoryGrid.setItems(sbAcTxnCategoryVOList);
 		
 		verticalLayout.add(sbAcTxnCategoryGrid);
+		
+		notesSpan = new Span();
+		notesSpan.getElement().setProperty("innerHTML", "<u>Amount Column</u><br/><b>Manual categorisation</b>: Fully contained within this SB A/c Txn.<br/><b>Automatic categorisation</b>: May be part of other SB A/c Txn.s");
+		verticalLayout.add(notesSpan);
 		
 		hLayout = new HorizontalLayout();
 		verticalLayout.add(hLayout);

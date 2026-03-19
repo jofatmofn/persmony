@@ -60,9 +60,6 @@ public class Action {
 	@Column(name="cost_retained_fraction", nullable=true, columnDefinition="NUMERIC", precision=5, scale=4)
 	private BigDecimal costRetainedFraction;
 	
-	@Column(name="fractional_entitlement_cash", nullable=true, columnDefinition="NUMERIC", precision=8, scale=3)	// TODO Belongs to Demat level Action
-	private BigDecimal fractionalEntitlementCash;
-	
 	@JsonIgnore
 	@OneToMany(mappedBy="action", cascade=CascadeType.ALL)
 	private List<IsinAction> isinActionList;

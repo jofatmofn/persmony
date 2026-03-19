@@ -119,7 +119,6 @@ public class DebtEquityMutualService {
 			action = new Action();
 			action.setActionType(Constants.domainValueCache.get(isinActionCreateVO.getActionVO().getActionType().getId()));
 			action.setEntitledIsin(isin);
-			action.setFractionalEntitlementCash(null);	// TODO: Later enhancement; FractionalEntitlementCash belongs to Demat level action
 			action.setNewSharesPerOld(isinActionCreateVO.getActionVO().getNewSharesPerOld());
 			action.setOldSharesBase(isinActionCreateVO.getActionVO().getOldSharesBase());
 			action.setCostRetainedFraction(isinActionCreateVO.getActionVO().getCostRetainedFraction());

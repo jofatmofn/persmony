@@ -10,13 +10,10 @@ import org.sakuram.persmony.valueobject.IdValueVO;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
-import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.data.renderer.TextRenderer;
 
 public class ViewFuncs {
-
+	
 	public static void showError(String message) {
 		ConfirmDialog errorDialog;
 		
@@ -60,24 +57,6 @@ public class ViewFuncs {
     	return selectDv;
     }
     
-    public static RadioButtonGroup<Boolean> newTriStateRBG() {
-    	RadioButtonGroup<Boolean> triStateRBG;
-    	triStateRBG = new RadioButtonGroup<Boolean>();
-    	triStateRBG.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-    	triStateRBG.setItems(null, true, false);
-    	triStateRBG.setValue(null);
-    	triStateRBG.setRenderer(new TextRenderer<>((mn) -> {
-    		if (mn == null) {
-    			return "Both";
-    		} else if (mn) {
-    			return "Yes";
-    		} else {
-    			return "No";
-    	    }
-    	}));
-    	return triStateRBG;
-    }
-
     private static void configureSelect(Select<IdValueVO> dvSelect, List<IdValueVO> idValueVOList, String label, boolean isNoSelectionAllowed, boolean isNullAValue) {
     	// Following special values have to go to the end, so that the ordinal value from enums are not impacted
 		if (isNullAValue) {

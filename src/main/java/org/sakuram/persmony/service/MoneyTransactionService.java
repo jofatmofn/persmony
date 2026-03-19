@@ -24,6 +24,8 @@ import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.InvestVO;
 import org.sakuram.persmony.valueobject.InvestmentDetailsVO;
 import org.sakuram.persmony.valueobject.InvestmentTransactionVO;
+import org.sakuram.persmony.valueobject.InvestmentTransaction3VO;
+import org.sakuram.persmony.valueobject.InvestmentTransactionCriteriaVO;
 import org.sakuram.persmony.valueobject.RealisationVO;
 import org.sakuram.persmony.valueobject.DuesVO;
 import org.sakuram.persmony.valueobject.DueRealisationVO;
@@ -50,6 +52,8 @@ public class MoneyTransactionService {
 	RealisationRepository realisationRepository;
 	@Autowired
 	MiscService miscService;
+	@Autowired
+	ReportService reportService;
 	
 	public void realisation(SingleRealisationVO singleRealisationVO) {
 		Investment investment;
@@ -607,6 +611,17 @@ public class MoneyTransactionService {
     		realisation.setForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
     	}
     	
+    }
+
+    public List<InvestmentTransaction3VO> retrieveInvestmentTransactionsDueBefore(InvestmentTransactionCriteriaVO investmentTransactionCriteriaVO) {
+    	List<InvestmentTransaction3VO> pendingInvestmentTransactionVOList;
+    	pendingInvestmentTransactionVOList = new ArrayList<>();
+    	for (Object[] record : reportService.listTransactions(investmentTransactionRepository.findPendingTransactions(investmentTransactionCriteriaVO), false).get(0)) {
+    		pendingInvestmentTransactionVOList.add(new InvestmentTransaction3VO(
+    				record
+    				));
+    	}
+    	return pendingInvestmentTransactionVOList;
     }
     
 	private void saveSchedule(List<ScheduleVO> scheduleVOList, Investment investment, long transactionType) {

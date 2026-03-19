@@ -12,6 +12,5 @@ public class RetrieveAccrualsRealisationsRequestVO {
 	Long productProviderDvId;
 	Boolean inForm26as;
 	Boolean inAis;
-	Boolean withInterest;
-	Boolean withTds;
+	Boolean withBreakup;
 }

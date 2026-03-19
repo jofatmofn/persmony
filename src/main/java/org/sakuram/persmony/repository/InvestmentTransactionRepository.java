@@ -10,6 +10,7 @@ import java.util.List;
 import org.sakuram.persmony.bean.Investment;
 import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.valueobject.InvestmentTransactionCriteriaVO;
 
 public interface InvestmentTransactionRepository extends JpaRepository<InvestmentTransaction, Long> {
 	public List<InvestmentTransaction> findByInvestmentOrderByDueDateDesc(Investment investment);
@@ -22,10 +23,15 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 			+ "	LEFT OUTER JOIN domain_value pDV ON I.product_provider_fk = pDV.id "
 			+ "	LEFT OUTER JOIN domain_value iDV ON I.investor_fk = iDV.id "
 			+ "	LEFT OUTER JOIN domain_value bDV ON I.provider_branch_fk = bDV.id "
-			+ "WHERE status_fk = 69 "
-			+ "	AND transaction_type_fk = 73 "
+			+ "WHERE (due_date IS NULL OR CAST(:#{#investmentTransactionCriteriaVO.dueDateOnOrBefore} AS DATE) IS NULL OR due_date <= :#{#investmentTransactionCriteriaVO.dueDateOnOrBefore}) "
+			+ "	AND (:#{#investmentTransactionCriteriaVO.isStatusPending} AND status_fk = 69 "
+			+ "	OR :#{#investmentTransactionCriteriaVO.isStatusCancelled} AND status_fk = 70 "
+			+ "	OR :#{#investmentTransactionCriteriaVO.isStatusCompleted} AND status_fk = 71) "
+			+ "	AND (:#{#investmentTransactionCriteriaVO.isTypePayment} AND transaction_type_fk = 72 "
+			+ "	OR :#{#investmentTransactionCriteriaVO.isTypeReceipt} AND transaction_type_fk = 73 "
+			+ "	OR :#{#investmentTransactionCriteriaVO.isTypeAccrual} AND transaction_type_fk = 74) "
 			+ "ORDER BY due_date, t_id")
-	public List<Object[]> findPendingTransactions();
+	public List<Object[]> findPendingTransactions(@Param("investmentTransactionCriteriaVO") InvestmentTransactionCriteriaVO investmentTransactionCriteriaVO);
 	
 	@Query(nativeQuery = true, value =
 			"SELECT IT.due_date, IT.id t_id, I.id, iDV.value AS investor, CONCAT(pDV.value, ' - ', COALESCE(bDV.value, 'Central')) AS provider, I.product_name, I.investment_id_with_provider, IT.due_amount, null, IT.returned_principal_amount, MIN(R.realisation_date) AS realised_date, SUM(R.amount) AS realised_amount, SUM(R.returned_principal_amount) AS realised_principal "

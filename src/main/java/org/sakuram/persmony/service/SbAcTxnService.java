@@ -6,8 +6,11 @@ import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -373,6 +376,7 @@ public class SbAcTxnService {
 		List<SbAcTxnCategoryVO> sbAcTxnCategoryVOList;
 		DvFlagsSbAcTxnCategoryVO dvFlagsSbAcTxnCategoryVO;
 		double amount;
+		Set<String> contractNoSet;
 		
 		sbAcTxnCategoryVOList = new ArrayList<SbAcTxnCategoryVO>();
 		savingsAccountTransaction = savingsAccountTransactionRepository.findById(savingsAccountTransactionId)
@@ -402,14 +406,18 @@ public class SbAcTxnService {
 					'R',
 					realisation.getAmount()));
 		}
+		contractNoSet = new HashSet<>();
 		for (Action action : savingsAccountTransaction.getActionList()) {
 			if (action.getContract() != null) {
-				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
-						Constants.NON_SATC_ID,
-						new IdValueVO(null, "Contract"),
-						new IdValueVO(null, action.getContract().getContractNo()),
-						'C',
-						action.getContract().getNetAmount()));
+				if (!contractNoSet.contains(action.getContract().getContractNo())) {
+					contractNoSet.add(action.getContract().getContractNo());
+					sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
+							Constants.NON_SATC_ID,
+							new IdValueVO(null, "Contract"),
+							new IdValueVO(null, action.getContract().getContractNo()),
+							'C',
+							action.getContract().getExtraAmount()));
+				}
 			}
 			for (IsinAction isinAction : action.getIsinActionList()) {
 				if (isinAction.isInternal()) {
@@ -423,12 +431,12 @@ public class SbAcTxnService {
 					}
 				} else {
 					for (IsinActionPart isinActionPart : isinAction.getIsinActionPartList()) {
-						amount += isinActionPart.getQuantity() * isinActionPart.getPricePerUnit();
+						amount += isinActionPart.getQuantity() * Optional.ofNullable(isinActionPart.getPricePerUnit()).orElse(0D);
 					}
 				}
 				sbAcTxnCategoryVOList.add(new SbAcTxnCategoryVO(
 						Constants.NON_SATC_ID,
-						new IdValueVO(Constants.TRANSACTION_CATEGORY_AND_SECURITY_TYPE_BIMAP.inverseBidiMap().get(isinAction.getIsin().getSecurityType().getId())),
+						new IdValueVO(isinAction.getIsin().getSecurityType()),
 						new IdValueVO(null,
 								isinAction.getAction().getActionType().getValue() +
 								"/" + isinAction.getIsin().getIsin()),

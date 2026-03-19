@@ -20,9 +20,11 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -41,17 +43,18 @@ public class RealisationComponent extends VerticalLayout {
 	MiscService miscService;
 	MoneyTransactionService moneyTransactionService;
 	SbAcTxnService sbAcTxnService;
+	InvestmentTransactionSearchComponent investmentTransactionSearchComponent;
 	InvestmentDetailComponent investmentDetailComponent;
 	@Getter
 	Button saveButton;
 	
-	public RealisationComponent(MiscService miscService, MoneyTransactionService moneyTransactionService, SbAcTxnService sbAcTxnService, InvestmentDetailComponent investmentDetailComponent) {
+	public RealisationComponent(MiscService miscService, MoneyTransactionService moneyTransactionService, SbAcTxnService sbAcTxnService, InvestmentTransactionSearchComponent investmentTransactionSearchComponent, InvestmentDetailComponent investmentDetailComponent) {
 		this.miscService = miscService;
 		this.moneyTransactionService = moneyTransactionService;
 		this.sbAcTxnService = sbAcTxnService;
+		this.investmentTransactionSearchComponent = investmentTransactionSearchComponent;
 		this.investmentDetailComponent = investmentDetailComponent;
 		saveButton = new Button("Save");
-		this.removeAll();
 	}
 	
 	public void handleRealisation() {
@@ -61,13 +64,14 @@ public class RealisationComponent extends VerticalLayout {
 	public void handleRealisation(SavingsAccountTransactionVO savingsAccountTransactionVO) {
 		IntegerField investmentTransactionIdIntegerField;
 		Select<IdValueVO> realisationTypeDvSelect;
-		HorizontalLayout topPaneHorizontalLayout;
+		HorizontalLayout topPaneHorizontalLayout, hLayout;
 		FormLayout inFields1FormLayout, inFields2FormLayout, outFields1FormLayout, outFields2FormLayout, outFields3FormLayout;
 		InvestmentTransaction2VO investmentTransaction2VO;
-		Button proceedButton;
+		Button proceedButton, itSearchButton;
 		List<IdValueVO> realisationTypeIdValueVOList;
 		IdValueVO savingsAccountRealisationTypeIdValueVO;
 		
+		this.removeAll();
 		realisationTypeIdValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_REALISATION_TYPE, false, false);
 		savingsAccountRealisationTypeIdValueVO = realisationTypeIdValueVOList.stream()
 				.filter(idValueVO -> idValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT)
@@ -83,8 +87,39 @@ public class RealisationComponent extends VerticalLayout {
 		inFields1FormLayout = new FormLayout();
 		inFields1FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		topPaneHorizontalLayout.add(inFields1FormLayout);
+		
+		hLayout = new HorizontalLayout();
 		investmentTransactionIdIntegerField = new IntegerField();
-		inFields1FormLayout.addFormItem(investmentTransactionIdIntegerField, "Investment Transaction Id");
+		itSearchButton = new Button("IT Search");
+		itSearchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		itSearchButton.setDisableOnClick(true);
+		hLayout.add(investmentTransactionIdIntegerField, itSearchButton);
+		inFields1FormLayout.addFormItem(hLayout, "Investment Transaction Id");
+		// On click of IT Search
+		itSearchButton.addClickListener(event -> {
+			Dialog dialog;
+			Button closeButton;
+
+			try {
+				dialog = new Dialog();
+				dialog.setHeaderTitle("Investment Transaction");
+				closeButton = new Button(new Icon("lumo", "cross"),
+				        (e) -> {
+				        	dialog.close();
+				        });
+				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+				dialog.getHeader().add(closeButton);
+	    		dialog.add(investmentTransactionSearchComponent.showForm());
+	    		dialog.open();
+	    		investmentTransactionSearchComponent.getInvestmentTransactionsGrid().addItemDoubleClickListener(dcEvent -> {
+	    			investmentTransactionIdIntegerField.setValue((int) dcEvent.getItem().getId());
+	    			dialog.close();
+	    		});
+			} finally {
+	    		itSearchButton.setEnabled(true);
+			}
+		});
+		
 		realisationTypeDvSelect = ViewFuncs.newDvSelect(realisationTypeIdValueVOList, "Realisation Type", false, false);
 		inFields1FormLayout.addFormItem(realisationTypeDvSelect, "Realisation Type");
 		if (savingsAccountTransactionVO == null) {
