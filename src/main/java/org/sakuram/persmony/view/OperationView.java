@@ -29,6 +29,8 @@ import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
+import com.vaadin.flow.component.HasValue.ValueChangeEvent;
+import com.vaadin.flow.component.HasValue.ValueChangeListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -511,12 +513,13 @@ public class OperationView extends Div {
 		
 		taxabilityDvSelect = newDvSelect("Taxability", Constants.CATEGORY_TAXABILITY, true);
 		formLayout.addFormItem(taxabilityDvSelect, "Taxability");
+		taxabilityDvSelect.setValue(new IdValueVO(Constants.DVID_TAXABILITY_TAXABLE_AT_REGULAR_RATE));
 		
 		accrualApplicabilityRadioButtonGroup = new RadioButtonGroup<>();
 		formLayout.addFormItem(accrualApplicabilityRadioButtonGroup, "Accrual Applicability");
 		// accrualApplicabilityRadioButtonGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
 		accrualApplicabilityRadioButtonGroup.setItems("Not Known", "Not Applicable", "Applicable");
-		accrualApplicabilityRadioButtonGroup.setValue("Not Known");
+		accrualApplicabilityRadioButtonGroup.setValue("Applicable");
 		
 		unitsNumberField = new NumberField();
 		formLayout.addFormItem(unitsNumberField, "No. of Units");
@@ -574,7 +577,39 @@ public class OperationView extends Div {
 		formLayout.addFormItem(dynamicReceiptPeriodicityRadioButtonGroup, "Dynamic Receipt Periodicity");
 		dynamicReceiptPeriodicityRadioButtonGroup.setItems("Not Applicable", "Yearly");
 		dynamicReceiptPeriodicityRadioButtonGroup.setValue("Not Applicable");
-		
+
+		ValueChangeListener<ValueChangeEvent<?>> addDefaultPaymentLogic = e -> {
+			// Only addition, no modification
+			if (paymentScheduleVOList.size() == 0 && investmentStartDatePicker.getValue() != null && faceValueNumberField.getValue() != null) {
+				paymentScheduleVOList.add(new ScheduleVO(
+						investmentStartDatePicker.getValue(),
+						faceValueNumberField.getValue(),
+						null,
+						null,
+						null
+						));
+				paymentScheduleButton.setText(paymentScheduleButton.getText().replace("(0)", "(1)"));
+			}
+		};
+		investmentStartDatePicker.addValueChangeListener(addDefaultPaymentLogic);
+		faceValueNumberField.addValueChangeListener(addDefaultPaymentLogic);
+
+		ValueChangeListener<ValueChangeEvent<?>> addDefaultReceiptLogic = e -> {
+			// Only addition, no modification
+			if (receiptScheduleVOList.size() == 0 && investmentEndDatePicker.getValue() != null && faceValueNumberField.getValue() != null) {
+				receiptScheduleVOList.add(new ScheduleVO(
+						investmentEndDatePicker.getValue(),
+						null,
+						faceValueNumberField.getValue(),
+						null,
+						null
+						));
+				receiptScheduleButton.setText(receiptScheduleButton.getText().replace("(0)", "(1)"));
+			}
+		};
+		investmentEndDatePicker.addValueChangeListener(addDefaultReceiptLogic);
+		faceValueNumberField.addValueChangeListener(addDefaultReceiptLogic);
+
 		saveButton = new Button("Save");
 		formLayout.add(saveButton);
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);

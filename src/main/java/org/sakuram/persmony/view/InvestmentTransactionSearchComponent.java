@@ -68,7 +68,7 @@ public class InvestmentTransactionSearchComponent extends Div {
 		typePaymentCheckbox = new Checkbox("Payment");
 		typePaymentCheckbox.setValue(true);
 		typeReceiptCheckbox = new Checkbox("Receipt");
-		typeReceiptCheckbox.setValue(false);
+		typeReceiptCheckbox.setValue(true);
 		typeAccrualCheckbox = new Checkbox("Accrual");
 		typeAccrualCheckbox.setValue(false);
 		hLayout.add(typePaymentCheckbox, typeReceiptCheckbox, typeAccrualCheckbox);

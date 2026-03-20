@@ -103,6 +103,7 @@ public class Constants {
 	public static final long DVID_SECURITY_TYPE_MUTUAL_FUND = 345;
 	public static final long DVID_SECURITY_TYPE_DEBT_INSTRUMENT = 346;
 	public static final long DVID_ISIN_ACTION_TYPE_GIFT_OR_TRANSFER = 323;
+	public static final long DVID_TAXABILITY_TAXABLE_AT_REGULAR_RATE = 64;
 
 	public static final long ACTION_ID_GIFT_OR_TRANSFER = 5;
 	public static final String ACTION_TYPE_GIFT_OR_TRANSFER_ENTRY_SPEC_NAME_RECEIVE = "Transfer In";
