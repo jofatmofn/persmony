@@ -41,14 +41,14 @@ import com.vaadin.flow.router.Route;
 
 @Route(value="search", layout=PersMonyLayout.class)
 @PageTitle("Investments Search")
-public class SearchView extends Div {
+public class DTInvestmentSearchComponent extends Div {
 	private static final long serialVersionUID = -9072230786957200591L;
 
 	MoneyTransactionService moneyTransactionService;
 	MiscService miscService;
 	SearchService searchService;
 
-	public SearchView(MoneyTransactionService moneyTransactionService, MiscService miscService, SearchService searchService, InvestmentDetailComponent investmentDetailComponent) {
+	public DTInvestmentSearchComponent(MoneyTransactionService moneyTransactionService, MiscService miscService, SearchService searchService, InvestmentDetailComponent investmentDetailComponent) {
 		Select<String> fieldNameSelect, operatorSelect;
 		Grid<SearchCriterionVO> searchCriteriaGrid;
 		Binder<SearchCriterionVO> searchCriteriaBinder;

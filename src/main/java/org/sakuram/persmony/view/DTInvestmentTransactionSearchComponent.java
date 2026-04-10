@@ -30,7 +30,7 @@ import com.vaadin.flow.spring.annotation.SpringComponent;
 
 @SpringComponent
 @Scope("prototype")
-public class InvestmentTransactionSearchComponent extends Div {
+public class DTInvestmentTransactionSearchComponent extends Div {
 
 	private static final long serialVersionUID = -7053684638596163476L;
 
@@ -39,7 +39,7 @@ public class InvestmentTransactionSearchComponent extends Div {
 	
 	Grid<InvestmentTransaction3VO> investmentTransactionsGrid;
 	
-	public InvestmentTransactionSearchComponent(MoneyTransactionService moneyTransactionService, MiscService miscService) {
+	public DTInvestmentTransactionSearchComponent(MoneyTransactionService moneyTransactionService, MiscService miscService) {
 		this.moneyTransactionService = moneyTransactionService;
 		this.miscService = miscService;
 	}

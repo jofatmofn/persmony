@@ -43,12 +43,12 @@ public class RealisationComponent extends VerticalLayout {
 	MiscService miscService;
 	MoneyTransactionService moneyTransactionService;
 	SbAcTxnService sbAcTxnService;
-	InvestmentTransactionSearchComponent investmentTransactionSearchComponent;
+	DTInvestmentTransactionSearchComponent investmentTransactionSearchComponent;
 	InvestmentDetailComponent investmentDetailComponent;
 	@Getter
 	Button saveButton;
 	
-	public RealisationComponent(MiscService miscService, MoneyTransactionService moneyTransactionService, SbAcTxnService sbAcTxnService, InvestmentTransactionSearchComponent investmentTransactionSearchComponent, InvestmentDetailComponent investmentDetailComponent) {
+	public RealisationComponent(MiscService miscService, MoneyTransactionService moneyTransactionService, SbAcTxnService sbAcTxnService, DTInvestmentTransactionSearchComponent investmentTransactionSearchComponent, InvestmentDetailComponent investmentDetailComponent) {
 		this.miscService = miscService;
 		this.moneyTransactionService = moneyTransactionService;
 		this.sbAcTxnService = sbAcTxnService;

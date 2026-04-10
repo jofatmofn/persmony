@@ -64,7 +64,7 @@ import com.vaadin.flow.router.Route;
 
 @Route(value="operation", layout=PersMonyLayout.class)
 @PageTitle("Investments Operations")
-public class OperationView extends Div {
+public class DTIOperationComponent extends Div {
 	private static final long serialVersionUID = 6529685098267757690L;
 	
 	MoneyTransactionService moneyTransactionService;
@@ -72,7 +72,7 @@ public class OperationView extends Div {
 	SbAcTxnService sbAcTxnService;
 	RealisationComponent realisationComponent;
 
-	public OperationView(MoneyTransactionService moneyTransactionService, MiscService miscService, SbAcTxnService sbAcTxnService, RealisationComponent realisationComponent) {
+	public DTIOperationComponent(MoneyTransactionService moneyTransactionService, MiscService miscService, SbAcTxnService sbAcTxnService, RealisationComponent realisationComponent) {
 		Span selectSpan;
 		FormLayout formLayout;
 		Select<Map.Entry<Integer,String>> operationSelect;

@@ -17,8 +17,8 @@ public class PersMonyLayout extends AppLayout {
         setPrimarySection(Section.DRAWER);
         addToDrawer(
         		new RouterLink("Home", HomeView.class),
-        		new RouterLink("Investments Search", SearchView.class),
-        		new RouterLink("Investments Operations", OperationView.class),
+        		new RouterLink("Investments Search", DTInvestmentSearchComponent.class),
+        		new RouterLink("Investments Operations", DTIOperationComponent.class),
         		new RouterLink("Reports", ReportView.class),
         		new RouterLink("Savings Account Transactions", SbAcTxnOperationView.class),
         		new RouterLink("Debt/Equity/MF", DebtEquityMutualView.class)
