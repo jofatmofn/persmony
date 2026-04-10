@@ -86,6 +86,17 @@ public class InvestmentDetailComponent extends Div {
 			}
 			verticalLayout.add(new H4("Investment Transactions"));
 			verticalLayout.add(investmentTransactionsGrid);
+			verticalLayout.add(new DynamicFileDownloader("Download as CSV...", "investment_transactions.csv", out -> {
+				Stream<InvestmentTransactionVO> investmentTransactionVOStream = null;
+				investmentTransactionVOStream = investmentTransactionsGrid.getGenericDataView().getItems();
+
+				PrintWriter writer = new PrintWriter(out);
+				writer.println("Investment Transaction Id,Transaction Type,Due Date,Due Amount,Status,Settled Amount,Due Principal Amount,Due Interest Amount,Due TDS Amount,Accrual TDS Reference,Tax Group,Assessment Year");
+				investmentTransactionVOStream.forEach(investmentTransactionVO -> {
+					writer.println(investmentTransactionVO.toString());
+				});
+				writer.close();
+			}));
 			
 			realisationGrid = new Grid<>(RealisationVO.class);
 			realisationGrid.setColumns("realisationId", "investmentTransactionId", "realisationDate", "realisationType", "amount", "returnedPrincipalAmount", "interestAmount", "tdsAmount", "tdsReference");

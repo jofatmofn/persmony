@@ -28,7 +28,10 @@ public class InvestmentTransaction3VO {
 		this.productProvider = (String) columns[colPos++];
 		this.productName = (String) columns[colPos++];
 		this.investmentIdWithProvider = (String) columns[colPos++];
-		this.dueAmount = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;
+		this.dueAmount = (columns[colPos] == null ? null : ((Number) columns[colPos]).doubleValue()); colPos++;
+		// When the query is NATIVE, Hibernate does not enforce the entity mapping. It relies on the driver's raw type resolution.
+		// For PostgreSQL NUMERIC, it is usually BigDecimal. But for values like 1.0, it may return Double
+		// Hence the above typecasting is changed from BigDecimal to Number
 		this.basedOn = (columns[colPos] == null ? null : ((String) columns[colPos])); colPos++;
 		this.returnedPrincipalAmount = (columns[colPos] == null ? null : ((BigDecimal) columns[colPos]).doubleValue()); colPos++;;
 	}

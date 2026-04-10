@@ -30,8 +30,40 @@ public class LotWithPVO {
 		return new String[] {"isinActionVO.internal", "isinActionVO.settlementDate", "lotVO.holdingChangeDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "lotVO.isinActionPartId", "isinActionVO.actionType.value", "isinActionVO.bookingType.value", "isinActionVO.dematAccount.value", "lotVO.pricePerUnit", "lotVO.transactionQuantity"};
 	}
 	
+	public String toStringH() {
+		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+				isinActionVO.isInternal,
+				isinActionVO.settlementDate,
+				lotVO.holdingChangeDate,
+				isinActionVO.isin,
+				isinActionVO.securityName,
+				isinActionVO.isinActionId,
+				lotVO.isinActionPartId,
+				isinActionVO.actionType.value,
+				isinActionVO.bookingType.value,
+				isinActionVO.dematAccount.value,
+				lotVO.pricePerUnit,
+				lotVO.transactionQuantity
+				);
+	}
+	
 	public static String[] gridColumnsB() {
 		return new String[] {"isinActionVO.settlementDate", "lotVO.holdingChangeDate", "isinActionVO.isin", "isinActionVO.securityName", "isinActionVO.isinActionId", "lotVO.isinActionPartId", "isinActionVO.actionType.value", "isinActionVO.dematAccount.value", "lotVO.pricePerUnit", "lotVO.transactionQuantity", "lotVO.balance"};
 	}
 	
+	public String toStringB() {
+		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+				isinActionVO.settlementDate,
+				lotVO.holdingChangeDate,
+				isinActionVO.isin,
+				isinActionVO.securityName,
+				isinActionVO.isinActionId,
+				lotVO.isinActionPartId,
+				isinActionVO.actionType.value,
+				isinActionVO.dematAccount.value,
+				lotVO.pricePerUnit,
+				lotVO.transactionQuantity,
+				lotVO.balance
+				);
+	}
 }

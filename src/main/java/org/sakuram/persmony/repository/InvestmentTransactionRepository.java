@@ -30,7 +30,9 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 			+ "	AND (:#{#investmentTransactionCriteriaVO.isTypePayment} AND transaction_type_fk = 72 "
 			+ "	OR :#{#investmentTransactionCriteriaVO.isTypeReceipt} AND transaction_type_fk = 73 "
 			+ "	OR :#{#investmentTransactionCriteriaVO.isTypeAccrual} AND transaction_type_fk = 74) "
-			+ "ORDER BY due_date, t_id")
+			+ " AND (CAST(:#{#investmentTransactionCriteriaVO.investorDvId} AS BIGINT) IS NULL OR I.investor_fk = :#{#investmentTransactionCriteriaVO.investorDvId})"
+			+ " AND (CAST(:#{#investmentTransactionCriteriaVO.productProviderDvId} AS BIGINT) IS NULL OR I.product_provider_fk = :#{#investmentTransactionCriteriaVO.productProviderDvId})"
+			+ " ORDER BY due_date, t_id")
 	public List<Object[]> findPendingTransactions(@Param("investmentTransactionCriteriaVO") InvestmentTransactionCriteriaVO investmentTransactionCriteriaVO);
 	
 	@Query(nativeQuery = true, value =

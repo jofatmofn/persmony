@@ -38,4 +38,21 @@ public class InvestmentTransactionVO {
 		investmentTransactionVO.taxGroup = this.taxGroup;
 		investmentTransactionVO.assessmentYear = this.assessmentYear;
 	}
+	
+	public String toString() {
+		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+				investmentTransactionId,
+				transactionType,
+				dueDate,
+				dueAmount,
+				status,
+				settledAmount,
+				returnedPrincipalAmount,
+				interestAmount,
+				tdsAmount,
+				accrualTdsReference,
+				taxGroup,
+				assessmentYear);
+	}
+	
 }

@@ -11,4 +11,5 @@ import lombok.Setter;
 public class InvestmentTransactionCriteriaVO {
 	LocalDate dueDateOnOrBefore;
 	boolean isStatusPending, isStatusCompleted, isStatusCancelled, isTypePayment, isTypeReceipt, isTypeAccrual;
+	Long investorDvId, productProviderDvId;
 }

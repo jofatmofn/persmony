@@ -130,7 +130,7 @@ public class ReportService {
 	public List<List<Object[]>> pendingTransactions() {
 		List<Object[]> recordList;
 		
-		recordList = investmentTransactionRepository.findPendingTransactions(new InvestmentTransactionCriteriaVO(null, true, false, false, true, true, false));
+		recordList = investmentTransactionRepository.findPendingTransactions(new InvestmentTransactionCriteriaVO(null, true, false, false, true, true, false, null, null));
 		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Based On", "Returned Principal"});
 		return listTransactions(recordList, true);
 	}
@@ -1223,6 +1223,7 @@ public class ReportService {
 		LocalDate realisationDate, investmentLastDate;
 		double investmentYearEndAccrual, investmentTransactionAmount;
 		int tdsGroupInd;
+		boolean yearEndTransactionFound;
 
 		investorDvIdToTaxLiabilitysMap = new HashMap<Long, Double[]>();
 		accrualDetailsForInvestor = new ArrayList<List<Object[]>>(2);
@@ -1270,6 +1271,7 @@ public class ReportService {
 			}	// TDS Group defined at investment transaction level is not utilised!!!
 
 			// TDS
+			yearEndTransactionFound = false;
 			for (InvestmentTransaction investmentTransaction : investment.getInvestmentTransactionList()) {
 				if (investmentTransaction.getStatus().getId() == Constants.DVID_TRANSACTION_STATUS_COMPLETED) {
 					if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_ACCRUAL &&
@@ -1284,6 +1286,9 @@ public class ReportService {
 								investmentTransactionAmount,
 								investmentTransaction.getTdsAmount()
 								});
+						if (investmentTransaction.getDueDate().compareTo(fyEndDate) == 0) {
+							yearEndTransactionFound = true;
+						}
 					}
 					else if (investmentTransaction.getTransactionType().getId() == Constants.DVID_TRANSACTION_TYPE_RECEIPT) {
 						for (Realisation realisation : investmentTransaction.getRealisationList()) {
@@ -1292,6 +1297,9 @@ public class ReportService {
 									realisationDate.compareTo(fyEndDate) <= 0) {
 								investorSummary[1] += Objects.requireNonNullElse(realisation.getTdsAmount(), 0D).doubleValue();
 								investmentYearEndAccrual -= Objects.requireNonNullElse(realisation.getInterestAmount(), 0D);
+								if (realisationDate.compareTo(fyEndDate) == 0) {
+									yearEndTransactionFound = true;
+								}
 							}
 						}
 					}
@@ -1299,7 +1307,7 @@ public class ReportService {
 			}
 			if (investment.getIsAccrualApplicable() != null && investment.getIsAccrualApplicable() &&
 					(investment.getClosureDate() == null || investment.getClosureDate().compareTo(fyEndDate) >= 0) &&
-					investmentYearEndAccrual > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
+					investmentYearEndAccrual > Constants.TOLERATED_DIFFERENCE_AMOUNT && !yearEndTransactionFound) {
 				anticipatedAccrualDetailsForInvestor.add(new Object[] {investment.getId(), null, null,
 						"Accrual",
 						fyEndDate,

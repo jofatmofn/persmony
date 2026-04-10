@@ -3,8 +3,11 @@ package org.sakuram.persmony.view;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.MoneyTransactionService;
+import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
+import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestmentTransaction3VO;
 import org.sakuram.persmony.valueobject.InvestmentTransactionCriteriaVO;
 import org.springframework.context.annotation.Scope;
@@ -22,6 +25,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 
 @SpringComponent
@@ -31,12 +35,13 @@ public class InvestmentTransactionSearchComponent extends Div {
 	private static final long serialVersionUID = -7053684638596163476L;
 
 	MoneyTransactionService moneyTransactionService;
+	MiscService miscService;
 	
 	Grid<InvestmentTransaction3VO> investmentTransactionsGrid;
 	
-	public InvestmentTransactionSearchComponent(MoneyTransactionService moneyTransactionService) {
+	public InvestmentTransactionSearchComponent(MoneyTransactionService moneyTransactionService, MiscService miscService) {
 		this.moneyTransactionService = moneyTransactionService;
-		
+		this.miscService = miscService;
 	}
 	
 	public FormLayout showForm() {
@@ -45,13 +50,17 @@ public class InvestmentTransactionSearchComponent extends Div {
 		DatePicker dueOnOrBeforeDatePicker;
 		Checkbox statusPendingCheckbox, statusCompletedCheckbox, statusCancelledCheckbox, typePaymentCheckbox, typeReceiptCheckbox, typeAccrualCheckbox;
 		Button fetchButton;
+		Select<IdValueVO> investorDvSelect, productProviderDvSelect;
 		
 		formLayout = new FormLayout();
-		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 2));
 		
 		dueOnOrBeforeDatePicker = new DatePicker("From");
 		formLayout.addFormItem(dueOnOrBeforeDatePicker, "Due On or Before");
 		dueOnOrBeforeDatePicker.setValue(LocalDate.now());
+		
+		investorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_INVESTOR, null, true, false);
+		formLayout.addFormItem(investorDvSelect, "Investor");
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Transaction Status");
@@ -62,6 +71,9 @@ public class InvestmentTransactionSearchComponent extends Div {
 		statusCancelledCheckbox = new Checkbox("Cancelled");
 		statusCancelledCheckbox.setValue(false);
 		hLayout.add(statusPendingCheckbox, statusCompletedCheckbox, statusCancelledCheckbox);
+		
+		productProviderDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_PARTY, null, true, false);
+		formLayout.addFormItem(productProviderDvSelect, "Product Provider");
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Transaction Type");
@@ -75,6 +87,7 @@ public class InvestmentTransactionSearchComponent extends Div {
 		
 		fetchButton = new Button("Fetch");
 		formLayout.add(fetchButton);
+		formLayout.setColspan(fetchButton, 2);
 		fetchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		fetchButton.setDisableOnClick(true);
 		
@@ -85,6 +98,7 @@ public class InvestmentTransactionSearchComponent extends Div {
 			column.setResizable(true);
 		}
 		formLayout.add(investmentTransactionsGrid);
+		formLayout.setColspan(investmentTransactionsGrid, 2);
 		
 		// On click of Fetch
 		fetchButton.addClickListener(event -> {
@@ -111,7 +125,9 @@ public class InvestmentTransactionSearchComponent extends Div {
 					recordList = moneyTransactionService.retrieveInvestmentTransactionsDueBefore(new InvestmentTransactionCriteriaVO(
 							dueOnOrBeforeDatePicker.getValue(),
 							statusPendingCheckbox.getValue(), statusCompletedCheckbox.getValue(), statusCancelledCheckbox.getValue(),
-							typePaymentCheckbox.getValue(), typeReceiptCheckbox.getValue(), typeAccrualCheckbox.getValue()
+							typePaymentCheckbox.getValue(), typeReceiptCheckbox.getValue(), typeAccrualCheckbox.getValue(),
+							investorDvSelect.getValue() == null ? null : investorDvSelect.getValue().getId(),
+							productProviderDvSelect.getValue() == null ? null : productProviderDvSelect.getValue().getId()
 							));
 					notification = Notification.show("No. of Investment Transactions fetched: " + recordList.size());
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);

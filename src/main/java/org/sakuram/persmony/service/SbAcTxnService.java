@@ -64,7 +64,7 @@ public class SbAcTxnService {
     	Double amount, balance;
     	Long bookingDvId, transactionCodeDvId, costCenterDvId, voucherTypeDvId;
     	Integer branchCode;
-    	SimpleDateFormat targetDateFormat, targetTimeFormat, sourceFormat01, sourceFormat02, sourceFormat03, sourceFormat04, sourceFormat05, sourceFormat06;
+    	SimpleDateFormat targetDateFormat, targetTimeFormat, sourceFormat01, sourceFormat02, sourceFormat03, sourceFormat04, sourceFormat05, sourceFormat06, sourceFormat07;
     	int debitCount, creditCount;
     	double debitTotal, creditTotal;
     	
@@ -80,6 +80,7 @@ public class SbAcTxnService {
     	sourceFormat04 = new SimpleDateFormat("dd/MM/yyyy");
     	sourceFormat05 = new SimpleDateFormat("dd/MM/yy");
     	sourceFormat06 = new SimpleDateFormat("dd-MM-yyyy");
+    	sourceFormat07 = new SimpleDateFormat("MM/dd/yyyy");
     	
 		try (CSVParser csvParser = new CSVParser(new BufferedReader(new InputStreamReader(multipartFile.getInputStream())), CSVFormat.DEFAULT)) {
 			for (CSVRecord csvRecord : csvParser.getRecords()) {
@@ -158,22 +159,20 @@ public class SbAcTxnService {
 					}
 					balance = Double.parseDouble(cellContentList.get(9));
 				} else if (bankAccountDvId == 95) { // Indian
-					// dd/MM/yyyy
-					valueDateStr = targetDateFormat.format(sourceFormat04.parse(cellContentList.get(0)));
-					transactionDateStr = targetDateFormat.format(sourceFormat04.parse(cellContentList.get(1)));
-					remitterBranch = cellContentList.get(2);
-					narration = cellContentList.get(3);
-					if (!cellContentList.get(4).equals("")) {
-						reference = cellContentList.get(4);
+					// MM/dd/yyyy
+					transactionDateStr = targetDateFormat.format(sourceFormat07.parse(cellContentList.get(0)));
+					narration = cellContentList.get(1);
+					if (!cellContentList.get(2).equals("")) {
+						reference = cellContentList.get(2);
 					}
-					if (cellContentList.get(5).equals("")) {
-						amount = Double.parseDouble(cellContentList.get(6));
+					if (cellContentList.get(3).equals("")) {
+						amount = Double.parseDouble(cellContentList.get(4));
 						bookingDvId = Constants.DVID_BOOKING_CREDIT;
 					} else {
-						amount = Double.parseDouble(cellContentList.get(5));
+						amount = Double.parseDouble(cellContentList.get(3));
 						bookingDvId = Constants.DVID_BOOKING_DEBIT;
 					}
-					balance = Double.parseDouble(cellContentList.get(7).substring(0, cellContentList.get(7).length() - 2));
+					balance = Double.parseDouble(cellContentList.get(5).substring(0, cellContentList.get(5).length() - 3));
 				} else if (bankAccountDvId == 97) { // IOB
 					// dd-MMM-yyyy
 					transactionDateStr = targetDateFormat.format(sourceFormat01.parse(cellContentList.get(0)));

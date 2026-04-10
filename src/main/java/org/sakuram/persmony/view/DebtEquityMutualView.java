@@ -1,5 +1,6 @@
 package org.sakuram.persmony.view;
 
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.sakuram.persmony.service.DebtEquityMutualService;
 import org.sakuram.persmony.service.MiscService;
@@ -25,6 +27,7 @@ import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.TradeVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
@@ -78,6 +81,10 @@ public class DebtEquityMutualView extends Div {
 	@Autowired
 	private ApplicationContext context;
 		
+    enum LastButton {
+        HISTORY, BALANCE, NONE
+    }
+
 	public DebtEquityMutualView(DebtEquityMutualService debtEquityMutualService, MiscService miscService, DatePickerI18n isoDatePickerI18n, IsinActionShowComponent isinActionShowComponent, LotShowComponent lotShowComponent, IsinActionSearchComponent isinActionSearchComponent) {
 		
 		Div content;
@@ -129,6 +136,9 @@ public class DebtEquityMutualView extends Div {
 		SecuritySearchComponent securitySearchComponent;
 		Select<IdValueVO> dematAccountDvSelect;
 		NumberField balanceNumberField;
+		AtomicReference<LastButton> lastClicked;
+		
+		lastClicked = new AtomicReference<>(LastButton.NONE);
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
@@ -155,6 +165,7 @@ public class DebtEquityMutualView extends Div {
 		
 		balanceNumberField = new NumberField();
 		formLayout.addFormItem(balanceNumberField, "All ISIN Balance");
+		balanceNumberField.setReadOnly(true);
 		
 		clientSideControlsLayout = new HorizontalLayout();
 		formLayout.add(clientSideControlsLayout);
@@ -166,6 +177,7 @@ public class DebtEquityMutualView extends Div {
 			Checkbox includeInternalCheckbox, includeRelatedIsinsCheckbox;
 			AtomicBoolean includeInternal, includeRelatedIsins;
 			
+			lastClicked.set(LastButton.HISTORY);
 			try {
 				if (securitySearchComponent.getIsinTextField() == null || securitySearchComponent.getIsinTextField().isEmpty()) {
 					return;
@@ -229,6 +241,7 @@ public class DebtEquityMutualView extends Div {
 		balancesButton.addClickListener(event -> {
 			Checkbox includeNilBalanceCheckbox;
 			
+			lastClicked.set(LastButton.BALANCE);
 			try {
 				if (securitySearchComponent.getIsinTextField() == null || securitySearchComponent.getIsinTextField().isEmpty()) {
 					return;
@@ -276,6 +289,26 @@ public class DebtEquityMutualView extends Div {
 				balancesButton.setEnabled(true);
 			}
 		});
+
+		formLayout.add(new DynamicFileDownloader("Download as CSV...", "dem_lots.csv", out -> {
+			Stream<LotWithPVO> lotVOStream = null;
+			lotVOStream = lotsGrid.getGenericDataView().getItems();
+
+			PrintWriter writer = new PrintWriter(out);
+			if (lastClicked.get() == LastButton.HISTORY) {
+				writer.println(String.join(", ", LotWithPVO.gridColumnsH()));
+			} else if (lastClicked.get() == LastButton.BALANCE) {
+				writer.println(String.join(", ", LotWithPVO.gridColumnsB()));
+			}
+			lotVOStream.forEach(lotVO -> {
+				if (lastClicked.get() == LastButton.HISTORY) {
+					writer.println(lotVO.toStringH());
+				} else if (lastClicked.get() == LastButton.BALANCE) {
+					writer.println(lotVO.toStringB());
+				}
+			});
+			writer.close();
+		}));
 
 		lotsGrid.addItemClickListener(e -> {
 		    if ("isinActionVO.isinActionId".equals(e.getColumn().getKey()) || "lotVO.isinActionPartId".equals(e.getColumn().getKey())) {
