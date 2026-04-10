@@ -19,11 +19,14 @@ import org.sakuram.persmony.valueobject.DetailsForTaxFilingRequestVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.PeriodSummaryCriteriaVO;
 
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -43,11 +46,16 @@ public class ReportView extends Div {
 	public ReportView(ReportService reportService, MiscService miscService) {
 		MultiDownloadButton generateButton;
 		FormLayout formLayout;
+		HorizontalLayout horizontalLayout;
 		ReportFields reportFields;
 		
 		reportFields = new ReportFields();
 		
+		horizontalLayout = new HorizontalLayout();
+		add(horizontalLayout);
+		
 		reportFields.reportSelect = new Select<String>();
+		horizontalLayout.add(new NativeLabel("Report"), reportFields.reportSelect);
 		reportFields.reportSelect.setItems("All Pending Transactions",
 				"Receipt Transactions",
 				"Open Investments",
@@ -59,9 +67,7 @@ public class ReportView extends Div {
 				"Readiness for Tax Filing"
 				// "ISIN All Details"
 				);
-		reportFields.reportSelect.setLabel("Report");
 		reportFields.reportSelect.setPlaceholder("Select Report");
-		add(reportFields.reportSelect);
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(
@@ -72,7 +78,7 @@ public class ReportView extends Div {
 		reportFields.periodFromDatePicker = new DatePicker("From");
 		reportFields.periodToDatePicker = new DatePicker("To");
 		reportFields.financialYearStartIntegerField = new IntegerField();
-		reportFields.investorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_PRIMARY_INVESTOR, "Investor", false, false);
+		reportFields.investorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_PRIMARY_INVESTOR, null, false, false);
 		reportFields.reportSelect.addValueChangeListener(event -> {
 			HorizontalLayout hLayout;		
 			formLayout.remove(formLayout.getChildren().collect(Collectors.toList()));
@@ -87,14 +93,12 @@ public class ReportView extends Div {
 	        		hLayout.add(reportFields.periodFromDatePicker, reportFields.periodToDatePicker);
 	            	break;
 	            case "Tax Liability":
-	            	reportFields.financialYearStartIntegerField.setLabel("FY Start Year");
-	        		formLayout.add(reportFields.financialYearStartIntegerField);
+	        		formLayout.addFormItem(reportFields.financialYearStartIntegerField, "FY Start Year");
 	            	break;
 	            case "Details for Tax Filing":
 	            case "Readiness for Tax Filing":
-	        		formLayout.add(reportFields.investorDvSelect);
-	        		reportFields.financialYearStartIntegerField.setLabel("FY Start Year");
-	        		formLayout.add(reportFields.financialYearStartIntegerField);
+	        		formLayout.addFormItem(reportFields.investorDvSelect, "Investor");
+	        		formLayout.addFormItem(reportFields.financialYearStartIntegerField, "FY Start Year");
 	            	break;
 	            }
 			} catch (Exception e) {
@@ -104,8 +108,7 @@ public class ReportView extends Div {
 			}
         });
 
-		generateButton = new MultiDownloadButton("Generate", () -> createReportStreams(reportService, reportFields));		
-		// generateButton.getContent().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		generateButton = new MultiDownloadButton("Generate", () -> createReportStreams(reportService, reportFields));
 		add(generateButton);
 	}
 

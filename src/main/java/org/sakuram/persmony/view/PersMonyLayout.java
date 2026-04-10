@@ -17,11 +17,10 @@ public class PersMonyLayout extends AppLayout {
         setPrimarySection(Section.DRAWER);
         addToDrawer(
         		new RouterLink("Home", HomeView.class),
-        		new RouterLink("Investments Search", DTInvestmentSearchComponent.class),
-        		new RouterLink("Investments Operations", DTIOperationComponent.class),
-        		new RouterLink("Reports", ReportView.class),
+        		new RouterLink("Defined Transaction Investments", DefinedTransactionsInvestmentView.class),
+        		new RouterLink("Securities", DebtEquityMutualView.class),
         		new RouterLink("Savings Account Transactions", SbAcTxnOperationView.class),
-        		new RouterLink("Debt/Equity/MF", DebtEquityMutualView.class)
+        		new RouterLink("Reports", ReportView.class)
         		);
         createHeader();
     }

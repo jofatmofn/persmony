@@ -5,19 +5,23 @@ import java.util.function.Supplier;
 
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.server.StreamResource;
 
 public class MultiDownloadButton extends Composite<Div> {
 
-    private final Button button;
+	private static final long serialVersionUID = -3408394088604973276L;
+	
+	private final Button button;
     private final Div hidden = new Div();
 
     public MultiDownloadButton(String caption,
                                Supplier<List<StreamResource>> resources) {
 
         button = new Button(caption);
+        button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         hidden.getStyle().set("display", "none");
 
         getContent().add(button, hidden);

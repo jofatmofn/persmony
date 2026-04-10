@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.sakuram.persmony.service.MiscService;
-import org.sakuram.persmony.service.MoneyTransactionService;
 import org.sakuram.persmony.service.SearchService;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
@@ -16,6 +15,7 @@ import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestmentVO;
 import org.sakuram.persmony.valueobject.SearchCriterionVO;
+import org.springframework.context.annotation.Scope;
 import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
@@ -23,32 +23,39 @@ import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.grid.editor.Editor;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.annotation.SpringComponent;
 
-@Route(value="search", layout=PersMonyLayout.class)
-@PageTitle("Investments Search")
-public class DTInvestmentSearchComponent extends Div {
-	private static final long serialVersionUID = -9072230786957200591L;
-
-	MoneyTransactionService moneyTransactionService;
+@SpringComponent
+@Scope("prototype")
+public class DTInvestmentSearchComponent {
 	MiscService miscService;
 	SearchService searchService;
+	InvestmentDetailComponent investmentDetailComponent;
 
-	public DTInvestmentSearchComponent(MoneyTransactionService moneyTransactionService, MiscService miscService, SearchService searchService, InvestmentDetailComponent investmentDetailComponent) {
+	public DTInvestmentSearchComponent(MiscService miscService, SearchService searchService, InvestmentDetailComponent investmentDetailComponent) {
+		this.miscService = miscService;
+		this.searchService = searchService;
+		this.investmentDetailComponent = investmentDetailComponent;
+	}
+	
+	public Component showForm() {
+		FormLayout formLayout;
+		HorizontalLayout horizontalLayout;
 		Select<String> fieldNameSelect, operatorSelect;
 		Grid<SearchCriterionVO> searchCriteriaGrid;
 		Binder<SearchCriterionVO> searchCriteriaBinder;
@@ -60,22 +67,32 @@ public class DTInvestmentSearchComponent extends Div {
 		List<SearchCriterionVO> searchCriterionVOList;
 		Grid<InvestmentVO> investmentsGrid;
 		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		
+		horizontalLayout = new HorizontalLayout();
 		addButton = new Button("Add Row");
-		add(addButton);
+		horizontalLayout.add(addButton);
+		formLayout.add(horizontalLayout);
+		
 		searchCriteriaGrid = new Grid<>(SearchCriterionVO.class, false);
 		searchCriterionVOList = new ArrayList<SearchCriterionVO>();
 		searchCriteriaGridLDV = searchCriteriaGrid.setItems(searchCriterionVOList);
-		add(searchCriteriaGrid);
+		formLayout.add(searchCriteriaGrid);
+		
+		horizontalLayout = new HorizontalLayout();
 		searchButton = new Button("Search");
-		add(searchButton);
+		horizontalLayout.add(searchButton);
+		formLayout.add(horizontalLayout);
+		
 		investmentsGrid = new Grid<>(InvestmentVO.class);
 		investmentsGrid.setColumns("investmentId", "investor", "productProvider", "providerBranch", "investmentIdWithProvider", "investorIdWithProvider", "productType", "productName", "productIdOfProvider", "rateOfInterest", "dematAccount", "units", "worth", "cleanPrice", "accruedInterest", "charges", "taxability", "isAccrualApplicable", "investmentStartDate", "investmentEndDate", "dynamicReceiptPeriodicity", "previousInvestment", "newInvestmentReason", "closed", "closureDate", "closureType");
 		for (Column<InvestmentVO> column : investmentsGrid.getColumns()) {
 			column.setResizable(true);
 		}
-		add(investmentsGrid);
+		formLayout.add(investmentsGrid);
 		
-		add(new DynamicFileDownloader("Download as CSV...", "investments.csv", out -> {
+		formLayout.add(new DynamicFileDownloader("Download as CSV...", "investments.csv", out -> {
 			Stream<InvestmentVO> investmentVOStream = null;
 			investmentVOStream = investmentsGrid.getGenericDataView().getItems();
 
@@ -218,6 +235,7 @@ public class DTInvestmentSearchComponent extends Div {
 			investmentDetailComponent.showDetail(event.getItem().getInvestmentId());
 		});
 		
+		return formLayout;
 	}
 	
     private static void addCloseHandler(Component criteriaField,
