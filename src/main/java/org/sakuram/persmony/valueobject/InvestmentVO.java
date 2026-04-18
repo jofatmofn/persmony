@@ -36,6 +36,9 @@ public class InvestmentVO {
 	private Character dynamicReceiptPeriodicity;	
 	private String providerBranch;
 	
+	public static String getColumns() {
+		return "investmentId,investor,productProvider,providerBranch,investmentIdWithProvider,investorIdWithProvider,productType,productName,productIdOfProvider,rateOfInterest,dematAccount,units,worth,cleanPrice,accruedInterest,charges,taxability,isAccrualApplicable,investmentStartDate,investmentEndDate,dynamicReceiptPeriodicity,previousInvestment,newInvestmentReason,closed,closureDate,closureType";
+	}
 	public String toString() {
 		return String.format("%s,%s,%s,\"%s\",%s,\"%s\",%s,\"%s\",%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
 				investmentId,

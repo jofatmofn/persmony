@@ -1,12 +1,9 @@
 package org.sakuram.persmony.view;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.SearchService;
 import org.sakuram.persmony.util.Constants;
@@ -16,8 +13,6 @@ import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestmentVO;
 import org.sakuram.persmony.valueobject.SearchCriterionVO;
 import org.springframework.context.annotation.Scope;
-import org.vaadin.firitin.components.DynamicFileDownloader;
-
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.button.Button;
@@ -92,7 +87,7 @@ public class DTInvestmentSearchComponent {
 		}
 		formLayout.add(investmentsGrid);
 		
-		formLayout.add(new DynamicFileDownloader("Download as CSV...", "investments.csv", out -> {
+		/* formLayout.add(new DynamicFileDownloader("Download as CSV...", "investments.csv", out -> {
 			Stream<InvestmentVO> investmentVOStream = null;
 			investmentVOStream = investmentsGrid.getGenericDataView().getItems();
 
@@ -102,7 +97,15 @@ public class DTInvestmentSearchComponent {
 				writer.println(investmentVO.toString());
 			});
 			writer.close();
-		}));
+		})); */
+		GridCsvDownloaderComponent<InvestmentVO> downloader =
+		        new GridCsvDownloaderComponent<>(
+		        		investmentsGrid,
+		                "investments.csv",
+		                InvestmentVO::getColumns,
+		                InvestmentVO::toString
+		        );
+		formLayout.add(downloader);
 
 		
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);

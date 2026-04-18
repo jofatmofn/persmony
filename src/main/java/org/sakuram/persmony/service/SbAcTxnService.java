@@ -124,7 +124,7 @@ public class SbAcTxnService {
 						bookingDvId = Constants.DVID_BOOKING_DEBIT;
 					}
 					balance = Double.parseDouble(cellContentList.get(8));
-				} else if (bankAccountDvId == 90 || bankAccountDvId == 91 || bankAccountDvId == 112) { // HDFC
+				} else if (bankAccountDvId == 90 || bankAccountDvId == 91 || bankAccountDvId == 112 || bankAccountDvId == 375) { // HDFC
 					// dd/MM/yy
 					transactionDateStr = targetDateFormat.format(sourceFormat05.parse(cellContentList.get(0)));
 					narration = cellContentList.get(1);
