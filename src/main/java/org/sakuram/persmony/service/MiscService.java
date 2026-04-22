@@ -65,6 +65,8 @@ public class MiscService {
     		categoryDvIdList.add(domainValue.getId());
     	}
     	
+    	Constants.TXN_CAT_TO_DV_CAT_MAP = fetchDvCategoriesOfTxnCategories();
+    			
     	try (CSVParser csvParser = new CSVParser(new BufferedReader(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("IA Spec.csv"), "UTF-8")), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
 	    	Long actionTypeDvId = null;
     		for (CSVRecord csvRecord : csvParser.getRecords()) {
@@ -375,7 +377,7 @@ public class MiscService {
 				);
     }
     
-    public Map<Long, String> fetchDvCategoriesOfTxnCategories() {
+    private Map<Long, String> fetchDvCategoriesOfTxnCategories() {
     	Map<Long, String> txnCatToDvCatMap;
     	List<Long> categoryDvIdList;
     	

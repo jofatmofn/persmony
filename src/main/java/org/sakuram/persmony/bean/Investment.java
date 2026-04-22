@@ -216,4 +216,7 @@ public class Investment {
 		return (rateOfInterest == null ? null : rateOfInterest.doubleValue());
 	}
 	
+	public String toString() {
+		return productProvider.getValue() + "::" + productType.getValue() + "::" + investor.getValue() + "::" + investmentIdWithProvider;
+	}
 }

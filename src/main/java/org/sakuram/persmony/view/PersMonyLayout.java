@@ -20,6 +20,7 @@ public class PersMonyLayout extends AppLayout {
         		new RouterLink("Defined Transaction Investments", DefinedTransactionsInvestmentView.class),
         		new RouterLink("Securities", DebtEquityMutualView.class),
         		new RouterLink("Savings Account Transactions", SbAcTxnOperationView.class),
+        		new RouterLink("Financial Plan", PlanView.class),
         		new RouterLink("Reports", ReportView.class)
         		);
         createHeader();

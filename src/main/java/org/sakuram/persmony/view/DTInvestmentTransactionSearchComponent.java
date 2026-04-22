@@ -16,6 +16,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
@@ -36,18 +37,24 @@ public class DTInvestmentTransactionSearchComponent extends Div {
 
 	MoneyTransactionService moneyTransactionService;
 	MiscService miscService;
+	DatePickerI18n isoDatePickerI18n;
 	
 	Grid<InvestmentTransaction3VO> investmentTransactionsGrid;
 	
-	public DTInvestmentTransactionSearchComponent(MoneyTransactionService moneyTransactionService, MiscService miscService) {
+	public DTInvestmentTransactionSearchComponent(MoneyTransactionService moneyTransactionService, MiscService miscService, DatePickerI18n isoDatePickerI18n) {
 		this.moneyTransactionService = moneyTransactionService;
 		this.miscService = miscService;
+		this.isoDatePickerI18n = isoDatePickerI18n;
 	}
 	
 	public FormLayout showForm() {
+		return showForm(new ITSearchDefaults(null, LocalDate.now(), true, false, false, true, true, false));
+	}
+	
+	public FormLayout showForm(ITSearchDefaults itSearchDefaults) {
 		FormLayout formLayout;
 		HorizontalLayout hLayout;
-		DatePicker dueOnOrBeforeDatePicker;
+		DatePicker dueDateFromDatePicker, dueDateToDatePicker;
 		Checkbox statusPendingCheckbox, statusCompletedCheckbox, statusCancelledCheckbox, typePaymentCheckbox, typeReceiptCheckbox, typeAccrualCheckbox;
 		Button fetchButton;
 		Select<IdValueVO> investorDvSelect, productProviderDvSelect;
@@ -55,9 +62,15 @@ public class DTInvestmentTransactionSearchComponent extends Div {
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 2));
 		
-		dueOnOrBeforeDatePicker = new DatePicker("From");
-		formLayout.addFormItem(dueOnOrBeforeDatePicker, "Due On or Before");
-		dueOnOrBeforeDatePicker.setValue(LocalDate.now());
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Due Date");
+		dueDateFromDatePicker = new DatePicker("From");
+		dueDateFromDatePicker.setI18n(isoDatePickerI18n);
+		dueDateToDatePicker = new DatePicker("To");
+		dueDateToDatePicker.setI18n(isoDatePickerI18n);
+		hLayout.add(dueDateFromDatePicker, dueDateToDatePicker);
+		dueDateFromDatePicker.setValue(itSearchDefaults.dueDateFrom);
+		dueDateToDatePicker.setValue(itSearchDefaults.dueDateTo);
 		
 		investorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_INVESTOR, null, true, false);
 		formLayout.addFormItem(investorDvSelect, "Investor");
@@ -65,11 +78,11 @@ public class DTInvestmentTransactionSearchComponent extends Div {
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Transaction Status");
 		statusPendingCheckbox = new Checkbox("Pending");
-		statusPendingCheckbox.setValue(true);
+		statusPendingCheckbox.setValue(itSearchDefaults.statusPending);
 		statusCompletedCheckbox = new Checkbox("Completed");
-		statusCompletedCheckbox.setValue(false);
+		statusCompletedCheckbox.setValue(itSearchDefaults.statusCompleted);
 		statusCancelledCheckbox = new Checkbox("Cancelled");
-		statusCancelledCheckbox.setValue(false);
+		statusCancelledCheckbox.setValue(itSearchDefaults.statusCancelled);
 		hLayout.add(statusPendingCheckbox, statusCompletedCheckbox, statusCancelledCheckbox);
 		
 		productProviderDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_PARTY, null, true, false);
@@ -78,11 +91,11 @@ public class DTInvestmentTransactionSearchComponent extends Div {
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Transaction Type");
 		typePaymentCheckbox = new Checkbox("Payment");
-		typePaymentCheckbox.setValue(true);
+		typePaymentCheckbox.setValue(itSearchDefaults.typePayment);
 		typeReceiptCheckbox = new Checkbox("Receipt");
-		typeReceiptCheckbox.setValue(true);
+		typeReceiptCheckbox.setValue(itSearchDefaults.typeReceipt);
 		typeAccrualCheckbox = new Checkbox("Accrual");
-		typeAccrualCheckbox.setValue(false);
+		typeAccrualCheckbox.setValue(itSearchDefaults.typeAccrual);
 		hLayout.add(typePaymentCheckbox, typeReceiptCheckbox, typeAccrualCheckbox);
 		
 		fetchButton = new Button("Fetch");
@@ -107,8 +120,9 @@ public class DTInvestmentTransactionSearchComponent extends Div {
 			
 			try {
 				// Validation
-				if (dueOnOrBeforeDatePicker.getValue() == null) {
-					ViewFuncs.showError("Specify value for Due Date On or Before");
+				if (dueDateFromDatePicker.getValue() != null && dueDateToDatePicker.getValue() != null &&
+						dueDateFromDatePicker.getValue().isAfter(dueDateToDatePicker.getValue())) {
+					ViewFuncs.showError("From Due Date cannot be after To Due Date");
 					return;
 				}
 				if (!statusPendingCheckbox.getValue() && !statusCompletedCheckbox.getValue() && !statusCancelledCheckbox.getValue()) {
@@ -123,7 +137,8 @@ public class DTInvestmentTransactionSearchComponent extends Div {
 				// Back-end Call
 				try {
 					recordList = moneyTransactionService.retrieveInvestmentTransactionsDueBefore(new InvestmentTransactionCriteriaVO(
-							dueOnOrBeforeDatePicker.getValue(),
+							dueDateFromDatePicker.getValue(),
+							dueDateToDatePicker.getValue(),
 							statusPendingCheckbox.getValue(), statusCompletedCheckbox.getValue(), statusCancelledCheckbox.getValue(),
 							typePaymentCheckbox.getValue(), typeReceiptCheckbox.getValue(), typeAccrualCheckbox.getValue(),
 							investorDvSelect.getValue() == null ? null : investorDvSelect.getValue().getId(),
@@ -148,4 +163,19 @@ public class DTInvestmentTransactionSearchComponent extends Div {
 		return investmentTransactionsGrid;
 	}
 	
+	static class ITSearchDefaults {
+		LocalDate dueDateFrom, dueDateTo;
+		boolean statusPending, statusCompleted, statusCancelled, typePayment, typeReceipt, typeAccrual;
+		
+		ITSearchDefaults(LocalDate dueDateFrom, LocalDate dueDateTo, boolean statusPending, boolean statusCompleted, boolean statusCancelled, boolean typePayment, boolean typeReceipt, boolean typeAccrual) {
+			this.dueDateFrom = dueDateFrom;
+			this.dueDateTo = dueDateTo;
+			this.statusPending = statusPending;
+			this.statusCompleted = statusCompleted;
+			this.statusCancelled = statusCancelled;
+			this.typePayment = typePayment;
+			this.typeReceipt = typeReceipt;
+			this.typeAccrual = typeAccrual;
+		}
+	}
 }

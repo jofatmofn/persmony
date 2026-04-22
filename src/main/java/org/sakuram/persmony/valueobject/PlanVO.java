@@ -1,0 +1,20 @@
+package org.sakuram.persmony.valueobject;
+
+import java.math.BigDecimal;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class PlanVO {
+	Long id;
+	Long incomeInvestmentTransactionId;
+	Long incomeCashFlowId;
+	Long expenditureInvestmentTransactionId;
+	Long expenditureCashFlowId;
+	BigDecimal mappedAmount;
+}

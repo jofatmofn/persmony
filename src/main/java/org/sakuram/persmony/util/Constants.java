@@ -1,5 +1,6 @@
 package org.sakuram.persmony.util;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.sakuram.persmony.valueobject.IsinActionSpecVO;
 public class Constants {
 
 	public static final String ISO_LOCAL_DATE = "yyyy-MM-dd";
+	public static final DateTimeFormatter ISO_LOCAL_DATE_FORMATTER = DateTimeFormatter.ofPattern(ISO_LOCAL_DATE);
 	public static final double EPSILON = 0.0000000009D;
 	public static final double TOLERATED_DIFFERENCE_AMOUNT = 20D;	// No specific reason for this value
 	
@@ -285,4 +287,5 @@ public class Constants {
 	public static Map<Long, DomainValue> domainValueCache;
 	public static Map<String, List<Long>> categoryDvIdCache;
 	public static final Map<Long, IsinActionSpecVO> ISIN_ACTION_SPEC_MAP = new HashMap<Long, IsinActionSpecVO>();
+	public static Map<Long, String> TXN_CAT_TO_DV_CAT_MAP;
 }

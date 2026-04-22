@@ -130,7 +130,7 @@ public class ReportService {
 	public List<List<Object[]>> pendingTransactions() {
 		List<Object[]> recordList;
 		
-		recordList = investmentTransactionRepository.findPendingTransactions(new InvestmentTransactionCriteriaVO(null, true, false, false, true, true, false, null, null));
+		recordList = investmentTransactionRepository.findPendingTransactions(new InvestmentTransactionCriteriaVO(null, null, true, false, false, true, true, false, null, null));
 		recordList.add(0, new Object[]{"Date", "Txn. Id", "Investment Id", "Investor", "Product Provider", "Product Name", "Account No.", "Amount", "Based On", "Returned Principal"});
 		return listTransactions(recordList, true);
 	}

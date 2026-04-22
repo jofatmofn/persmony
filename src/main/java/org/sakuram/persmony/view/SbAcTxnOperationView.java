@@ -409,18 +409,10 @@ public class SbAcTxnOperationView extends Div {
 		Button fetchButton;
 		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
 		GridContextMenu<SavingsAccountTransactionVO> sATGridContextMenu;
-		Map<Long, String> txnCatToDvCatMap;
 		AtomicBoolean isEarTextEnabled, isEarSelectEnabled;
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
-		
-		try {
-			txnCatToDvCatMap = miscService.fetchDvCategoriesOfTxnCategories();
-		} catch (Exception e) {
-			ViewFuncs.showError(UtilFuncs.messageFromException(e));
-			return null;
-		}
 		
 		sbAcTxnFromIdIntegerField = new IntegerField("From");
 		sbAcTxnToIdIntegerField = new IntegerField("To");
@@ -491,7 +483,7 @@ public class SbAcTxnOperationView extends Div {
 					endAccountReferenceOperatorSelect.setValue(null);
 					endAccountReferenceDvSelect.clear();
 				} else {
-					dvCategory = txnCatToDvCatMap.get(transactionCategoryDvSelect.getValue().getId());
+					dvCategory = Constants.TXN_CAT_TO_DV_CAT_MAP.get(transactionCategoryDvSelect.getValue().getId());
 					if (dvCategory == null || dvCategory.equals("")) {
 						isEarTextEnabled.set(true);
 						isEarSelectEnabled.set(false);
@@ -664,7 +656,7 @@ public class SbAcTxnOperationView extends Div {
 		});
 
 		savingsAccountTransactionsGrid.addItemDoubleClickListener(event -> {
-			acceptSbAcTxnCategory(event.getItem().getSavingsAccountTransactionId(), event.getItem().getAmount(), txnCatToDvCatMap);
+			acceptSbAcTxnCategory(event.getItem().getSavingsAccountTransactionId(), event.getItem().getAmount());
 			savingsAccountTransactionsGrid.select(event.getItem());
 		});
 		
@@ -675,14 +667,13 @@ public class SbAcTxnOperationView extends Div {
 			savingsAccountTransactionVO = event.getItem();
 			if (savingsAccountTransactionVO.isPresent()) {
 				savingsAccountTransactionsGrid.select(savingsAccountTransactionVO.get());
-				acceptSbAcTxnCategory(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), savingsAccountTransactionVO.get().getAmount(), txnCatToDvCatMap);
+				acceptSbAcTxnCategory(savingsAccountTransactionVO.get().getSavingsAccountTransactionId(), savingsAccountTransactionVO.get().getAmount());
 			}
 		});
 		sATGridContextMenu.addItem("Categorise ALL", event -> {
 			acceptSbAcTxnCategory(((ListDataProvider<SavingsAccountTransactionVO>) savingsAccountTransactionsGrid.getDataProvider()).getItems().stream()
 					.map(savingsAccountTransactionVO -> savingsAccountTransactionVO.getSavingsAccountTransactionId())
-					.collect(Collectors.toList()),
-					txnCatToDvCatMap);
+					.collect(Collectors.toList()));
 		});
 		sATGridContextMenu.addItem("No Category", event -> {
 			Optional<SavingsAccountTransactionVO> savingsAccountTransactionVO;
@@ -771,7 +762,7 @@ public class SbAcTxnOperationView extends Div {
 		return formLayout;
 	}
 	
-	private void acceptSbAcTxnCategory(List<Long> savingsAccountTransactionIdList, Map<Long, String> txnCatToDvCatMap) {
+	private void acceptSbAcTxnCategory(List<Long> savingsAccountTransactionIdList) {
 		Dialog dialog;
 		FormLayout formLayout;
 		Select<IdValueVO> transactionCategoryDvSelect, endAccountReferenceDvSelect;
@@ -817,7 +808,7 @@ public class SbAcTxnOperationView extends Div {
 			endAccountReferenceTextField.setValue("");
 			endAccountReferenceTextField.setVisible(false);
 			
-			dvCategory = txnCatToDvCatMap.get(transactionCategoryDvSelect.getValue().getId());
+			dvCategory = Constants.TXN_CAT_TO_DV_CAT_MAP.get(transactionCategoryDvSelect.getValue().getId());
 			if (dvCategory == null || dvCategory.equals("")) {
 				endAccountReferenceTextField.setVisible(true);
 			} else if (dvCategory.equals(Constants.CATEGORY_NONE)) {
@@ -840,7 +831,7 @@ public class SbAcTxnOperationView extends Div {
 					ViewFuncs.showError("Transaction Category cannot be empty");
 					return;
 				}
-				dvCategory = txnCatToDvCatMap.get(transactionCategoryDvSelect.getValue().getId());
+				dvCategory = Constants.TXN_CAT_TO_DV_CAT_MAP.get(transactionCategoryDvSelect.getValue().getId());
 				if ((dvCategory == null || dvCategory.equals("")) && endAccountReferenceTextField.isEmpty() ||
 						dvCategory != null && !dvCategory.equals(Constants.CATEGORY_NONE) && endAccountReferenceDvSelect.getValue() == null) {
 					ViewFuncs.showError("End Account Reference cannot be empty");
@@ -871,7 +862,7 @@ public class SbAcTxnOperationView extends Div {
 		dialog.open();
 	}
 	
-	private void acceptSbAcTxnCategory(long savingsAccountTransactionId, Double sbAcTxnAmount, Map<Long, String> txnCatToDvCatMap) {
+	private void acceptSbAcTxnCategory(long savingsAccountTransactionId, Double sbAcTxnAmount) {
 		Dialog dialog;
 		VerticalLayout verticalLayout;
 		HorizontalLayout hLayout;
@@ -969,7 +960,7 @@ public class SbAcTxnOperationView extends Div {
 						ViewFuncs.showError("Transaction Amount cannot be empty");
 						return;
 					}
-					dvCategory = txnCatToDvCatMap.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
+					dvCategory = Constants.TXN_CAT_TO_DV_CAT_MAP.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
 					if ((dvCategory == null || !dvCategory.equals(Constants.CATEGORY_NONE)) &&
 							(sbAcTxnCategoryVO.getEndAccountReference() == null || sbAcTxnCategoryVO.getEndAccountReference().getValue() == null)) {
 						ViewFuncs.showError("End Account Reference cannot be empty");
@@ -1025,7 +1016,7 @@ public class SbAcTxnOperationView extends Div {
 		transactionCategoryColumn.setResizable(true);
 		endAccountReferenceColumn = sbAcTxnCategoryGrid.addColumn(sbAcTxnCategoryVO -> {
 			String dvCategory;
-			dvCategory = txnCatToDvCatMap.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
+			dvCategory = Constants.TXN_CAT_TO_DV_CAT_MAP.get(sbAcTxnCategoryVO.getTransactionCategory().getId());
 			if (dvCategory != null && dvCategory.equals(Constants.CATEGORY_NONE)) return "";
 			else return sbAcTxnCategoryVO.getEndAccountReference().getValue() ;
 			}).setHeader("End Account Reference");
@@ -1083,7 +1074,7 @@ public class SbAcTxnOperationView extends Div {
 					endAccountReferenceTextField.setValue(""); // Components must be attached to the UI before updates are properly reflected
 				}
 			} else {
-				dvCategory = txnCatToDvCatMap.get(transactionCategoryDvSelect.getValue().getId());
+				dvCategory = Constants.TXN_CAT_TO_DV_CAT_MAP.get(transactionCategoryDvSelect.getValue().getId());
 				if (dvCategory == null || dvCategory.equals("") || dvCategory.equals(Constants.CATEGORY_NONE)) {
 					endAccountReferenceTextField = new TextField();
 					endAccountReferenceColumn.setEditorComponent(endAccountReferenceTextField);

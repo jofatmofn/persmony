@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.sakuram.persmony.util.Constants;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -141,6 +143,10 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	
 	public void setTdsAmount(Double tdsAmount) {
 		this.tdsAmount = (tdsAmount == null ? null : BigDecimal.valueOf(tdsAmount));
+	}
+	
+	public String toString() {
+		return investment.toString() + "::" + dueDate.format(Constants.ISO_LOCAL_DATE_FORMATTER) + "::" + transactionType.getValue().substring(0, 1);
 	}
 	
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter @Setter
 @AllArgsConstructor
 public class InvestmentTransactionCriteriaVO {
-	LocalDate dueDateOnOrBefore;
+	LocalDate dueDateFrom, dueDateTo;
 	boolean isStatusPending, isStatusCompleted, isStatusCancelled, isTypePayment, isTypeReceipt, isTypeAccrual;
 	Long investorDvId, productProviderDvId;
 }
