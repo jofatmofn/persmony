@@ -28,6 +28,7 @@ import org.sakuram.persmony.valueobject.DvFlagsAccountVO;
 import org.sakuram.persmony.valueobject.DvFlagsBranchVO;
 import org.sakuram.persmony.valueobject.DvFlagsInvestorVO;
 import org.sakuram.persmony.valueobject.DvFlagsSbAcTxnCategoryVO;
+import org.sakuram.persmony.valueobject.DvFlagsVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.InvestmentTransaction2VO;
 import org.sakuram.persmony.valueobject.IsinActionEntrySpecVO;
@@ -375,6 +376,21 @@ public class MiscService {
 				Math.abs(tdsAmount),
 				null
 				);
+    }
+    
+    public long identifyPrimaryInvestor(long bankAccountOrInvestorDvId) {
+    	DomainValue investorDv;
+		DvFlagsVO dvFlagsVO;
+    	
+		investorDv = Constants.domainValueCache.get(bankAccountOrInvestorDvId);
+		dvFlagsVO = DomainValueFlags.getDvFlagsVO(investorDv);
+		if (dvFlagsVO instanceof DvFlagsAccountVO) {
+			investorDv = Constants.domainValueCache.get(((DvFlagsAccountVO) dvFlagsVO).getInvestorDvId());
+		} else if (dvFlagsVO != null && !(dvFlagsVO instanceof DvFlagsInvestorVO)) {
+			throw new AppException("Unexpected Bank Account / Investor", null);
+		}
+
+		return Constants.INVESTOR_TO_PRIMARY_MAP.containsKey(investorDv.getId()) ? Constants.INVESTOR_TO_PRIMARY_MAP.get(investorDv.getId()) : investorDv.getId();
     }
     
     private Map<Long, String> fetchDvCategoriesOfTxnCategories() {

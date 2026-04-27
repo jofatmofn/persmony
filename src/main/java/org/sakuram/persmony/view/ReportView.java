@@ -64,7 +64,9 @@ public class ReportView extends Div {
 				"Income Vs. Spend",
 				"Tax Liability", 
 				"Details for Tax Filing",
-				"Readiness for Tax Filing"
+				"Readiness for Tax Filing",
+				"Loan Reconciliation",
+				"Transfer Reconciliation"
 				// "ISIN All Details"
 				);
 		reportFields.reportSelect.setPlaceholder("Select Report");
@@ -181,6 +183,12 @@ public class ReportView extends Div {
             	reportList = reportFields.reportSelect.getValue().equals("Details for Tax Filing") ?
             			reportService.detailsForTaxFiling(detailsForTaxFilingRequestVO) :
             			reportService.readinessForTaxFiling(detailsForTaxFilingRequestVO);
+            	break;
+            case "Loan Reconciliation":
+            	reportList = reportService.loanReconciliation();
+            	break;
+            case "Transfer Reconciliation":
+            	reportList = reportService.transferReconciliation();
             	break;
             }
 		} catch (Exception e) {

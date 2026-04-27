@@ -21,6 +21,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -187,6 +188,36 @@ public class PlanView extends Div {
 			} finally {
 				searchButton.setEnabled(true);
 			}
+		});
+		
+		planSearchResultGrid.addComponentColumn(planSearchResultVO -> {
+			Select<IdValueVO> transactionStatusDvSelect;
+			
+			transactionStatusDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_TRANSACTION_STATUS, null, false, false);
+			if (planSearchResultVO.getStatusIdValueVO().getId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
+				transactionStatusDvSelect.setEnabled(false);
+			}
+			transactionStatusDvSelect.setValue(planSearchResultVO.getStatusIdValueVO());
+			transactionStatusDvSelect.addValueChangeListener(e->{
+				if (e.isFromClient()) {
+					ConfirmDialog confirmDialog = new ConfirmDialog();
+					confirmDialog.setHeader("Confirm");
+					confirmDialog.setText("Are you sure you want to update the status?");
+					confirmDialog.setConfirmButton("Confirm", confirmEvent -> {
+						Notification notification;
+						
+						planService.updatePlanStatus(planSearchResultVO.getPlanId(), transactionStatusDvSelect.getValue().getId());
+						notification = Notification.show("Status updated successfully");
+						notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+						transactionStatusDvSelect.setEnabled(false);
+					});
+					confirmDialog.setCancelButton("Cancel", cancelEvent -> {
+						transactionStatusDvSelect.setValue(planSearchResultVO.getStatusIdValueVO());
+					});
+					confirmDialog.open();
+				}
+			});
+			return transactionStatusDvSelect;
 		});
 		
 		return formLayout;

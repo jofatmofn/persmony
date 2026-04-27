@@ -35,6 +35,7 @@ import com.vaadin.flow.component.HasValue.ValueChangeListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
@@ -89,8 +90,9 @@ public class SbAcTxnOperationView extends Div {
 	MiscService miscService;
 	
 	IsinActionSearchComponent isinActionSearchComponent;
+	DatePickerI18n isoDatePickerI18n;
 	
-	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent) {
+	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent, DatePickerI18n isoDatePickerI18n) {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
@@ -100,6 +102,7 @@ public class SbAcTxnOperationView extends Div {
 		this.sbAcTxnService = sbAcTxnService;
 		this.miscService = miscService;
 		this.isinActionSearchComponent = isinActionSearchComponent;
+		this.isoDatePickerI18n = isoDatePickerI18n;
 		
 		setSizeFull();
 		
@@ -145,7 +148,9 @@ public class SbAcTxnOperationView extends Div {
 		formLayout.addFormItem(bankAccountOrInvestorDvSelect, "Account");
 		
 		transactionDateDatePicker = new DatePicker("Transaction");
+		transactionDateDatePicker.setI18n(isoDatePickerI18n);
 		valueDateDatePicker = new DatePicker("Value");
+		valueDateDatePicker.setI18n(isoDatePickerI18n);
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Date");
 		hLayout.add(transactionDateDatePicker, valueDateDatePicker);
@@ -406,7 +411,7 @@ public class SbAcTxnOperationView extends Div {
 		RadioButtonGroup<String> bookingRadioButtonGroup;
 		HorizontalLayout hLayout;
 		Select<IdValueVO> narrationOperatorSelect, endAccountReferenceOperatorSelect;
-		Button fetchButton;
+		Button fetchButton, clearButton;
 		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
 		GridContextMenu<SavingsAccountTransactionVO> sATGridContextMenu;
 		AtomicBoolean isEarTextEnabled, isEarSelectEnabled;
@@ -421,7 +426,9 @@ public class SbAcTxnOperationView extends Div {
 		hLayout.add(sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField);
 		
 		sbAcTxnFromDatePicker = new DatePicker("From");
+		sbAcTxnFromDatePicker.setI18n(isoDatePickerI18n);
 		sbAcTxnToDatePicker = new DatePicker("To");
+		sbAcTxnToDatePicker.setI18n(isoDatePickerI18n);
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Period");
 		hLayout.add(sbAcTxnFromDatePicker, sbAcTxnToDatePicker);
@@ -554,10 +561,13 @@ public class SbAcTxnOperationView extends Div {
 			if (e.isFromClient()) {
 				earLogic.valueChanged(e);
 			}
-		});		
+		});
 		
+		hLayout = new HorizontalLayout();
+		formLayout.add(hLayout);
 		fetchButton = new Button("Fetch");
-		formLayout.add(fetchButton);
+		clearButton = new Button("Clear");
+		hLayout.add(fetchButton, clearButton);
 		fetchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		fetchButton.setDisableOnClick(true);
 		
@@ -653,6 +663,23 @@ public class SbAcTxnOperationView extends Div {
 			} finally {
 				fetchButton.setEnabled(true);
 			}
+		});
+
+		clearButton.addClickListener(event -> {
+			sbAcTxnFromIdIntegerField.setValue(null);
+			sbAcTxnToIdIntegerField.setValue(null);
+			sbAcTxnFromDatePicker.setValue(null);
+			sbAcTxnToDatePicker.setValue(null);
+			sbAcTxnFromAmoutNumberField.setValue(null);
+			sbAcTxnToAmoutNumberField.setValue(null);
+			narrationOperatorSelect.clear();
+			narrationTextField.setValue("");
+			bankAccountOrInvestorDvSelect.clear();
+			bookingRadioButtonGroup.setValue("Both");
+			transactionCategoryDvSelect.clear();
+			endAccountReferenceOperatorSelect.clear();
+			endAccountReferenceTextField.setValue("");
+			endAccountReferenceDvSelect.clear();
 		});
 
 		savingsAccountTransactionsGrid.addItemDoubleClickListener(event -> {

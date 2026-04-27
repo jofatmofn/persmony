@@ -124,7 +124,7 @@ public class SbAcTxnService {
 						bookingDvId = Constants.DVID_BOOKING_DEBIT;
 					}
 					balance = Double.parseDouble(cellContentList.get(8));
-				} else if (bankAccountDvId == 90 || bankAccountDvId == 91 || bankAccountDvId == 112 || bankAccountDvId == 375) { // HDFC
+				} else if (bankAccountDvId == 90 || bankAccountDvId == 91 || bankAccountDvId == 112 || bankAccountDvId == 240 || bankAccountDvId == 375) { // HDFC
 					// dd/MM/yy
 					transactionDateStr = targetDateFormat.format(sourceFormat05.parse(cellContentList.get(0)));
 					narration = cellContentList.get(1);
@@ -289,9 +289,7 @@ public class SbAcTxnService {
 						bookingDvId = Constants.DVID_BOOKING_DEBIT;
 					}
 					balance = Double.parseDouble(cellContentList.get(8).replace(",", ""));
-				/* } else if (bankAccountDvId == 240) { // HDFC-PPF
-					
-				} else if (bankAccountDvId == 242) { // PO-PPF */
+				/* } else if (bankAccountDvId == 242) { // PO-PPF */
 					
 				} else if (bankAccountDvId == 296) { // Canara-CC
 					// dd-MM-yyyy
@@ -390,7 +388,7 @@ public class SbAcTxnService {
 								new IdValueVO(null, sbAcTxnCategory.getEndAccountReference()) :
 								new IdValueVO(Long.parseLong(sbAcTxnCategory.getEndAccountReference())),
 						sbAcTxnCategory.getGroupId(),
-						sbAcTxnCategory.getAmount()));
+						sbAcTxnCategory.getAmountD()));
 			}
 		}
 		for (Realisation realisation : savingsAccountTransaction.getRealisationList()) {
@@ -505,7 +503,7 @@ public class SbAcTxnService {
 							if (sbAcTxnCategoryUpdated.getTransactionCategory().getId() != sbAcTxnCategoryVO.getTransactionCategory().getId() ||
 									!Objects.equals(sbAcTxnCategoryUpdated.getEndAccountReference(), sbAcTxnCategoryVO.getEndAccountReference().getValue()) ||
 									!Objects.equals(sbAcTxnCategoryUpdated.getGroupId(), sbAcTxnCategoryVO.getGroupId()) ||
-									!sbAcTxnCategoryUpdated.getAmount().equals(sbAcTxnCategoryVO.getAmount())) {
+									!sbAcTxnCategoryUpdated.getAmountD().equals(sbAcTxnCategoryVO.getAmount())) {
 								sbAcTxnCategoryUpdated.setTransactionCategory(transactionCategoryDvUi);
 								sbAcTxnCategoryUpdated.setEndAccountReference(endAccountReferenceUiToDb(sbAcTxnCategoryVO.getEndAccountReference()));
 								sbAcTxnCategoryUpdated.setGroupId(sbAcTxnCategoryVO.getGroupId());

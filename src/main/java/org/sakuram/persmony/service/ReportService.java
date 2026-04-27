@@ -1,6 +1,7 @@
 package org.sakuram.persmony.service;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import org.sakuram.persmony.repository.IsinActionPartRepository;
 import org.sakuram.persmony.repository.IsinActionRepository;
 import org.sakuram.persmony.repository.IsinRepository;
 import org.sakuram.persmony.repository.RealisationRepository;
+import org.sakuram.persmony.repository.SavingsAccountTransactionRepository;
 import org.sakuram.persmony.repository.SbAcTxnCategoryRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
@@ -52,6 +54,8 @@ public class ReportService {
 	InvestmentRepository investmentRepository;
 	@Autowired
 	InvestmentTransactionRepository investmentTransactionRepository;
+	@Autowired
+	SavingsAccountTransactionRepository savingsAccountTransactionRepository;
 	@Autowired
 	SbAcTxnCategoryRepository sbAcTxnCategoryRepository;
 	@Autowired
@@ -402,7 +406,7 @@ public class ReportService {
 			dvFlagsSbAcTxnCategoryVO = (DvFlagsSbAcTxnCategoryVO) DomainValueFlags.getDvFlagsVO(sbAcTxnCategory.getTransactionCategory());
 			if (dvFlagsSbAcTxnCategoryVO.getIOrC() == DvFlagsSbAcTxnCategoryVO.IOrC.INCOME) {
 			}
-			amount = Math.abs(sbAcTxnCategory.getAmount());
+			amount = Math.abs(sbAcTxnCategory.getAmountD());
 			switch(dvFlagsSbAcTxnCategoryVO.getIOrC()) {
 			case INCOME:
 				incomeAmount += amount;
@@ -414,8 +418,8 @@ public class ReportService {
 				break;
 			case BOOKING_DEPENDENT:
 				if (sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_CREDIT &&
-						sbAcTxnCategory.getAmount() >= 0 || sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
-						sbAcTxnCategory.getAmount() < 0) {
+						sbAcTxnCategory.getAmountD() >= 0 || sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
+						sbAcTxnCategory.getAmountD() < 0) {
 					incomeAmount += amount;
 					treatment = "I";
 				} else {
@@ -425,8 +429,8 @@ public class ReportService {
 				break;
 			default: 	// case NONE
 				if (sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_CREDIT &&
-						sbAcTxnCategory.getAmount() >= 0 || sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
-						sbAcTxnCategory.getAmount() < 0) {
+						sbAcTxnCategory.getAmountD() >= 0 || sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
+						sbAcTxnCategory.getAmountD() < 0) {
 					otherAmount += amount;
 					treatment = "O+";
 				} else {
@@ -437,7 +441,7 @@ public class ReportService {
 			}
 			recordList.add(new Object[] {dvFlagsSbAcTxnCategoryVO.getIorCString(), sbAcTxnCategory.getSavingsAccountTransaction().getBankAccountOrInvestor().getValue(), sbAcTxnCategory.getSavingsAccountTransaction().getId(), sbAcTxnCategory.getId(),
 					sbAcTxnCategory.getTransactionCategory().getValue(), sbAcTxnCategory.getEndAccountReference(),
-					sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getValue(), sbAcTxnCategory.getAmount(), treatment, amount});
+					sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getValue(), sbAcTxnCategory.getAmountD(), treatment, amount});
 		}
 		
 		// DTI transactions
@@ -611,29 +615,29 @@ public class ReportService {
 			if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SALARY) {
 				reportTableList.get(TABLE_IND_SALARY_SALARY).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INTERNSHIP) {
 				reportTableList.get(TABLE_IND_OS_OTHER_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EMPLOYMENT_TDS) {
 				reportTableList.get(TABLE_IND_SALARY_EMPLOYMENT_TDS).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_PROPERTY_RENT) {
 				reportTableList.get(TABLE_IND_HP_RENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TAX_RENTAL_INCOME) {
 				reportTableList.get(TABLE_IND_HP_TAX_RENTAL_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TAX_PROPERTY ||
 					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TAX_WATER) {
 				reportTableList.get(TABLE_IND_HP_TAX_PROPERTY_WATER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
 						(sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TAX_PROPERTY ? "Property" : "Water"),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND ||
 					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_MUTUAL_FUND_DIVIDEND) {
 				if (reportTableList.get(TABLE_IND_OS_DIVIDEND).size() > 0) {
@@ -644,11 +648,11 @@ public class ReportService {
 				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
 						previousReportRow[3].equals(expandIsin(sbAcTxnCategory.getEndAccountReference())) &&
 						previousReportRow[4].equals("")) {
-					previousReportRow[4] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
+					previousReportRow[4] = sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
 				} else {
 					reportTableList.get(TABLE_IND_OS_DIVIDEND).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 							expandIsin(sbAcTxnCategory.getEndAccountReference()),
-							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+							sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_DIVIDEND_TDS ||
 					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_MUTUAL_FUND_DIVIDEND_TDS) {
@@ -660,23 +664,23 @@ public class ReportService {
 				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
 						previousReportRow[3].equals(expandIsin(sbAcTxnCategory.getEndAccountReference())) &&
 						previousReportRow[5].equals("")) {
-					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
+					previousReportRow[5] = sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
 				} else {
 					reportTableList.get(TABLE_IND_OS_DIVIDEND).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 							expandIsin(sbAcTxnCategory.getEndAccountReference()), "",
-							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+							sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SB_INTEREST &&
 					dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_SAVINGS)) {
 				reportTableList.get(TABLE_IND_OS_SB_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						savingsAccountTransaction.getBankAccountOrInvestor().getValue(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_SB_INTEREST &&
 					dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_PPF)) {
 				reportTableList.get(TABLE_IND_EI_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						"PPF Interest",
 						savingsAccountTransaction.getBankAccountOrInvestor().getValue(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_IT_REFUND_INTEREST) {
 				if (reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).size() > 0) {
 					previousReportRow = reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).get(reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).size() - 1);
@@ -686,11 +690,11 @@ public class ReportService {
 				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
 						previousReportRow[3].equals(Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()) &&
 						previousReportRow[4].equals("")) {
-					previousReportRow[4] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
+					previousReportRow[4] = sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
 				} else {
 					reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 							Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
-							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+							sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_IT_REFUND_INTEREST_TDS) {
 				if (reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).size() > 0) {
@@ -701,11 +705,11 @@ public class ReportService {
 				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
 						previousReportRow[3].equals(Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue()) &&
 						previousReportRow[5].equals("")) {
-					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
+					previousReportRow[5] = sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
 				} else {
 					reportTableList.get(TABLE_IND_OS_IT_REFUND_INTEREST).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 							Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(), "",
-							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+							sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_INTEREST) {
 				if (reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).size() > 0) {
@@ -716,11 +720,11 @@ public class ReportService {
 				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
 						previousReportRow[3].equals(sbAcTxnCategory.getEndAccountReference()) &&
 						previousReportRow[4].equals("")) {
-					previousReportRow[4] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
+					previousReportRow[4] = sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
 				} else {
 					reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 							sbAcTxnCategory.getEndAccountReference(),
-							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+							sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_INTEREST_TDS) {
 				if (reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).size() > 0) {
@@ -731,11 +735,11 @@ public class ReportService {
 				if (previousReportRow[2].equals(savingsAccountTransaction.getTransactionDate()) &&
 						previousReportRow[3].equals(sbAcTxnCategory.getEndAccountReference()) &&
 						previousReportRow[5].equals("")) {
-					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
+					previousReportRow[5] = sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
 				} else {
 					reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 							sbAcTxnCategory.getEndAccountReference(), "",
-							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+							sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_OTHER_INCOME) {
 				/* reportTableList.get(TABLE_IND_OS_EQUITY_INCOME).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
@@ -743,25 +747,25 @@ public class ReportService {
 						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""}); */
 			} else if (dvFlagsAccountVO != null && dvFlagsAccountVO.getAccType().equals(Constants.ACCOUNT_TYPE_PPF)) {
 				reportTableList.get(TABLE_IND_VI_A_INVESTMENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-						"PPF – 80C",
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
+						"PPF - 80C",
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_NPS_TIER_1) {
 				reportTableList.get(TABLE_IND_VI_A_INVESTMENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-						"NPS Tier 1 – 80CCD(1B)",
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+						"NPS Tier 1 - 80CCD(1B)",
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_NPS_TIER_2) {
 				reportTableList.get(TABLE_IND_VI_A_INVESTMENT).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-						"NPS Tier 2 – 80C",
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+						"NPS Tier 2 - 80C",
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_DONATION) {
 				reportTableList.get(TABLE_IND_80G).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						Constants.domainValueCache.get(Long.parseLong(sbAcTxnCategory.getEndAccountReference())).getValue(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_EXEMPT_DIVIDEND) {
 				reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 						"Exempt Dividend",
 						sbAcTxnCategory.getEndAccountReference(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_BUYBACK) {
 				if (reportTableList.get(TABLE_IND_EI_OTHER).size() > 0) {
 					previousReportRow = reportTableList.get(TABLE_IND_EI_OTHER).get(reportTableList.get(TABLE_IND_EI_OTHER).size() - 1);
@@ -772,12 +776,12 @@ public class ReportService {
 						previousReportRow[3].equals("Buyback CG - 10(34A)") &&
 						previousReportRow[4].equals(sbAcTxnCategory.getEndAccountReference()) &&
 						previousReportRow[5].equals("")) {
-					previousReportRow[5] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
+					previousReportRow[5] = sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1);
 				} else {
 					reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 							"Buyback CG - 10(34A)",
 							sbAcTxnCategory.getEndAccountReference(),
-							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
+							sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? 1 : -1), ""});
 				}
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_EQUITY_BUYBACK_TDS) {
 				if (reportTableList.get(TABLE_IND_EI_OTHER).size() > 0) {
@@ -789,12 +793,12 @@ public class ReportService {
 						previousReportRow[3].equals("Buyback CG - 10(34A)") &&
 						previousReportRow[4].equals(sbAcTxnCategory.getEndAccountReference()) &&
 						previousReportRow[6].equals("")) {
-					previousReportRow[6] = sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
+					previousReportRow[6] = sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1);
 				} else {
 					reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
 							"Buyback CG - 10(34A)",
 							sbAcTxnCategory.getEndAccountReference(), "",
-							sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+							sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 				}
 			} else if ((sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_GIFT ||
 					sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_ON_BEHALF_GIFT) &&
@@ -803,14 +807,14 @@ public class ReportService {
 					savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_DEBIT &&
 					sbAcTxnCategory.getEndAccountReference().equals(String.valueOf(incomeTaxFilingDetailsRequestVO.getInvestorDvId())))) {
 				reportTableList.get(TABLE_IND_EI_OTHER).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-						"Gift Received – 56(2)(x)", "", sbAcTxnCategory.getAmount(), ""});
+						"Gift Received - 56(2)(x)", "", sbAcTxnCategory.getAmountD(), ""});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_INCOME_TAX) {
 				reportTableList.get(TABLE_IND_TAX_PAYMENT_ADV_SA).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 			} else if (sbAcTxnCategory.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_OTHERS &&
 					sbAcTxnCategory.getEndAccountReference().equals(Constants.END_ACCOUNT_REFERENCE_HEALTH_INSURANCE)) {
 				reportTableList.get(TABLE_IND_80D_HEALTH_INSURANCE).add(new Object[] {"", "", savingsAccountTransaction.getTransactionDate(),
-						sbAcTxnCategory.getAmount() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
+						sbAcTxnCategory.getAmountD() * (savingsAccountTransaction.getBooking().getId() == Constants.DVID_BOOKING_CREDIT ? -1 : 1)});
 			}
 		}
 
@@ -1098,6 +1102,136 @@ public class ReportService {
 		return reportList;
 	}
 	
+	public List<List<Object[]>> loanReconciliation() {
+		List<List<Object[]>> reportList;
+		List<Object[]> recordList;
+		Map<Pair<Long, Long>, Pair<BigDecimal, BigDecimal>> loanReconciliationMap;
+		long satParty, earParty, loaner, loanee;
+		Pair<Long, Long> keyPair;
+		Pair<BigDecimal, BigDecimal> valuePair;
+		
+		reportList = new ArrayList<List<Object[]>>(1);
+		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
+		
+		recordList.add(new Object[] {"SAT", "Loaner", "Loanee", "Date", "Type", "Amount"});
+		loanReconciliationMap = new HashMap<>();
+		for (SavingsAccountTransaction sat : savingsAccountTransactionRepository.findBySbAcTxnCategoryListTransactionCategoryIn(Arrays.asList(new DomainValue[] {Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_LOAN)}))) {
+			for (SbAcTxnCategory satc : sat.getSbAcTxnCategoryList()) {
+				if (satc.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_LOAN && toInclude(satc)) {
+					satParty = miscService.identifyPrimaryInvestor(sat.getBankAccountOrInvestor().getId());
+					earParty = miscService.identifyPrimaryInvestor(Long.valueOf(satc.getEndAccountReference()));
+					if (sat.getBooking().getId() == Constants.DVID_BOOKING_CREDIT) {
+						loaner = earParty;
+						loanee = satParty;
+					} else {
+						loaner = satParty;
+						loanee = earParty;
+					}
+					
+					recordList.add(new Object[] {sat.getId(), Constants.domainValueCache.get(loaner).getValue(), Constants.domainValueCache.get(loanee).getValue(), sat.getTransactionDate(), "Loan", satc.getAmount()});
+					keyPair = Pair.with(loaner, loanee);
+					if (loanReconciliationMap.containsKey(keyPair)) {
+						valuePair = loanReconciliationMap.get(keyPair);
+					} else {
+						valuePair = Pair.with(BigDecimal.ZERO, BigDecimal.ZERO);
+						loanReconciliationMap.put(keyPair, valuePair);
+					}
+					loanReconciliationMap.replace(keyPair, valuePair.setAt0(valuePair.getValue0().add(satc.getAmount().abs())));
+				}
+			}
+		}
+		for (SavingsAccountTransaction sat : savingsAccountTransactionRepository.findBySbAcTxnCategoryListTransactionCategoryIn(Arrays.asList(new DomainValue[] {Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_LOAN_REPAYMENT)}))) {
+			for (SbAcTxnCategory satc : sat.getSbAcTxnCategoryList()) {
+				if (satc.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_LOAN_REPAYMENT && toInclude(satc)) {
+					satParty = miscService.identifyPrimaryInvestor(sat.getBankAccountOrInvestor().getId());
+					earParty = miscService.identifyPrimaryInvestor(Long.valueOf(satc.getEndAccountReference()));
+					if (sat.getBooking().getId() == Constants.DVID_BOOKING_CREDIT) {
+						loaner = satParty;
+						loanee = earParty;
+					} else {
+						loaner = earParty;
+						loanee = satParty;
+					}
+					
+					recordList.add(new Object[] {sat.getId(), Constants.domainValueCache.get(loaner).getValue(), Constants.domainValueCache.get(loanee).getValue(), sat.getTransactionDate(), "Repay", satc.getAmount()});
+					keyPair = Pair.with(loaner, loanee);
+					if (loanReconciliationMap.containsKey(keyPair)) {
+						valuePair = loanReconciliationMap.get(keyPair);
+					} else {
+						valuePair = Pair.with(BigDecimal.ZERO, BigDecimal.ZERO);
+						loanReconciliationMap.put(keyPair, valuePair);
+					}
+					loanReconciliationMap.replace(keyPair, valuePair.setAt1(valuePair.getValue1().add(satc.getAmount().abs())));
+				}
+			}
+		}
+
+		recordList.add(new Object[] {});
+		recordList.add(new Object[] {"Summary"});
+		recordList.add(new Object[] {"Loaner", "Loanee", "Total Loaned", "Total Repaid", "Balance Loan"});
+		for (Map.Entry<Pair<Long, Long>, Pair<BigDecimal, BigDecimal>> loanReconciliationMapEntry : loanReconciliationMap.entrySet()) {
+			recordList.add(new Object[] {Constants.domainValueCache.get(loanReconciliationMapEntry.getKey().getValue0()).getValue(), Constants.domainValueCache.get(loanReconciliationMapEntry.getKey().getValue1()).getValue(), loanReconciliationMapEntry.getValue().getValue0(), loanReconciliationMapEntry.getValue().getValue1(), loanReconciliationMapEntry.getValue().getValue0().subtract(loanReconciliationMapEntry.getValue().getValue1())});
+		}
+		return reportList;
+	}
+	
+	public List<List<Object[]>> transferReconciliation() {
+		List<List<Object[]>> reportList;
+		List<Object[]> recordList;
+		Map<Triplet<Long, Long, Long>, Pair<BigDecimal, BigDecimal>> transferReconciliationMap;
+		long satParty, earParty, sender, recipient;
+		Triplet<Long, Long, Long> keyTriplet;
+		Pair<BigDecimal, BigDecimal> valuePair;
+		int ind;
+		
+		reportList = new ArrayList<List<Object[]>>(1);
+		recordList = new ArrayList<Object[]>();
+		reportList.add(recordList);
+		
+		recordList.add(new Object[] {"SAT", "Sender", "Recipient", "Date", "Type", "Amount", "Booking"});
+		transferReconciliationMap = new HashMap<>();
+		for (SavingsAccountTransaction sat : savingsAccountTransactionRepository.findBySbAcTxnCategoryListTransactionCategoryIn(Arrays.asList(new DomainValue[] {Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_TRANSFER), Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_GIFT)}))) {
+			for (SbAcTxnCategory satc : sat.getSbAcTxnCategoryList()) {
+				if (satc.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_TRANSFER || satc.getTransactionCategory().getId() == Constants.DVID_TRANSACTION_CATEGORY_GIFT) {
+					satParty = sat.getBankAccountOrInvestor().getId();
+					earParty = Long.valueOf(satc.getEndAccountReference());
+					if (sat.getBooking().getId() == Constants.DVID_BOOKING_CREDIT) {
+						sender = earParty;
+						recipient = satParty;
+						ind = 1;
+					} else {
+						sender = satParty;
+						recipient = earParty;
+						ind = 0;
+					}
+					
+					recordList.add(new Object[] {sat.getId(), Constants.domainValueCache.get(sender).getValue(), Constants.domainValueCache.get(recipient).getValue(), sat.getTransactionDate(), satc.getTransactionCategory().getValue(), satc.getAmount(), sat.getBooking().getValue()});
+					keyTriplet = Triplet.with(sender, recipient, satc.getTransactionCategory().getId());
+					if (transferReconciliationMap.containsKey(keyTriplet)) {
+						valuePair = transferReconciliationMap.get(keyTriplet);
+					} else {
+						valuePair = Pair.with(BigDecimal.ZERO, BigDecimal.ZERO);
+						transferReconciliationMap.put(keyTriplet, valuePair);
+					}
+					if (ind == 0) {
+						transferReconciliationMap.replace(keyTriplet, valuePair.setAt0(valuePair.getValue0().add(satc.getAmount().abs())));
+					} else {
+						transferReconciliationMap.replace(keyTriplet, valuePair.setAt1(valuePair.getValue1().add(satc.getAmount().abs())));
+					}
+				}
+			}
+		}
+
+		recordList.add(new Object[] {});
+		recordList.add(new Object[] {"Summary"});
+		recordList.add(new Object[] {"Sender", "Recipient", "Type", "Total Sent", "Total Received", "Unmatched"});
+		for (Map.Entry<Triplet<Long, Long, Long>, Pair<BigDecimal, BigDecimal>> transferReconciliationMapEntry : transferReconciliationMap.entrySet()) {
+			recordList.add(new Object[] {Constants.domainValueCache.get(transferReconciliationMapEntry.getKey().getValue0()).getValue(), Constants.domainValueCache.get(transferReconciliationMapEntry.getKey().getValue1()).getValue(), Constants.domainValueCache.get(transferReconciliationMapEntry.getKey().getValue2()).getValue(), transferReconciliationMapEntry.getValue().getValue0(), transferReconciliationMapEntry.getValue().getValue1(), transferReconciliationMapEntry.getValue().getValue0().subtract(transferReconciliationMapEntry.getValue().getValue1())});
+		}
+		return reportList;
+	}
+	
 	/* public List<List<Object[]>> isinReport() {
 		List<List<Object[]>> reportList;
 		List<Object[]> recordList;
@@ -1332,5 +1466,14 @@ public class ReportService {
 		Isin isin = isinRepository.findById(isinStr).
 				orElseThrow(() -> new AppException("Missing ISIN " + isinStr, null));
 		return isinStr + "/" + isin.getSecurityName();
+	}
+	
+	private boolean toInclude(SbAcTxnCategory sbAcTxnCategory) {
+		// When a Category involves two parties (e.g. Loan, Gift, Transfer) and if both sides are accounts, then the transaction will be duplicated in the database
+		// Take only one of them
+		DomainValue earDv;
+		earDv = Constants.domainValueCache.get(Long.valueOf(sbAcTxnCategory.getEndAccountReference()));
+		return sbAcTxnCategory.getSavingsAccountTransaction().getBooking().getId() == Constants.DVID_BOOKING_CREDIT || !earDv.getCategory().equals(Constants.CATEGORY_ACCOUNT);
+		// The condition could as well be == DEBIT
 	}
 }

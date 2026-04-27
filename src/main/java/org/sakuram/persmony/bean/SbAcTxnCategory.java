@@ -53,7 +53,7 @@ public class SbAcTxnCategory {
 		this.amount = (amount == null ? null : BigDecimal.valueOf(amount));
 	}
 	
-	public Double getAmount() {
+	public Double getAmountD() {
 		return (amount == null ? null : amount.doubleValue());
 	}
 

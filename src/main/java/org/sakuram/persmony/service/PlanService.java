@@ -156,4 +156,12 @@ public class PlanService {
 				);
 	}
 	
+	public void updatePlanStatus(long incomeExpenditureMatchPlanId, long planStatusDvId) {
+		IncomeExpenditureMatchPlan incomeExpenditureMatchPlan;
+		
+		incomeExpenditureMatchPlan = incomeExpenditureMatchPlanRepository.findById(incomeExpenditureMatchPlanId)
+				.orElseThrow(() -> new AppException("Invalid Plan Id " + incomeExpenditureMatchPlanId, null));
+		incomeExpenditureMatchPlan.setStatus(Constants.domainValueCache.get(planStatusDvId));
+		incomeExpenditureMatchPlanRepository.save(incomeExpenditureMatchPlan);
+	}
 }

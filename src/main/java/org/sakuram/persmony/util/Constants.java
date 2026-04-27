@@ -46,6 +46,7 @@ public class Constants {
 	public static final String CATEGORIES_USED_BY_CATEGORY_TRANSACTION_CATEGORY = "CatList01";
 	public static final String CATEGORY_NPS_ACCOUNT = "NPSAc";
 	public static final String CATEGORY_NPS_TIER = "NPSTier";
+	public static final String CATEGORY_LOAN_PARTY = "LonPrty";
 	
 	public static final long DVID_NEW_INVESTMENT_REASON_RENEWAL = 67;
 	public static final long DVID_NEW_INVESTMENT_REASON_TRANSFER_IN = 188;
@@ -94,6 +95,9 @@ public class Constants {
 	public static final long DVID_TRANSACTION_CATEGORY_INCOME_TAX = 216;
 	public static final long DVID_TRANSACTION_CATEGORY_NONE = 303;
 	public static final long DVID_TRANSACTION_CATEGORY_IGNORE = 315;
+	public static final long DVID_TRANSACTION_CATEGORY_LOAN = 220;
+	public static final long DVID_TRANSACTION_CATEGORY_LOAN_REPAYMENT = 294;
+	public static final long DVID_TRANSACTION_CATEGORY_TRANSFER = 232;
 	public static final long DVID_BOOKING_CREDIT = 222;
 	public static final long DVID_BOOKING_DEBIT = 223;
 	public static final long DVID_EMPTY_SELECT = -1L;
