@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import org.sakuram.persmony.service.DebtEquityMutualService;
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.util.Constants;
+import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.AccountingIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.ActionVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
@@ -27,6 +28,8 @@ import org.sakuram.persmony.valueobject.RealIsinActionEntryVO;
 import org.sakuram.persmony.valueobject.TradeVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
@@ -62,9 +65,17 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.UploadI18N;
+import com.vaadin.flow.component.upload.UploadI18N.AddFiles;
+import com.vaadin.flow.component.upload.UploadI18N.DropFiles;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Route(value="dem", layout=PersMonyLayout.class)
 @PageTitle("Debt/Equity/MF")
@@ -90,8 +101,8 @@ public class DebtEquityMutualView extends Div {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
-		Component historyView, createView, npsActionView, iaSearchView;
-		Tab historyTab, createTab, npsActionTab, iaSearchTab;
+		Component historyView, createView, npsActionView, iaSearchView, importView;
+		Tab historyTab, createTab, npsActionTab, iaSearchTab, importTab;
 		
 		this.debtEquityMutualService = debtEquityMutualService;
 		this.miscService = miscService;
@@ -115,8 +126,11 @@ public class DebtEquityMutualView extends Div {
 		iaSearchTab = new Tab("IA Search");
 		iaSearchView = isinActionSearchComponent.showForm();
 		tabContent.put(iaSearchTab, iaSearchView);
+		importTab = new Tab("Import");
+		importView = createIsinActionsImportView();
+		tabContent.put(importTab, importView);
 		
-		tabs = new Tabs(historyTab, createTab, npsActionTab, iaSearchTab);
+		tabs = new Tabs(historyTab, createTab, npsActionTab, iaSearchTab, importTab);
         tabs.setWidthFull();
         tabs.addSelectedChangeListener(e -> {
         	content.removeAll();
@@ -1423,5 +1437,102 @@ public class DebtEquityMutualView extends Div {
 		});
 		
 		return formLayout;
+    }
+    
+	private Component createIsinActionsImportView() {
+		FormLayout formLayout;
+		Select<IdValueVO> dematAccountDvSelect;
+		Upload upload;
+		Button importButton;
+		ScopeLocalDummy01 uploadedContents;
+		HorizontalLayout hLayout;
+		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		
+		uploadedContents = new ScopeLocalDummy01();
+		
+        dematAccountDvSelect = ViewFuncs.newDvSelect(miscService.fetchDvsOfCategory(Constants.CATEGORY_DEMAT_ACCOUNT, true, false), null, false, false);
+        formLayout.addFormItem(dematAccountDvSelect, "Demat Account");
+		
+        UploadHandler inMemoryUploadHandler = UploadHandler
+                .inMemory((uploadMetadata, bytes) -> {
+    		        MultipartFile multipartFile =
+    			            new MockMultipartFile(
+    			                "file",                       // form field name
+    			                uploadMetadata.fileName(),          // original filename
+    			                uploadMetadata.contentType(),          // content type
+    			                bytes                            // stream
+    			            );
+
+    			        uploadedContents.setMultipartFile(multipartFile);
+                });
+
+        upload = new Upload(inMemoryUploadHandler);
+        upload.setAcceptedFileTypes(
+                "text/csv", ".csv");
+        upload.setMaxFiles(1);
+
+        UploadI18N i18n = new UploadI18N();
+        i18n.setDropFiles(new DropFiles().setOne("Drop CSV Tradebook here"));
+        i18n.setAddFiles(new AddFiles().setOne("Browse CSV Tradebook..."));
+
+        upload.setI18n(i18n);
+
+        formLayout.add(upload);
+
+        upload.addFileRejectedListener(event -> {
+            String errorMessage = event.getErrorMessage();
+
+            Notification notification = Notification.show(errorMessage, 5000,
+                    Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        });
+		
+        hLayout = new HorizontalLayout();
+		formLayout.add(hLayout);
+		importButton = new Button("Upload");
+		hLayout.add(importButton);
+		importButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		importButton.setDisableOnClick(true);
+
+		// On click of Upload
+		importButton.addClickListener(event -> {
+			Notification notification;
+			int isinActionsCount;
+
+			try {
+				// Validation
+				if (dematAccountDvSelect.getValue() == null) {
+					ViewFuncs.showError("Select a demat account");
+					return;
+				}
+				if (uploadedContents.getMultipartFile() == null) {
+					ViewFuncs.showError("Upload a valid Tradebook");
+					return;
+				}
+				
+				try {
+					isinActionsCount = debtEquityMutualService.importIsinActions(dematAccountDvSelect.getValue(), uploadedContents.getMultipartFile());
+					notification = Notification.show(isinActionsCount + " ISIN Actions Imported.");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					uploadedContents.setMultipartFile(null);
+				} catch (Exception e) {
+					ViewFuncs.showError(UtilFuncs.messageFromException(e));
+					return;
+				}
+			} finally {
+				importButton.setEnabled(true);
+			}
+		});
+
+		return formLayout;
+	}
+	
+
+    @Getter @Setter
+    private class ScopeLocalDummy01 {
+    	MultipartFile multipartFile;
+
     }
 }

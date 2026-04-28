@@ -1,5 +1,9 @@
 package org.sakuram.persmony.service;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +13,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.sakuram.persmony.bean.Action;
 import org.sakuram.persmony.bean.Isin;
 import org.sakuram.persmony.bean.IsinAction;
@@ -43,6 +50,7 @@ import org.sakuram.persmony.valueobject.TradeVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Transactional
@@ -551,6 +559,79 @@ public class DebtEquityMutualService {
 				orElseThrow(() -> new AppException("Missing Action " + isinActionPartId, null));
 		return lotToWithCVo(isinActionPart);
 		
+	}
+	
+	public int importIsinActions(IdValueVO dematAccount, MultipartFile multipartFile) throws IOException {
+    	List<String> cellContentList;
+    	String action, isin, settlementDateStr, holdingChangeDateStr;
+    	BigDecimal quantity, pricePerUnit;
+		int actionCount;
+    	
+		actionCount = 0;
+		try (CSVParser csvParser = new CSVParser(new BufferedReader(new InputStreamReader(multipartFile.getInputStream())), CSVFormat.DEFAULT)) {
+			for (CSVRecord csvRecord : csvParser.getRecords()) {
+				cellContentList = new ArrayList<String>();
+				csvRecord.iterator().forEachRemaining(cellContentList::add);
+				cellContentList.replaceAll(String::trim);
+				action = null;
+				isin = null;
+				settlementDateStr = null;
+				holdingChangeDateStr = null;
+				quantity = null;
+				pricePerUnit = null;
+				
+				// TODO: Following hard-coded transformation is to be performed based on import-specification
+				if (dematAccount.getId() == 143 || dematAccount.getId() == 205 || dematAccount.getId() == 206) { // Zerodha
+					isin = cellContentList.get(2);
+					holdingChangeDateStr = cellContentList.get(3);
+					action = cellContentList.get(7);
+					quantity = new BigDecimal(cellContentList.get(9));
+					pricePerUnit = new BigDecimal(cellContentList.get(10));
+					settlementDateStr = cellContentList.get(14);
+				} else {
+					throw new AppException("Unexpected demat account", null);
+				}
+				
+				if (action == null || action.equals("")) {
+					throw new AppException("Action cannot be empty", null);
+				} else if (action.equals("buy")) {
+					createIsinActions(new IsinActionCreateVO(
+							null,
+							new ActionVO(
+									new IdValueVO(Constants.DVID_ISIN_ACTION_TYPE_BUY),
+									isin,
+									null,
+									null,
+									null,
+									null
+									),
+							dematAccount,
+							Arrays.asList(new RealIsinActionEntryVO[] {
+									new RealIsinActionEntryVO(
+											Constants.ISIN_ACTION_SPEC_MAP.get(Constants.DVID_ISIN_ACTION_TYPE_BUY).getIsinActionEntrySpecVOList()
+													.stream()
+													.filter(iaesVO -> iaesVO.getEntrySpecName().equals(Constants.ACTION_TYPE_BUY_ENTRY_SPEC_NAME_BUY))
+													.findFirst()
+													.get(),
+											LocalDate.parse(settlementDateStr),
+											LocalDate.parse(holdingChangeDateStr),
+											isin,
+											quantity.doubleValue(),
+											dematAccount,
+											pricePerUnit.doubleValue()
+											)
+							}),
+							null,
+							new ArrayList<TradeVO>(0),
+							new ArrayList<AccountingIsinActionEntryVO>(0)
+							));
+				} else {
+					throw new AppException("Unhandled action " + action, null);
+				}
+				actionCount++;
+			}
+		}
+		return actionCount;
 	}
 	
 	private ActionVO actionToVo(Action action) {
