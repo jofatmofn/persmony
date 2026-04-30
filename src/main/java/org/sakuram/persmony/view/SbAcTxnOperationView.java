@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.sakuram.persmony.service.MiscService;
 import org.sakuram.persmony.service.SbAcTxnService;
+import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
 import org.sakuram.persmony.valueobject.FieldSpecVO;
@@ -21,6 +21,7 @@ import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 import org.sakuram.persmony.valueobject.SbAcTxnImportStatsVO;
+import org.sakuram.persmony.view.TxnCatEarCriteriaComponent.TxnCatEarCriteriaVO;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
@@ -29,9 +30,6 @@ import org.vaadin.firitin.components.DynamicFileDownloader;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
-import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.HasValue.ValueChangeEvent;
-import com.vaadin.flow.component.HasValue.ValueChangeListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -90,9 +88,10 @@ public class SbAcTxnOperationView extends Div {
 	MiscService miscService;
 	
 	IsinActionSearchComponent isinActionSearchComponent;
+	TxnCatEarCriteriaComponent txnCatEarCriteriaComponent;
 	DatePickerI18n isoDatePickerI18n;
 	
-	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent, DatePickerI18n isoDatePickerI18n) {
+	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent, TxnCatEarCriteriaComponent txnCatEarCriteriaComponent, DatePickerI18n isoDatePickerI18n) {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
@@ -103,6 +102,7 @@ public class SbAcTxnOperationView extends Div {
 		this.miscService = miscService;
 		this.isinActionSearchComponent = isinActionSearchComponent;
 		this.isoDatePickerI18n = isoDatePickerI18n;
+		this.txnCatEarCriteriaComponent = txnCatEarCriteriaComponent;
 		
 		setSizeFull();
 		
@@ -406,15 +406,15 @@ public class SbAcTxnOperationView extends Div {
 		DatePicker sbAcTxnFromDatePicker, sbAcTxnToDatePicker;
 		IntegerField sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField;	// TODO: LongField
 		NumberField sbAcTxnFromAmoutNumberField, sbAcTxnToAmoutNumberField;
-		TextField narrationTextField, endAccountReferenceTextField;
-		Select<IdValueVO> bankAccountOrInvestorDvSelect, transactionCategoryDvSelect, endAccountReferenceDvSelect;
+		TextField narrationTextField;
+		Select<IdValueVO> bankAccountOrInvestorDvSelect;
 		RadioButtonGroup<String> bookingRadioButtonGroup;
 		HorizontalLayout hLayout;
-		Select<IdValueVO> narrationOperatorSelect, endAccountReferenceOperatorSelect;
+		Select<IdValueVO> narrationOperatorSelect;
 		Button fetchButton, clearButton;
 		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
 		GridContextMenu<SavingsAccountTransactionVO> sATGridContextMenu;
-		AtomicBoolean isEarTextEnabled, isEarSelectEnabled;
+		TxnCatEarCriteriaVO txnCatEarCriteriaVO;
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
@@ -458,110 +458,8 @@ public class SbAcTxnOperationView extends Div {
 		bookingRadioButtonGroup.setValue("Both");
 		formLayout.addFormItem(bookingRadioButtonGroup, "Booking");
 		
-		transactionCategoryDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_TRANSACTION_CATEGORY + "+" + Constants.CATEGORY_TRANSACTION_CATEGORY_2, null, true, true);
-		// transactionCategoryDvSelect.getListDataView().addItem(new IdValueVO(Constants.DVID_TRANSACTION_CATEGORY_DTI, Constants.domainValueCache.get(Constants.DVID_TRANSACTION_CATEGORY_DTI).getValue()));
-		formLayout.addFormItem(transactionCategoryDvSelect, "Transaction Category");
-		
-		endAccountReferenceOperatorSelect = ViewFuncs.newSelect(FieldSpecVO.getTxtOperatorList(), "Operator", true, false);
-		endAccountReferenceTextField = new TextField("Specify Value");
-		endAccountReferenceDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORIES_USED_BY_CATEGORY_TRANSACTION_CATEGORY, null, true, false);
-		endAccountReferenceDvSelect.setLabel("Select Value");
-		isEarTextEnabled = new AtomicBoolean(true);
-		isEarSelectEnabled = new AtomicBoolean(true);
-		hLayout = new HorizontalLayout();
-		formLayout.addFormItem(hLayout, "End Account Reference");
-		hLayout.add(endAccountReferenceOperatorSelect, endAccountReferenceTextField, endAccountReferenceDvSelect);
-		
-		ValueChangeListener<ValueChangeEvent<?>> earLogic = e -> {
-			String dvCategory;
-			HasValue<?, ?> source;
-			
-			source = e.getHasValue();
-			if (source == transactionCategoryDvSelect) {
-				if (transactionCategoryDvSelect.getValue() == null) {
-					isEarTextEnabled.set(true);
-					isEarSelectEnabled.set(true);
-					endAccountReferenceDvSelect.clear();
-					ViewFuncs.newDvSelect(endAccountReferenceDvSelect, miscService, Constants.CATEGORIES_USED_BY_CATEGORY_TRANSACTION_CATEGORY, null, true, false);
-				} else if(transactionCategoryDvSelect.getValue().getId() == Constants.DVID_EMPTY_SELECT) {
-					isEarTextEnabled.set(false);
-					isEarSelectEnabled.set(false);
-					endAccountReferenceTextField.setValue("");
-					endAccountReferenceOperatorSelect.setValue(null);
-					endAccountReferenceDvSelect.clear();
-				} else {
-					dvCategory = Constants.TXN_CAT_TO_DV_CAT_MAP.get(transactionCategoryDvSelect.getValue().getId());
-					if (dvCategory == null || dvCategory.equals("")) {
-						isEarTextEnabled.set(true);
-						isEarSelectEnabled.set(false);
-						endAccountReferenceDvSelect.clear();
-					} else if (dvCategory.equals(Constants.CATEGORY_NONE)) {
-						isEarTextEnabled.set(false);
-						isEarSelectEnabled.set(false);
-						endAccountReferenceTextField.setValue("");
-						endAccountReferenceOperatorSelect.setValue(null);
-						endAccountReferenceDvSelect.clear();
-					} else {
-						isEarTextEnabled.set(false);
-						isEarSelectEnabled.set(true);
-						endAccountReferenceOperatorSelect.setValue(null);
-						endAccountReferenceTextField.setValue("");
-						endAccountReferenceDvSelect.clear();
-						ViewFuncs.newDvSelect(endAccountReferenceDvSelect, miscService, dvCategory, null, true, false);
-					}
-				}
-				endAccountReferenceOperatorSelect.setEnabled(isEarTextEnabled.get());
-				endAccountReferenceTextField.setEnabled(isEarTextEnabled.get());
-				endAccountReferenceDvSelect.setEnabled(isEarSelectEnabled.get());
-				
-			} else if (source == endAccountReferenceOperatorSelect) {
-				if (endAccountReferenceOperatorSelect.getValue() == null) {
-					endAccountReferenceTextField.setValue("");
-				}
-			} else if (source == endAccountReferenceTextField) {
-				if (endAccountReferenceTextField.getValue().isEmpty()) {
-					endAccountReferenceOperatorSelect.setValue(null);
-					endAccountReferenceDvSelect.setEnabled(isEarSelectEnabled.get());
-				} else {
-					endAccountReferenceDvSelect.setValue(null);
-					endAccountReferenceDvSelect.setEnabled(false);
-				}
-			} else if (source == endAccountReferenceDvSelect) {
-				if (endAccountReferenceDvSelect.getValue() == null) {
-					if (isEarTextEnabled.get()) {
-						endAccountReferenceOperatorSelect.setValue(null);
-					} else {
-						endAccountReferenceOperatorSelect.setValue(null);
-					}
-					endAccountReferenceOperatorSelect.setEnabled(isEarTextEnabled.get());
-					endAccountReferenceTextField.setEnabled(isEarTextEnabled.get());
-				} else {
-					endAccountReferenceOperatorSelect.setValue(null);
-					endAccountReferenceOperatorSelect.setEnabled(false);
-					endAccountReferenceTextField.setValue("");
-					endAccountReferenceTextField.setEnabled(false);
-				}
-				
-			}
-		};
-		transactionCategoryDvSelect.addValueChangeListener(e -> {
-			earLogic.valueChanged(e);
-		});
-		endAccountReferenceOperatorSelect.addValueChangeListener(e -> {
-			if (e.isFromClient()) {
-				earLogic.valueChanged(e);
-			}
-		});
-		endAccountReferenceTextField.addValueChangeListener(e -> {
-			if (e.isFromClient()) {
-				earLogic.valueChanged(e);
-			}
-		});
-		endAccountReferenceDvSelect.addValueChangeListener(e -> {
-			if (e.isFromClient()) {
-				earLogic.valueChanged(e);
-			}
-		});
+		txnCatEarCriteriaVO = new TxnCatEarCriteriaComponent.TxnCatEarCriteriaVO();
+		formLayout.add(txnCatEarCriteriaComponent.showForm(txnCatEarCriteriaVO));
 		
 		hLayout = new HorizontalLayout();
 		formLayout.add(hLayout);
@@ -622,16 +520,10 @@ public class SbAcTxnOperationView extends Div {
 					ViewFuncs.showError("Specify Value for Narration");
 					return;
 				}
-				if (transactionCategoryDvSelect.getValue() != null && transactionCategoryDvSelect.getValue().getValue().equals("Empty") && !endAccountReferenceTextField.isEmpty()) {
-					ViewFuncs.showError("End Account Reference can be specified only when Transaction Category is not 'Empty'");
-					return;
-				}
-				if (!endAccountReferenceTextField.isEmpty() && endAccountReferenceOperatorSelect.getValue() == null) {
-					ViewFuncs.showError("End Account Reference: Non-matching Operator and Value");
-					return;
-				}
-				if (endAccountReferenceTextField.isEmpty() && endAccountReferenceOperatorSelect.getValue() != null && endAccountReferenceOperatorSelect.getValue().getId() != FieldSpecVO.TxtOperator.EQ.ordinal() && endAccountReferenceOperatorSelect.getValue().getId() != FieldSpecVO.TxtOperator.NE.ordinal()) {
-					ViewFuncs.showError("Specify Value for End Account Reference " + endAccountReferenceOperatorSelect.getValue().getId());
+				try {
+					txnCatEarCriteriaComponent.validateInput();
+				} catch (AppException e) {
+					ViewFuncs.showError(e.getMessage());
 					return;
 				}
 				
@@ -647,9 +539,9 @@ public class SbAcTxnOperationView extends Div {
 						narrationOperatorSelect.getValue() == null ? null : narrationOperatorSelect.getValue().getValue(),
 						bankAccountOrInvestorDvSelect.getValue() == null ? null : bankAccountOrInvestorDvSelect.getValue().getId(),
 						bookingRadioButtonGroup.getValue().equals("Both") ? null : (bookingRadioButtonGroup.getValue().equals("Credit Only") ? Constants.DVID_BOOKING_CREDIT : Constants.DVID_BOOKING_DEBIT),
-						transactionCategoryDvSelect.getValue() == null ? null : transactionCategoryDvSelect.getValue().getId(),
-						(endAccountReferenceDvSelect.getValue() == null ? (endAccountReferenceTextField.getValue().equals("") ? null : endAccountReferenceTextField.getValue()) : endAccountReferenceDvSelect.getValue().getId().toString()),
-						(endAccountReferenceDvSelect.getValue() == null ? (endAccountReferenceOperatorSelect.getValue() == null ? null : endAccountReferenceOperatorSelect.getValue().getValue()) : FieldSpecVO.TxtOperator.EQ.name())
+						txnCatEarCriteriaVO.getTransactionCategoryIdValueVO() == null ? null : txnCatEarCriteriaVO.getTransactionCategoryIdValueVO().getId(),
+						(txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO() == null ? (txnCatEarCriteriaVO.getEndAccountReference().equals("") ? null : txnCatEarCriteriaVO.getEndAccountReference()) : txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO().getId().toString()),
+						(txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO() == null ? (txnCatEarCriteriaVO.getEndAccountReferenceOperatorIdValueVO() == null ? null : txnCatEarCriteriaVO.getEndAccountReferenceOperatorIdValueVO().getValue()) : FieldSpecVO.TxtOperator.EQ.name())
 						);
 				try {
 					recordList = sbAcTxnService.searchSavingsAccountTransactions(sbAcTxnCriteriaVO);
@@ -676,10 +568,7 @@ public class SbAcTxnOperationView extends Div {
 			narrationTextField.setValue("");
 			bankAccountOrInvestorDvSelect.clear();
 			bookingRadioButtonGroup.setValue("Both");
-			transactionCategoryDvSelect.clear();
-			endAccountReferenceOperatorSelect.clear();
-			endAccountReferenceTextField.setValue("");
-			endAccountReferenceDvSelect.clear();
+			txnCatEarCriteriaComponent.clear();
 		});
 
 		savingsAccountTransactionsGrid.addItemDoubleClickListener(event -> {
