@@ -187,7 +187,7 @@ public class DTIOperationComponent {
 			hLayout = new HorizontalLayout();
 			formLayout.addFormItem(hLayout, "Realisation");
 			bankAccountDvSelect = newDvSelect("Bank Account", Constants.CATEGORY_ACCOUNT, false);
-			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (bankAccountDvSelect == null || bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()), () -> transactionDatePicker.getValue());
+			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (bankAccountDvSelect.getValue()), () -> transactionDatePicker.getValue());
 			hLayout.add(bankAccountDvSelect, sbAcTxnComponent.getLayout());
 		}
 		
@@ -350,7 +350,7 @@ public class DTIOperationComponent {
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Investment Realisation");
 		bankAccountDvSelect = newDvSelect("Account", Constants.CATEGORY_ACCOUNT, true);
-		sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (bankAccountDvSelect == null || bankAccountDvSelect.getValue() == null ? null : bankAccountDvSelect.getValue().getId()), () -> (paymentScheduleVOList == null || paymentScheduleVOList.size() == 0 ? null : paymentScheduleVOList.get(0).getDueDate()));
+		sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (bankAccountDvSelect.getValue()), () -> (paymentScheduleVOList == null || paymentScheduleVOList.size() == 0 ? null : paymentScheduleVOList.get(0).getDueDate()));
 		hLayout.add(bankAccountDvSelect, sbAcTxnComponent.getLayout());
 
 		dynamicReceiptPeriodicityRadioButtonGroup = new RadioButtonGroup<>();

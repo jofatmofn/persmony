@@ -20,8 +20,8 @@ public class SbAcTxnCriteriaVO {
 	Double fromAmount;
 	Double toAmount;
 	String narration;
-	String narrationOperator;
-	Long bankAccountOrInvestorDvId;
+	IdValueVO narrationOperatorIdValueVO;
+	IdValueVO bankAccountOrInvestorIdValueVO;
 	Long bookingDvId;
 	Long transactionCategoryDvId;
 	String endAccountReference;

@@ -67,13 +67,13 @@ public class SavingsAccountTransactionRepositoryImpl implements SavingsAccountTr
 			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getToAmount());
 			mainQueryStringBuffer.append(" ");
 		}
-		if (UtilFuncs.toFormQueryForNullableField(sbAcTxnCriteriaVO.getNarrationOperator(), sbAcTxnCriteriaVO.getNarration())) {
+		if (sbAcTxnCriteriaVO.getNarrationOperatorIdValueVO() != null && UtilFuncs.toFormQueryForNullableField(sbAcTxnCriteriaVO.getNarrationOperatorIdValueVO().getValue(), sbAcTxnCriteriaVO.getNarration())) {
 			mainQueryStringBuffer.append("AND ");
-			mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SAT.narration", sbAcTxnCriteriaVO.getNarrationOperator(), sbAcTxnCriteriaVO.getNarration())));
+			mainQueryStringBuffer.append(UtilFuncs.sqlWhereClauseText(new SearchCriterionVO("SAT.narration", sbAcTxnCriteriaVO.getNarrationOperatorIdValueVO().getValue(), sbAcTxnCriteriaVO.getNarration())));
 		}
-		if (sbAcTxnCriteriaVO.getBankAccountOrInvestorDvId() != null) {
+		if (sbAcTxnCriteriaVO.getBankAccountOrInvestorIdValueVO() != null) {
 			mainQueryStringBuffer.append("AND SAT.bank_account_or_investor_fk = ");
-			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getBankAccountOrInvestorDvId());
+			mainQueryStringBuffer.append(sbAcTxnCriteriaVO.getBankAccountOrInvestorIdValueVO().getId());
 			mainQueryStringBuffer.append(" ");
 		}
 		if (sbAcTxnCriteriaVO.getBookingDvId() != null) {

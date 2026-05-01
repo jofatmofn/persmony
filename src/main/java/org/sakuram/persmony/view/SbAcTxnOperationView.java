@@ -15,13 +15,11 @@ import org.sakuram.persmony.service.SbAcTxnService;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.UtilFuncs;
-import org.sakuram.persmony.valueobject.FieldSpecVO;
 import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCategoryVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 import org.sakuram.persmony.valueobject.SbAcTxnImportStatsVO;
-import org.sakuram.persmony.view.TxnCatEarCriteriaComponent.TxnCatEarCriteriaVO;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
@@ -55,7 +53,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
@@ -88,10 +85,10 @@ public class SbAcTxnOperationView extends Div {
 	MiscService miscService;
 	
 	IsinActionSearchComponent isinActionSearchComponent;
-	TxnCatEarCriteriaComponent txnCatEarCriteriaComponent;
+	SatPlanCriteriaComponent satPlanCriteriaComponent;
 	DatePickerI18n isoDatePickerI18n;
 	
-	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent, TxnCatEarCriteriaComponent txnCatEarCriteriaComponent, DatePickerI18n isoDatePickerI18n) {
+	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent, SatPlanCriteriaComponent satPlanCriteriaComponent, DatePickerI18n isoDatePickerI18n) {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
@@ -102,7 +99,7 @@ public class SbAcTxnOperationView extends Div {
 		this.miscService = miscService;
 		this.isinActionSearchComponent = isinActionSearchComponent;
 		this.isoDatePickerI18n = isoDatePickerI18n;
-		this.txnCatEarCriteriaComponent = txnCatEarCriteriaComponent;
+		this.satPlanCriteriaComponent = satPlanCriteriaComponent;
 		
 		setSizeFull();
 		
@@ -403,63 +400,17 @@ public class SbAcTxnOperationView extends Div {
 	@SuppressWarnings("unchecked")
 	private Component createSbAcTxnCategoriseView() {
 		FormLayout formLayout;
-		DatePicker sbAcTxnFromDatePicker, sbAcTxnToDatePicker;
-		IntegerField sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField;	// TODO: LongField
-		NumberField sbAcTxnFromAmoutNumberField, sbAcTxnToAmoutNumberField;
-		TextField narrationTextField;
-		Select<IdValueVO> bankAccountOrInvestorDvSelect;
-		RadioButtonGroup<String> bookingRadioButtonGroup;
 		HorizontalLayout hLayout;
-		Select<IdValueVO> narrationOperatorSelect;
 		Button fetchButton, clearButton;
 		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
 		GridContextMenu<SavingsAccountTransactionVO> sATGridContextMenu;
-		TxnCatEarCriteriaVO txnCatEarCriteriaVO;
+		SbAcTxnCriteriaVO satPlanCriteriaVO;
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		
-		sbAcTxnFromIdIntegerField = new IntegerField("From");
-		sbAcTxnToIdIntegerField = new IntegerField("To");
-		hLayout = new HorizontalLayout();
-		formLayout.addFormItem(hLayout, "SB Ac Txn Id");
-		hLayout.add(sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField);
-		
-		sbAcTxnFromDatePicker = new DatePicker("From");
-		sbAcTxnFromDatePicker.setI18n(isoDatePickerI18n);
-		sbAcTxnToDatePicker = new DatePicker("To");
-		sbAcTxnToDatePicker.setI18n(isoDatePickerI18n);
-		hLayout = new HorizontalLayout();
-		formLayout.addFormItem(hLayout, "Period");
-		hLayout.add(sbAcTxnFromDatePicker, sbAcTxnToDatePicker);
-		
-		sbAcTxnFromAmoutNumberField = new NumberField("From");
-		sbAcTxnToAmoutNumberField = new NumberField("To");
-		hLayout = new HorizontalLayout();
-		formLayout.addFormItem(hLayout, "Amount");
-		hLayout.add(sbAcTxnFromAmoutNumberField, sbAcTxnToAmoutNumberField);
-
-		narrationOperatorSelect = ViewFuncs.newSelect(FieldSpecVO.getTxtOperatorList(), "Operator", true, false);
-		narrationTextField = new TextField("Value");
-		hLayout = new HorizontalLayout();
-		formLayout.addFormItem(hLayout, "Narration");
-		hLayout.add(narrationOperatorSelect, narrationTextField);
-		narrationOperatorSelect.addValueChangeListener(event -> {
-			if (narrationOperatorSelect.getValue() == null) {
-				narrationTextField.setValue("");
-			}
-		});
-		
-		bankAccountOrInvestorDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_ACCOUNT + "+" + Constants.CATEGORY_PRIMARY_INVESTOR, null, true, false);
-		formLayout.addFormItem(bankAccountOrInvestorDvSelect, "Account");
-		
-		bookingRadioButtonGroup = new RadioButtonGroup<String>();
-		bookingRadioButtonGroup.setItems("Both", "Credit Only", "Debit Only");
-		bookingRadioButtonGroup.setValue("Both");
-		formLayout.addFormItem(bookingRadioButtonGroup, "Booking");
-		
-		txnCatEarCriteriaVO = new TxnCatEarCriteriaComponent.TxnCatEarCriteriaVO();
-		formLayout.add(txnCatEarCriteriaComponent.showForm(txnCatEarCriteriaVO));
+		satPlanCriteriaVO = new SbAcTxnCriteriaVO();
+		formLayout.add(satPlanCriteriaComponent.showForm(satPlanCriteriaVO));
 		
 		hLayout = new HorizontalLayout();
 		formLayout.add(hLayout);
@@ -491,60 +442,21 @@ public class SbAcTxnOperationView extends Div {
 		
 		// On click of Fetch
 		fetchButton.addClickListener(event -> {
-			SbAcTxnCriteriaVO sbAcTxnCriteriaVO;
 			List<SavingsAccountTransactionVO> recordList = null;
 			Notification notification;
 
 			try {
 				// Validation
-				if (sbAcTxnFromIdIntegerField.getValue() != null && sbAcTxnToIdIntegerField.getValue() != null &&
-						sbAcTxnFromIdIntegerField.getValue() > sbAcTxnToIdIntegerField.getValue()) {
-					ViewFuncs.showError("From SB Ac Txn Id cannot be greater than the To SB Ac Txn Id");
-					return;
-				}
-				if (sbAcTxnFromDatePicker.getValue() != null && sbAcTxnToDatePicker.getValue() != null &&
-						sbAcTxnFromDatePicker.getValue().isAfter(sbAcTxnToDatePicker.getValue())) {
-					ViewFuncs.showError("From Date cannot be after the To Date");
-					return;
-				}
-				if (sbAcTxnFromAmoutNumberField.getValue() != null && sbAcTxnToAmoutNumberField.getValue() != null &&
-						sbAcTxnFromAmoutNumberField.getValue() > sbAcTxnToAmoutNumberField.getValue()) {
-					ViewFuncs.showError("From Amount cannot be greater than the To Amount");
-					return;
-				}
-				if (!narrationTextField.isEmpty() && narrationOperatorSelect.getValue() == null) {
-					ViewFuncs.showError("Narration: Non-matching Operator and Value");
-					return;
-				}
-				if (narrationTextField.isEmpty() && narrationOperatorSelect.getValue() != null && narrationOperatorSelect.getValue().getId() != FieldSpecVO.TxtOperator.EQ.ordinal() && narrationOperatorSelect.getValue().getId() != FieldSpecVO.TxtOperator.NE.ordinal()) {
-					ViewFuncs.showError("Specify Value for Narration");
-					return;
-				}
 				try {
-					txnCatEarCriteriaComponent.validateInput();
+					satPlanCriteriaComponent.validateInput();
 				} catch (AppException e) {
 					ViewFuncs.showError(e.getMessage());
 					return;
 				}
 				
 				// Back-end Call
-				sbAcTxnCriteriaVO = new SbAcTxnCriteriaVO(
-						sbAcTxnFromIdIntegerField.getValue() == null ? null : (long)sbAcTxnFromIdIntegerField.getValue(),
-						sbAcTxnToIdIntegerField.getValue() == null ? null : (long)sbAcTxnToIdIntegerField.getValue(),
-						sbAcTxnFromDatePicker.getValue(),
-						sbAcTxnToDatePicker.getValue(),
-						sbAcTxnFromAmoutNumberField.getValue() == null ? null : (double)sbAcTxnFromAmoutNumberField.getValue().doubleValue(),
-						sbAcTxnToAmoutNumberField.getValue() == null ? null : (double)sbAcTxnToAmoutNumberField.getValue().doubleValue(),
-						narrationTextField.getValue().equals("") ? null : narrationTextField.getValue(),
-						narrationOperatorSelect.getValue() == null ? null : narrationOperatorSelect.getValue().getValue(),
-						bankAccountOrInvestorDvSelect.getValue() == null ? null : bankAccountOrInvestorDvSelect.getValue().getId(),
-						bookingRadioButtonGroup.getValue().equals("Both") ? null : (bookingRadioButtonGroup.getValue().equals("Credit Only") ? Constants.DVID_BOOKING_CREDIT : Constants.DVID_BOOKING_DEBIT),
-						txnCatEarCriteriaVO.getTransactionCategoryIdValueVO() == null ? null : txnCatEarCriteriaVO.getTransactionCategoryIdValueVO().getId(),
-						(txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO() == null ? (txnCatEarCriteriaVO.getEndAccountReference().equals("") ? null : txnCatEarCriteriaVO.getEndAccountReference()) : txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO().getId().toString()),
-						(txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO() == null ? (txnCatEarCriteriaVO.getEndAccountReferenceOperatorIdValueVO() == null ? null : txnCatEarCriteriaVO.getEndAccountReferenceOperatorIdValueVO().getValue()) : FieldSpecVO.TxtOperator.EQ.name())
-						);
 				try {
-					recordList = sbAcTxnService.searchSavingsAccountTransactions(sbAcTxnCriteriaVO);
+					recordList = sbAcTxnService.searchSavingsAccountTransactions(satPlanCriteriaVO);
 					notification = Notification.show("No. of Savings Account Transactions fetched: " + recordList.size());
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 					savingsAccountTransactionsGrid.setItems(recordList);
@@ -558,17 +470,7 @@ public class SbAcTxnOperationView extends Div {
 		});
 
 		clearButton.addClickListener(event -> {
-			sbAcTxnFromIdIntegerField.setValue(null);
-			sbAcTxnToIdIntegerField.setValue(null);
-			sbAcTxnFromDatePicker.setValue(null);
-			sbAcTxnToDatePicker.setValue(null);
-			sbAcTxnFromAmoutNumberField.setValue(null);
-			sbAcTxnToAmoutNumberField.setValue(null);
-			narrationOperatorSelect.clear();
-			narrationTextField.setValue("");
-			bankAccountOrInvestorDvSelect.clear();
-			bookingRadioButtonGroup.setValue("Both");
-			txnCatEarCriteriaComponent.clear();
+			satPlanCriteriaComponent.clear();
 		});
 
 		savingsAccountTransactionsGrid.addItemDoubleClickListener(event -> {

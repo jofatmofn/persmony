@@ -14,7 +14,6 @@ import com.vaadin.flow.component.HasValue.ValueChangeEvent;
 import com.vaadin.flow.component.HasValue.ValueChangeListener;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
@@ -26,9 +25,7 @@ import lombok.Setter;
 
 @SpringComponent
 @Scope("prototype")
-public class TxnCatEarCriteriaComponent extends Div {
-	private static final long serialVersionUID = -6578773406766073257L;
-	
+public class TxnCatEarCriteriaComponent {
 	MiscService miscService;
 	
 	TxnCatEarCriteriaVO txnCatEarCriteriaVO;
@@ -186,6 +183,7 @@ public class TxnCatEarCriteriaComponent extends Div {
 		txnCatEarCriteriaVO.setEndAccountReferenceOperatorIdValueVO(null);
 		txnCatEarCriteriaVO.setEndAccountReference("");
 		txnCatEarCriteriaVO.setEndAccountReferenceIdValueVO(null);
+		binder.refreshFields();
 	}
 	
     @Getter @Setter

@@ -262,7 +262,7 @@ public class RealisationComponent extends VerticalLayout {
 			formLayout.addFormItem(closureTypeDvSelect, "Account Closure Type");
 
 			realisationIdIntegerField = new IntegerField();
-			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO == null || investmentTransaction2VO.getDefaultBankAccountIdValueVO() == null ? null : investmentTransaction2VO.getDefaultBankAccountIdValueVO().getId()), () -> transactionDatePicker.getValue());
+			sbAcTxnComponent = new SbAcTxnComponent(sbAcTxnService, () -> (investmentTransaction2VO.getDefaultBankAccountIdValueVO()), () -> transactionDatePicker.getValue());
 			if (selectedRealisationIdValueVO.getId() == Constants.DVID_REALISATION_TYPE_SAVINGS_ACCOUNT) {
 				formLayout.addFormItem(sbAcTxnComponent.getLayout(), "SB A/c Txn Id");
 				if (savingsAccountTransactionVO == null) {

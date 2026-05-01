@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import org.sakuram.persmony.service.SbAcTxnService;
 import org.sakuram.persmony.util.UtilFuncs;
+import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.SavingsAccountTransactionVO;
 import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 
@@ -32,7 +33,7 @@ public class SbAcTxnComponent {
 	IntegerField sbAcTxnIdIntegerField;	// TODO: Should be LongField
 	Button fetchButton;
 	
-	public SbAcTxnComponent(SbAcTxnService sbAcTxnService, Supplier<Long> bankAccountDvIdSupplier, Supplier<LocalDate> transactionDateSupplier) {
+	public SbAcTxnComponent(SbAcTxnService sbAcTxnService, Supplier<IdValueVO> bankAccountIdValueVOSupplier, Supplier<LocalDate> transactionDateSupplier) {
 		
 		layout = new HorizontalLayout();
 		sbAcTxnIdIntegerField = new IntegerField("SAT Id");
@@ -52,14 +53,14 @@ public class SbAcTxnComponent {
 			List<SavingsAccountTransactionVO> recordList = null;
 			
 			try {
-				if (bankAccountDvIdSupplier == null || bankAccountDvIdSupplier.get() == null ||
+				if (bankAccountIdValueVOSupplier == null || bankAccountIdValueVOSupplier.get() == null ||
 						transactionDateSupplier == null || transactionDateSupplier.get() == null) {
 					return;
 				}
 				sbAcTxnCriteriaVO = new SbAcTxnCriteriaVO();
 				sbAcTxnCriteriaVO.setFromDate(transactionDateSupplier.get());
 				sbAcTxnCriteriaVO.setToDate(transactionDateSupplier.get());
-				sbAcTxnCriteriaVO.setBankAccountOrInvestorDvId(bankAccountDvIdSupplier.get());
+				sbAcTxnCriteriaVO.setBankAccountOrInvestorIdValueVO(bankAccountIdValueVOSupplier.get());
 
 				dialog = new Dialog();
 				dialog.setHeaderTitle("SB A/c Transactions");
