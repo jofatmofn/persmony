@@ -33,6 +33,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
@@ -56,8 +57,9 @@ public class PlanView extends Div {
 	DatePickerI18n isoDatePickerI18n;
 	
 	ObjectProvider<DTInvestmentTransactionSearchComponent> investmentTransactionSearchComponentObjectProvider;
+	ObjectProvider<CashFlowSearchComponent> cashFlowSearchComponentObjectProvider;
 	
-	public PlanView(PlanService planService, MiscService miscService, DatePickerI18n isoDatePickerI18n, ObjectProvider<DTInvestmentTransactionSearchComponent> investmentTransactionSearchComponentObjectProvider) {
+	public PlanView(PlanService planService, MiscService miscService, DatePickerI18n isoDatePickerI18n, ObjectProvider<DTInvestmentTransactionSearchComponent> investmentTransactionSearchComponentObjectProvider, ObjectProvider<CashFlowSearchComponent> cashFlowSearchComponentObjectProvider) {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
@@ -68,6 +70,7 @@ public class PlanView extends Div {
 		this.miscService = miscService;
 		this.isoDatePickerI18n = isoDatePickerI18n;
 		this.investmentTransactionSearchComponentObjectProvider = investmentTransactionSearchComponentObjectProvider;
+		this.cashFlowSearchComponentObjectProvider = cashFlowSearchComponentObjectProvider;
 		
 		setSizeFull();
 		
@@ -228,11 +231,14 @@ public class PlanView extends Div {
 		HorizontalLayout hLayout;
 		IntegerField incomeItIdIntegerField, incomeCfIdIntegerField, expenditureItIdIntegerField, expenditureCfIdIntegerField;
 		NumberField mappedAmountNumberField;
-		Button createButton, incomeItSearchButton, expenditureItSearchButton;
+		Button createButton, incomeItSearchButton, expenditureItSearchButton, incomeCfSearchButton, expenditureCfSearchButton;
 		DTInvestmentTransactionSearchComponent incomeInvestmentTransactionSearchComponent, expenditureInvestmentTransactionSearchComponent;
+		CashFlowSearchComponent incomeCashFlowSearchComponent, expenditureCashFlowSearchComponent;
 
 		incomeInvestmentTransactionSearchComponent = investmentTransactionSearchComponentObjectProvider.getObject();
 		expenditureInvestmentTransactionSearchComponent = investmentTransactionSearchComponentObjectProvider.getObject();
+		incomeCashFlowSearchComponent = cashFlowSearchComponentObjectProvider.getObject();
+		expenditureCashFlowSearchComponent = cashFlowSearchComponentObjectProvider.getObject();
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
@@ -244,7 +250,11 @@ public class PlanView extends Div {
 		incomeItSearchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		incomeItSearchButton.setDisableOnClick(true);
 		incomeCfIdIntegerField = new IntegerField("Cash Flow");
-		hLayout.add(incomeItIdIntegerField, incomeItSearchButton, incomeCfIdIntegerField);
+		incomeCfSearchButton = new Button("CF Search");
+		incomeCfSearchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		incomeCfSearchButton.setDisableOnClick(true);
+		hLayout.add(incomeItIdIntegerField, incomeItSearchButton, incomeCfIdIntegerField, incomeCfSearchButton);
+		hLayout.setAlignItems(FlexComponent.Alignment.CENTER);
 		
 		hLayout = new HorizontalLayout();
 		formLayout.addFormItem(hLayout, "Expenditure");
@@ -253,7 +263,11 @@ public class PlanView extends Div {
 		expenditureItSearchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		expenditureItSearchButton.setDisableOnClick(true);
 		expenditureCfIdIntegerField = new IntegerField("Cash Flow");
-		hLayout.add(expenditureItIdIntegerField, expenditureItSearchButton, expenditureCfIdIntegerField);
+		expenditureCfSearchButton = new Button("CF Search");
+		expenditureCfSearchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		expenditureCfSearchButton.setDisableOnClick(true);
+		hLayout.add(expenditureItIdIntegerField, expenditureItSearchButton, expenditureCfIdIntegerField, expenditureCfSearchButton);
+		hLayout.setAlignItems(FlexComponent.Alignment.CENTER);
 		
 		mappedAmountNumberField = new NumberField();
 		formLayout.addFormItem(mappedAmountNumberField, "Mapped Amount");
@@ -310,13 +324,36 @@ public class PlanView extends Div {
 				incomeItSearchButton.setEnabled(true);
 			}
 		});
+		incomeCfSearchButton.addClickListener(event -> {
+			Dialog dialog;
+			Button closeButton;
+
+			try {
+				dialog = new Dialog();
+				dialog.setHeaderTitle("Income Cash Flow");
+				closeButton = new Button(new Icon("lumo", "cross"),
+				        (e) -> {
+				        	dialog.close();
+				        });
+				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+				dialog.getHeader().add(closeButton);
+	    		dialog.add(incomeCashFlowSearchComponent.showForm(Constants.DVID_BOOKING_CREDIT));
+	    		dialog.open();
+	    		incomeCashFlowSearchComponent.getCashFlowsGrid().addItemDoubleClickListener(dcEvent -> {
+	    			incomeCfIdIntegerField.setValue(dcEvent.getItem().getId().intValue());
+	    			dialog.close();
+	    		});
+			} finally {
+				incomeCfSearchButton.setEnabled(true);
+			}
+		});
 		expenditureItSearchButton.addClickListener(event -> {
 			Dialog dialog;
 			Button closeButton;
 
 			try {
 				dialog = new Dialog();
-				dialog.setHeaderTitle("Income Investment Transaction");
+				dialog.setHeaderTitle("Expenditure Investment Transaction");
 				closeButton = new Button(new Icon("lumo", "cross"),
 				        (e) -> {
 				        	dialog.close();
@@ -333,6 +370,29 @@ public class PlanView extends Div {
 	    		});
 			} finally {
 				expenditureItSearchButton.setEnabled(true);
+			}
+		});
+		expenditureCfSearchButton.addClickListener(event -> {
+			Dialog dialog;
+			Button closeButton;
+
+			try {
+				dialog = new Dialog();
+				dialog.setHeaderTitle("Expenditure Cash Flow");
+				closeButton = new Button(new Icon("lumo", "cross"),
+				        (e) -> {
+				        	dialog.close();
+				        });
+				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+				dialog.getHeader().add(closeButton);
+	    		dialog.add(expenditureCashFlowSearchComponent.showForm(Constants.DVID_BOOKING_DEBIT));
+	    		dialog.open();
+	    		expenditureCashFlowSearchComponent.getCashFlowsGrid().addItemDoubleClickListener(dcEvent -> {
+	    			expenditureCfIdIntegerField.setValue(dcEvent.getItem().getId().intValue());
+	    			dialog.close();
+	    		});
+			} finally {
+				expenditureCfSearchButton.setEnabled(true);
 			}
 		});
 		createButton.addClickListener(event -> {
@@ -486,12 +546,12 @@ public class PlanView extends Div {
 					planService.createCashFlow(
 							new CashFlowVO(
 									null,
-									bankAccountOrInvestorDvSelect.getValue().getId(),
+									bankAccountOrInvestorDvSelect.getValue(),
 									flowDateDatePicker.getValue(),
-									transactionTypeRadioButtonGroup.getValue().equals("Income") ? Constants.DVID_TRANSACTION_TYPE_RECEIPT : Constants.DVID_TRANSACTION_TYPE_PAYMENT,
+									new IdValueVO(transactionTypeRadioButtonGroup.getValue().equals("Income") ? Constants.DVID_TRANSACTION_TYPE_RECEIPT : Constants.DVID_TRANSACTION_TYPE_PAYMENT),
 									BigDecimal.valueOf(flowAmountNumberField.getValue()),
 									narrationTextField.getValue(),
-									transactionCategoryDvSelect.getValue().getId(),
+									transactionCategoryDvSelect.getValue(),
 									endAccountReference
 									)
 							);

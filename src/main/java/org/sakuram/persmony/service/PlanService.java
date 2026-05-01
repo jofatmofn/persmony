@@ -20,6 +20,7 @@ import org.sakuram.persmony.valueobject.IdValueVO;
 import org.sakuram.persmony.valueobject.PlanSearchCriteriaVO;
 import org.sakuram.persmony.valueobject.PlanSearchResultVO;
 import org.sakuram.persmony.valueobject.PlanVO;
+import org.sakuram.persmony.valueobject.SbAcTxnCriteriaVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -148,9 +149,9 @@ public class PlanService {
 						cashFlowVO.getFlowDate(),
 						cashFlowVO.getFlowAmount(),
 						cashFlowVO.getNarration(),
-						cashFlowVO.getBankAccountOrInvestorDvId(),
-						cashFlowVO.getTransactionTypeDvId(),
-						cashFlowVO.getTransactionCategoryDvId(),
+						cashFlowVO.getBankAccountOrInvestorIdValueVO().getId(),
+						cashFlowVO.getTransactionTypeIdValueVO().getId(),
+						cashFlowVO.getTransactionCategoryIdValueVO().getId(),
 						cashFlowVO.getEndAccountReference()
 						)
 				);
@@ -164,4 +165,19 @@ public class PlanService {
 		incomeExpenditureMatchPlan.setStatus(Constants.domainValueCache.get(planStatusDvId));
 		incomeExpenditureMatchPlanRepository.save(incomeExpenditureMatchPlan);
 	}
+	
+	public List<CashFlowVO> searchSavingsAccountTransactions(SbAcTxnCriteriaVO cfCriteriaVO) {
+		List<Object[]> cashFlowList;
+		List<CashFlowVO> cashFlowVOList;
+		CashFlowVO cashFlowVO;
+		
+		cashFlowList = cashFlowRepository.searchCashFlows(cfCriteriaVO);
+		cashFlowVOList = new ArrayList<CashFlowVO>(cashFlowList.size());
+		for(Object[] columns : cashFlowList) {
+			cashFlowVO = new CashFlowVO(columns);
+			cashFlowVOList.add(cashFlowVO);
+		}
+		return cashFlowVOList;
+	}
+
 }

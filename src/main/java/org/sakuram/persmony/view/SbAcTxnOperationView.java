@@ -85,10 +85,10 @@ public class SbAcTxnOperationView extends Div {
 	MiscService miscService;
 	
 	IsinActionSearchComponent isinActionSearchComponent;
-	SatPlanCriteriaComponent satPlanCriteriaComponent;
+	SatCfCriteriaComponent satCfCriteriaComponent;
 	DatePickerI18n isoDatePickerI18n;
 	
-	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent, SatPlanCriteriaComponent satPlanCriteriaComponent, DatePickerI18n isoDatePickerI18n) {
+	public SbAcTxnOperationView(SbAcTxnService sbAcTxnService, MiscService miscService, IsinActionSearchComponent isinActionSearchComponent, SatCfCriteriaComponent satCfCriteriaComponent, DatePickerI18n isoDatePickerI18n) {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
@@ -99,7 +99,7 @@ public class SbAcTxnOperationView extends Div {
 		this.miscService = miscService;
 		this.isinActionSearchComponent = isinActionSearchComponent;
 		this.isoDatePickerI18n = isoDatePickerI18n;
-		this.satPlanCriteriaComponent = satPlanCriteriaComponent;
+		this.satCfCriteriaComponent = satCfCriteriaComponent;
 		
 		setSizeFull();
 		
@@ -404,13 +404,13 @@ public class SbAcTxnOperationView extends Div {
 		Button fetchButton, clearButton;
 		Grid<SavingsAccountTransactionVO> savingsAccountTransactionsGrid;
 		GridContextMenu<SavingsAccountTransactionVO> sATGridContextMenu;
-		SbAcTxnCriteriaVO satPlanCriteriaVO;
+		SbAcTxnCriteriaVO satCriteriaVO;
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		
-		satPlanCriteriaVO = new SbAcTxnCriteriaVO();
-		formLayout.add(satPlanCriteriaComponent.showForm(satPlanCriteriaVO));
+		satCriteriaVO = new SbAcTxnCriteriaVO();
+		formLayout.add(satCfCriteriaComponent.showForm(satCriteriaVO));
 		
 		hLayout = new HorizontalLayout();
 		formLayout.add(hLayout);
@@ -448,7 +448,7 @@ public class SbAcTxnOperationView extends Div {
 			try {
 				// Validation
 				try {
-					satPlanCriteriaComponent.validateInput();
+					satCfCriteriaComponent.validateInput();
 				} catch (AppException e) {
 					ViewFuncs.showError(e.getMessage());
 					return;
@@ -456,7 +456,7 @@ public class SbAcTxnOperationView extends Div {
 				
 				// Back-end Call
 				try {
-					recordList = sbAcTxnService.searchSavingsAccountTransactions(satPlanCriteriaVO);
+					recordList = sbAcTxnService.searchSavingsAccountTransactions(satCriteriaVO);
 					notification = Notification.show("No. of Savings Account Transactions fetched: " + recordList.size());
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 					savingsAccountTransactionsGrid.setItems(recordList);
@@ -470,7 +470,7 @@ public class SbAcTxnOperationView extends Div {
 		});
 
 		clearButton.addClickListener(event -> {
-			satPlanCriteriaComponent.clear();
+			satCfCriteriaComponent.clear();
 		});
 
 		savingsAccountTransactionsGrid.addItemDoubleClickListener(event -> {

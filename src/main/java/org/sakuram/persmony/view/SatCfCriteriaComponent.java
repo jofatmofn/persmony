@@ -24,23 +24,28 @@ import com.vaadin.flow.spring.annotation.UIScope;
 
 @SpringComponent
 @UIScope
-public class SatPlanCriteriaComponent {
+public class SatCfCriteriaComponent {
 	MiscService miscService;
 
 	TxnCatEarCriteriaComponent txnCatEarCriteriaComponent;
 	DatePickerI18n isoDatePickerI18n;
 	
-	SbAcTxnCriteriaVO satPlanCriteriaVO;
+	SbAcTxnCriteriaVO satCfCriteriaVO;
+	SatCfCriteriaConfigs satCfCriteriaConfigs;
 	TxnCatEarCriteriaVO txnCatEarCriteriaVO;
 	private final Binder<SbAcTxnCriteriaVO> binder = new Binder<>(SbAcTxnCriteriaVO.class);
 	
-	public SatPlanCriteriaComponent(MiscService miscService, TxnCatEarCriteriaComponent txnCatEarCriteriaComponent, DatePickerI18n isoDatePickerI18n) {
+	public SatCfCriteriaComponent(MiscService miscService, TxnCatEarCriteriaComponent txnCatEarCriteriaComponent, DatePickerI18n isoDatePickerI18n) {
 		this.miscService = miscService;
 		this.txnCatEarCriteriaComponent = txnCatEarCriteriaComponent;
 		this.isoDatePickerI18n = isoDatePickerI18n;
 	}
 	
-	public FormLayout showForm(SbAcTxnCriteriaVO satPlanCriteriaVO) {
+	public FormLayout showForm(SbAcTxnCriteriaVO satCfCriteriaVO) {
+		return showForm(satCfCriteriaVO, new SatCfCriteriaConfigs(true, null));
+	}
+	
+	public FormLayout showForm(SbAcTxnCriteriaVO satCfCriteriaVO, SatCfCriteriaConfigs satCfCriteriaConfigs) {
 		FormLayout formLayout;
 		HorizontalLayout hLayout;
 		DatePicker sbAcTxnFromDatePicker, sbAcTxnToDatePicker;
@@ -50,7 +55,8 @@ public class SatPlanCriteriaComponent {
 		Select<IdValueVO> bankAccountOrInvestorDvSelect, narrationOperatorSelect;
 		RadioButtonGroup<String> bookingRadioButtonGroup;
 		
-		this.satPlanCriteriaVO = satPlanCriteriaVO;
+		this.satCfCriteriaVO = satCfCriteriaVO;
+		this.satCfCriteriaConfigs = satCfCriteriaConfigs;
 		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
@@ -58,7 +64,7 @@ public class SatPlanCriteriaComponent {
 		sbAcTxnFromIdIntegerField = new IntegerField("From");
 		sbAcTxnToIdIntegerField = new IntegerField("To");
 		hLayout = new HorizontalLayout();
-		formLayout.addFormItem(hLayout, "SB Ac Txn Id");
+		formLayout.addFormItem(hLayout, "Txn Id");
 		hLayout.add(sbAcTxnFromIdIntegerField, sbAcTxnToIdIntegerField);
 		
 		sbAcTxnFromDatePicker = new DatePicker("From");
@@ -91,8 +97,9 @@ public class SatPlanCriteriaComponent {
 		
 		bookingRadioButtonGroup = new RadioButtonGroup<String>();
 		bookingRadioButtonGroup.setItems("Both", "Credit Only", "Debit Only");
-		bookingRadioButtonGroup.setValue("Both");
 		formLayout.addFormItem(bookingRadioButtonGroup, "Booking");
+		bookingRadioButtonGroup.setReadOnly(!satCfCriteriaConfigs.isBookingInput);
+		satCfCriteriaVO.setBookingDvId(satCfCriteriaConfigs.bookingDvId);
 		
 		txnCatEarCriteriaVO = new TxnCatEarCriteriaComponent.TxnCatEarCriteriaVO();
 		formLayout.add(txnCatEarCriteriaComponent.showForm(txnCatEarCriteriaVO));
@@ -113,51 +120,63 @@ public class SatPlanCriteriaComponent {
 						)
 				.bind("bookingDvId");
 		
-		binder.setBean(satPlanCriteriaVO);
+		binder.setBean(satCfCriteriaVO);
 		
 		return formLayout;
 	}
 	
 	public void validateInput() {
-		if (satPlanCriteriaVO.getFromId() != null && satPlanCriteriaVO.getToId() != null && 
-				satPlanCriteriaVO.getFromId() > satPlanCriteriaVO.getToId()) {
+		if (satCfCriteriaVO.getFromId() != null && satCfCriteriaVO.getToId() != null && 
+				satCfCriteriaVO.getFromId() > satCfCriteriaVO.getToId()) {
 			throw new AppException("From SB Ac Txn Id cannot be greater than the To SB Ac Txn Id", null);
 		}
-		if (satPlanCriteriaVO.getFromDate() != null && satPlanCriteriaVO.getToDate() != null && 
-				satPlanCriteriaVO.getFromDate().isAfter(satPlanCriteriaVO.getToDate())) {
+		if (satCfCriteriaVO.getFromDate() != null && satCfCriteriaVO.getToDate() != null && 
+				satCfCriteriaVO.getFromDate().isAfter(satCfCriteriaVO.getToDate())) {
 			throw new AppException("From Date cannot be after the To Date", null);
 		}
-		if (satPlanCriteriaVO.getFromAmount() != null && satPlanCriteriaVO.getToAmount() != null && 
-				satPlanCriteriaVO.getFromAmount() > satPlanCriteriaVO.getToAmount()) {
+		if (satCfCriteriaVO.getFromAmount() != null && satCfCriteriaVO.getToAmount() != null && 
+				satCfCriteriaVO.getFromAmount() > satCfCriteriaVO.getToAmount()) {
 			throw new AppException("From Amount cannot be greater than the To Amount", null);
 		}
-		if (!satPlanCriteriaVO.getNarration().equals("") && satPlanCriteriaVO.getNarrationOperatorIdValueVO() == null) {
+		if (!satCfCriteriaVO.getNarration().equals("") && satCfCriteriaVO.getNarrationOperatorIdValueVO() == null) {
 			throw new AppException("Narration: Non-matching Operator and Value", null);
 		}
-		if (satPlanCriteriaVO.getNarration().equals("") && satPlanCriteriaVO.getNarrationOperatorIdValueVO() != null && satPlanCriteriaVO.getNarrationOperatorIdValueVO().getId() != FieldSpecVO.TxtOperator.EQ.ordinal() && satPlanCriteriaVO.getNarrationOperatorIdValueVO().getId() != FieldSpecVO.TxtOperator.NE.ordinal()) {
+		if (satCfCriteriaVO.getNarration().equals("") && satCfCriteriaVO.getNarrationOperatorIdValueVO() != null && satCfCriteriaVO.getNarrationOperatorIdValueVO().getId() != FieldSpecVO.TxtOperator.EQ.ordinal() && satCfCriteriaVO.getNarrationOperatorIdValueVO().getId() != FieldSpecVO.TxtOperator.NE.ordinal()) {
 			throw new AppException("Specify Value for Narration", null);
 		}
 		txnCatEarCriteriaComponent.validateInput();
 		
-		satPlanCriteriaVO.setTransactionCategoryDvId(txnCatEarCriteriaVO.getTransactionCategoryIdValueVO() == null ? null : txnCatEarCriteriaVO.getTransactionCategoryIdValueVO().getId());
-		satPlanCriteriaVO.setEndAccountReference(txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO() == null ? (txnCatEarCriteriaVO.getEndAccountReference().equals("") ? null : txnCatEarCriteriaVO.getEndAccountReference()) : txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO().getId().toString());
-		satPlanCriteriaVO.setEndAccountReferenceOperator(txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO() == null ? (txnCatEarCriteriaVO.getEndAccountReferenceOperatorIdValueVO() == null ? null : txnCatEarCriteriaVO.getEndAccountReferenceOperatorIdValueVO().getValue()) : FieldSpecVO.TxtOperator.EQ.name());
+		satCfCriteriaVO.setTransactionCategoryDvId(txnCatEarCriteriaVO.getTransactionCategoryIdValueVO() == null ? null : txnCatEarCriteriaVO.getTransactionCategoryIdValueVO().getId());
+		satCfCriteriaVO.setEndAccountReference(txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO() == null ? (txnCatEarCriteriaVO.getEndAccountReference().equals("") ? null : txnCatEarCriteriaVO.getEndAccountReference()) : txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO().getId().toString());
+		satCfCriteriaVO.setEndAccountReferenceOperator(txnCatEarCriteriaVO.getEndAccountReferenceIdValueVO() == null ? (txnCatEarCriteriaVO.getEndAccountReferenceOperatorIdValueVO() == null ? null : txnCatEarCriteriaVO.getEndAccountReferenceOperatorIdValueVO().getValue()) : FieldSpecVO.TxtOperator.EQ.name());
 		
 	}
 	
 	public void clear() {
-		satPlanCriteriaVO.setFromId(null);
-		satPlanCriteriaVO.setToId(null);
-		satPlanCriteriaVO.setFromDate(null);
-		satPlanCriteriaVO.setToDate(null);
-		satPlanCriteriaVO.setFromAmount(null);
-		satPlanCriteriaVO.setToAmount(null);
-		satPlanCriteriaVO.setNarrationOperatorIdValueVO(null);
-		satPlanCriteriaVO.setNarration("");
-		satPlanCriteriaVO.setBankAccountOrInvestorIdValueVO(null);
-		satPlanCriteriaVO.setBookingDvId(null);
+		satCfCriteriaVO.setFromId(null);
+		satCfCriteriaVO.setToId(null);
+		satCfCriteriaVO.setFromDate(null);
+		satCfCriteriaVO.setToDate(null);
+		satCfCriteriaVO.setFromAmount(null);
+		satCfCriteriaVO.setToAmount(null);
+		satCfCriteriaVO.setNarrationOperatorIdValueVO(null);
+		satCfCriteriaVO.setNarration("");
+		satCfCriteriaVO.setBankAccountOrInvestorIdValueVO(null);
+		if (satCfCriteriaConfigs.isBookingInput) {
+			satCfCriteriaVO.setBookingDvId(null);
+		}
 		binder.refreshFields();
 		txnCatEarCriteriaComponent.clear();
+	}
+	
+	static class SatCfCriteriaConfigs {
+		Boolean isBookingInput;
+		Long bookingDvId;
+		
+		public SatCfCriteriaConfigs(boolean isBookingInput, Long bookingDvId) {
+			this.isBookingInput = isBookingInput;
+			this.bookingDvId = bookingDvId;
+		}
 	}
 	
 }
