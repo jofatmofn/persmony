@@ -21,6 +21,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
@@ -63,8 +64,8 @@ public class PlanView extends Div {
 		Div content;
 		Tabs tabs;
 		Map<Tab, Component> tabContent = new HashMap<Tab, Component>(3);
-		Component planStatusView, createPlanView, createCashFlowView;
-		Tab planStatusTab, createPlanTab, createCashFlowTab;
+		Component planStatusView, createPlanView, createCashFlowView, mapCfToItView;
+		Tab planStatusTab, createPlanTab, createCashFlowTab, mapCfToItTab;
 		
 		this.planService = planService;
 		this.miscService = miscService;
@@ -85,8 +86,11 @@ public class PlanView extends Div {
 		createCashFlowTab = new Tab("Create Cash Flow");
 		createCashFlowView = createCreateCashFlowView();
 		tabContent.put(createCashFlowTab, createCashFlowView);
+		mapCfToItTab = new Tab("Map CF to IT");
+		mapCfToItView = createMapCfToItView();
+		tabContent.put(mapCfToItTab, mapCfToItView);
 		
-		tabs = new Tabs(planStatusTab, createPlanTab, createCashFlowTab);
+		tabs = new Tabs(planStatusTab, createPlanTab, createCashFlowTab, mapCfToItTab);
         tabs.setWidthFull();
         tabs.addSelectedChangeListener(e -> {
         	content.removeAll();
@@ -105,9 +109,13 @@ public class PlanView extends Div {
 		DatePicker incomeFromDateDatePicker, incomeToDateDatePicker, expenditureFromDateDatePicker, expenditureToDateDatePicker;
 		Select<IdValueVO> incomeBankAccountOrInvestorDvSelect, expenditureBankAccountOrInvestorDvSelect;
 		NumberField mappedFromAmoutNumberField, mappedToAmoutNumberField;
+		Checkbox statusPendingCheckbox, statusCompletedCheckbox, statusCancelledCheckbox;
 		Button searchButton;
 		Grid<PlanSearchResultVO> planSearchResultGrid;
+		List<IdValueVO> transactionStatusIdValueVOList;
 
+		transactionStatusIdValueVOList = miscService.fetchDvsOfCategory(Constants.CATEGORY_TRANSACTION_STATUS);
+		
 		formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		
@@ -136,6 +144,16 @@ public class PlanView extends Div {
 		hLayout.add(mappedFromAmoutNumberField, mappedToAmoutNumberField);
 
 		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Transaction Status");
+		statusPendingCheckbox = new Checkbox("Pending");
+		statusPendingCheckbox.setValue(true);
+		statusCompletedCheckbox = new Checkbox("Completed");
+		statusCompletedCheckbox.setValue(false);
+		statusCancelledCheckbox = new Checkbox("Cancelled");
+		statusCancelledCheckbox.setValue(false);
+		hLayout.add(statusPendingCheckbox, statusCompletedCheckbox, statusCancelledCheckbox);
+		
+		hLayout = new HorizontalLayout();
 		formLayout.add(hLayout);
 		searchButton = new Button("Search");
 		hLayout.add(searchButton);
@@ -143,7 +161,7 @@ public class PlanView extends Div {
 		searchButton.setDisableOnClick(true);
 		
 		planSearchResultGrid = new Grid<>(PlanSearchResultVO.class);
-		planSearchResultGrid.setColumns("planId", "incomeDetail", "expenditureDetail", "mappedAmount", "statusIdValueVO.value");
+		planSearchResultGrid.setColumns("planId", "incomeDetail", "expenditureDetail", "mappedAmount");
 		for (Column<PlanSearchResultVO> column : planSearchResultGrid.getColumns()) {
 			column.setResizable(true);
 		}
@@ -168,6 +186,10 @@ public class PlanView extends Div {
 					ViewFuncs.showError("From Amount cannot be greater than the To Amount");
 					return;
 				}
+				if (!statusPendingCheckbox.getValue() && !statusCompletedCheckbox.getValue() && !statusCancelledCheckbox.getValue()) {
+					ViewFuncs.showError("Select one or more Transaction Statuses");
+					return;					
+				}
 				
 				// Back-end Call
 				try {
@@ -179,7 +201,8 @@ public class PlanView extends Div {
 							(incomeBankAccountOrInvestorDvSelect.getValue() == null ? null : incomeBankAccountOrInvestorDvSelect.getValue().getId()),
 							(expenditureBankAccountOrInvestorDvSelect.getValue() == null ? null : expenditureBankAccountOrInvestorDvSelect.getValue().getId()),
 							(mappedFromAmoutNumberField.getValue() == null ? null : BigDecimal.valueOf(mappedFromAmoutNumberField.getValue())),
-							(mappedToAmoutNumberField.getValue() == null ? null : BigDecimal.valueOf(mappedToAmoutNumberField.getValue()))
+							(mappedToAmoutNumberField.getValue() == null ? null : BigDecimal.valueOf(mappedToAmoutNumberField.getValue())),
+							statusPendingCheckbox.getValue(), statusCompletedCheckbox.getValue(), statusCancelledCheckbox.getValue()
 							));
 					notification = Notification.show("No. of Plans fetched: " + recordList.size());
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -196,7 +219,7 @@ public class PlanView extends Div {
 		planSearchResultGrid.addComponentColumn(planSearchResultVO -> {
 			Select<IdValueVO> transactionStatusDvSelect;
 			
-			transactionStatusDvSelect = ViewFuncs.newDvSelect(miscService, Constants.CATEGORY_TRANSACTION_STATUS, null, false, false);
+			transactionStatusDvSelect = ViewFuncs.newDvSelect(transactionStatusIdValueVOList, null, false, false);
 			if (planSearchResultVO.getStatusIdValueVO().getId() != Constants.DVID_TRANSACTION_STATUS_PENDING) {
 				transactionStatusDvSelect.setEnabled(false);
 			}
@@ -365,7 +388,7 @@ public class PlanView extends Div {
 	    				));
 	    		dialog.open();
 	    		expenditureInvestmentTransactionSearchComponent.getInvestmentTransactionsGrid().addItemDoubleClickListener(dcEvent -> {
-	    			incomeItIdIntegerField.setValue((int) dcEvent.getItem().getId());
+	    			expenditureItIdIntegerField.setValue((int) dcEvent.getItem().getId());
 	    			dialog.close();
 	    		});
 			} finally {
@@ -563,6 +586,116 @@ public class PlanView extends Div {
 				}
 			} finally {
 				createButton.setEnabled(true);
+			}
+		});
+		
+		return formLayout;
+	}
+	
+	private Component createMapCfToItView() {
+		FormLayout formLayout;
+		HorizontalLayout hLayout;
+		IntegerField incomeItIdIntegerField, incomeCfIdIntegerField;
+		Button mapButton, incomeItSearchButton, incomeCfSearchButton;
+		DTInvestmentTransactionSearchComponent incomeInvestmentTransactionSearchComponent;
+		CashFlowSearchComponent incomeCashFlowSearchComponent;
+
+		incomeInvestmentTransactionSearchComponent = investmentTransactionSearchComponentObjectProvider.getObject();
+		incomeCashFlowSearchComponent = cashFlowSearchComponentObjectProvider.getObject();
+		
+		formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
+		
+		hLayout = new HorizontalLayout();
+		formLayout.addFormItem(hLayout, "Income");
+		incomeItIdIntegerField = new IntegerField("Investment Transaction");
+		incomeItSearchButton = new Button("IT Search");
+		incomeItSearchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		incomeItSearchButton.setDisableOnClick(true);
+		incomeCfIdIntegerField = new IntegerField("Cash Flow");
+		incomeCfSearchButton = new Button("CF Search");
+		incomeCfSearchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		incomeCfSearchButton.setDisableOnClick(true);
+		hLayout.add(incomeCfIdIntegerField, incomeCfSearchButton, incomeItIdIntegerField, incomeItSearchButton);
+		hLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+		
+		hLayout = new HorizontalLayout();
+		formLayout.add(hLayout);
+		mapButton = new Button("Map");
+		hLayout.add(mapButton);
+		mapButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		mapButton.setDisableOnClick(true);
+		
+		incomeItSearchButton.addClickListener(event -> {
+			Dialog dialog;
+			Button closeButton;
+
+			try {
+				dialog = new Dialog();
+				dialog.setHeaderTitle("Income Investment Transaction");
+				closeButton = new Button(new Icon("lumo", "cross"),
+				        (e) -> {
+				        	dialog.close();
+				        });
+				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+				dialog.getHeader().add(closeButton);
+	    		dialog.add(incomeInvestmentTransactionSearchComponent.showForm(
+	    				new ITSearchDefaults(LocalDate.now(), null, true, false, false, false, true, false)
+	    				));
+	    		dialog.open();
+	    		incomeInvestmentTransactionSearchComponent.getInvestmentTransactionsGrid().addItemDoubleClickListener(dcEvent -> {
+	    			incomeItIdIntegerField.setValue((int) dcEvent.getItem().getId());
+	    			dialog.close();
+	    		});
+			} finally {
+				incomeItSearchButton.setEnabled(true);
+			}
+		});
+		incomeCfSearchButton.addClickListener(event -> {
+			Dialog dialog;
+			Button closeButton;
+
+			try {
+				dialog = new Dialog();
+				dialog.setHeaderTitle("Income Cash Flow");
+				closeButton = new Button(new Icon("lumo", "cross"),
+				        (e) -> {
+				        	dialog.close();
+				        });
+				closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+				dialog.getHeader().add(closeButton);
+	    		dialog.add(incomeCashFlowSearchComponent.showForm(Constants.DVID_BOOKING_CREDIT));
+	    		dialog.open();
+	    		incomeCashFlowSearchComponent.getCashFlowsGrid().addItemDoubleClickListener(dcEvent -> {
+	    			incomeCfIdIntegerField.setValue(dcEvent.getItem().getId().intValue());
+	    			dialog.close();
+	    		});
+			} finally {
+				incomeCfSearchButton.setEnabled(true);
+			}
+		});
+		mapButton.addClickListener(event -> {
+			Notification notification;
+			try {
+				if (incomeCfIdIntegerField.getValue() == null) {
+					ViewFuncs.showError("Cash Flow Id cannot be empty");
+					return;
+				}
+				if (incomeItIdIntegerField.getValue() == null) {
+					ViewFuncs.showError("Investment Transaction Id cannot be empty");
+					return;
+				}
+
+				try {
+					planService.mapCfToIt(incomeCfIdIntegerField.getValue(), incomeItIdIntegerField.getValue());
+					notification = Notification.show("Mapped Successfully");
+					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				} catch (Exception e ) {
+					ViewFuncs.showError(UtilFuncs.messageFromException(e));
+					return;
+				}
+			} finally {
+				mapButton.setEnabled(true);
 			}
 		});
 		

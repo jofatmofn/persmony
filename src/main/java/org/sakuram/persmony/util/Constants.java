@@ -18,6 +18,7 @@ public class Constants {
 	public static final DateTimeFormatter ISO_LOCAL_DATE_FORMATTER = DateTimeFormatter.ofPattern(ISO_LOCAL_DATE);
 	public static final double EPSILON = 0.0000000009D;
 	public static final double TOLERATED_DIFFERENCE_AMOUNT = 20D;	// No specific reason for this value
+	public static final String TO_STRING_FIELD_DELIMITER = "::";
 	
 	public static final String CATEGORY_INVESTOR = "Invstr";
 	public static final String CATEGORY_PRIMARY_INVESTOR = "PrimaryInvestor";

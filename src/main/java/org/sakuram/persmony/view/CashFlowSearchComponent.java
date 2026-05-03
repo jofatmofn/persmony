@@ -91,7 +91,7 @@ public class CashFlowSearchComponent extends Div {
 
 				// Back-end Call
 				try {
-					recordList = planService.searchSavingsAccountTransactions(cfCriteriaVO);
+					recordList = planService.searchCashFlows(cfCriteriaVO);
 					notification = Notification.show("No. of Cash Flows fetched: " + recordList.size());
 					notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 					cashFlowsGrid.setItems(recordList);

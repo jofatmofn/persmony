@@ -359,7 +359,6 @@ public class DTIOperationComponent {
 		dynamicReceiptPeriodicityRadioButtonGroup.setValue("Not Applicable");
 
 		ValueChangeListener<ValueChangeEvent<?>> addDefaultPaymentLogic = e -> {
-			// Only addition, no modification
 			if (paymentScheduleVOList.size() == 0 && investmentStartDatePicker.getValue() != null && faceValueNumberField.getValue() != null) {
 				paymentScheduleVOList.add(new ScheduleVO(
 						investmentStartDatePicker.getValue(),
@@ -369,13 +368,15 @@ public class DTIOperationComponent {
 						null
 						));
 				paymentScheduleButton.setText(paymentScheduleButton.getText().replace("(0)", "(1)"));
+			} else if (paymentScheduleVOList.size() == 1 && investmentStartDatePicker.getValue() != null && faceValueNumberField.getValue() != null) {
+				paymentScheduleVOList.get(0).setDueDate(investmentStartDatePicker.getValue());
+				paymentScheduleVOList.get(0).setDueAmount(faceValueNumberField.getValue());
 			}
 		};
 		investmentStartDatePicker.addValueChangeListener(addDefaultPaymentLogic);
 		faceValueNumberField.addValueChangeListener(addDefaultPaymentLogic);
 
 		ValueChangeListener<ValueChangeEvent<?>> addDefaultReceiptLogic = e -> {
-			// Only addition, no modification
 			if (receiptScheduleVOList.size() == 0 && investmentEndDatePicker.getValue() != null && faceValueNumberField.getValue() != null) {
 				receiptScheduleVOList.add(new ScheduleVO(
 						investmentEndDatePicker.getValue(),
@@ -385,6 +386,9 @@ public class DTIOperationComponent {
 						null
 						));
 				receiptScheduleButton.setText(receiptScheduleButton.getText().replace("(0)", "(1)"));
+			} else if (receiptScheduleVOList.size() == 1 && investmentEndDatePicker.getValue() != null && faceValueNumberField.getValue() != null) {
+				receiptScheduleVOList.get(0).setDueDate(investmentEndDatePicker.getValue());
+				receiptScheduleVOList.get(0).setReturnedPrincipalAmount(faceValueNumberField.getValue());
 			}
 		};
 		investmentEndDatePicker.addValueChangeListener(addDefaultReceiptLogic);

@@ -73,7 +73,7 @@ public class CashFlow {
 		} else {
 			endAccountReference = Constants.domainValueCache.get(Long.parseLong(this.endAccountReference)).getValue();
 		}
-		return bankAccountOrInvestor.getValue() + "::" + flowDate.format(Constants.ISO_LOCAL_DATE_FORMATTER) + "::" + transactionType.getValue().substring(0, 1) + "::" + transactionCategory.getValue() + "::" + endAccountReference + "::" + narration;
+		return bankAccountOrInvestor.getValue() + Constants.TO_STRING_FIELD_DELIMITER + flowDate.format(Constants.ISO_LOCAL_DATE_FORMATTER) + Constants.TO_STRING_FIELD_DELIMITER + transactionType.getValue().substring(0, 1) + Constants.TO_STRING_FIELD_DELIMITER + transactionCategory.getValue() + Constants.TO_STRING_FIELD_DELIMITER + endAccountReference + Constants.TO_STRING_FIELD_DELIMITER + narration;
 	}
 	
 }

@@ -25,13 +25,13 @@ public interface InvestmentTransactionRepository extends JpaRepository<Investmen
 			+ "	LEFT OUTER JOIN domain_value bDV ON I.provider_branch_fk = bDV.id "
 			+ "WHERE (due_date IS NULL OR CAST(:#{#investmentTransactionCriteriaVO.dueDateFrom} AS DATE) IS NULL OR due_date >= :#{#investmentTransactionCriteriaVO.dueDateFrom}) "
 			+ " AND (due_date IS NULL OR CAST(:#{#investmentTransactionCriteriaVO.dueDateTo} AS DATE) IS NULL OR due_date <= :#{#investmentTransactionCriteriaVO.dueDateTo}) "
-			+ "	AND (:#{#investmentTransactionCriteriaVO.isStatusPending} AND status_fk = 69 "
-			+ "	OR :#{#investmentTransactionCriteriaVO.isStatusCancelled} AND status_fk = 70 "
-			+ "	OR :#{#investmentTransactionCriteriaVO.isStatusCompleted} AND status_fk = 71) "
-			+ "	AND (:#{#investmentTransactionCriteriaVO.isTypePayment} AND transaction_type_fk = 72 "
-			+ "	OR :#{#investmentTransactionCriteriaVO.isTypeReceipt} AND transaction_type_fk = 73 "
-			+ "	OR :#{#investmentTransactionCriteriaVO.isTypeAccrual} AND transaction_type_fk = 74) "
-			+ " AND (CAST(:#{#investmentTransactionCriteriaVO.investorDvId} AS BIGINT) IS NULL OR I.investor_fk = :#{#investmentTransactionCriteriaVO.investorDvId})"
+			+ "	AND (:#{#investmentTransactionCriteriaVO.isStatusPending} AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_PENDING
+			+ "	OR :#{#investmentTransactionCriteriaVO.isStatusCancelled} AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_CANCELLED
+			+ "	OR :#{#investmentTransactionCriteriaVO.isStatusCompleted} AND status_fk = " + Constants.DVID_TRANSACTION_STATUS_COMPLETED
+			+ ")	AND (:#{#investmentTransactionCriteriaVO.isTypePayment} AND transaction_type_fk = " + Constants.DVID_TRANSACTION_TYPE_PAYMENT
+			+ "	OR :#{#investmentTransactionCriteriaVO.isTypeReceipt} AND transaction_type_fk = " + Constants.DVID_TRANSACTION_TYPE_RECEIPT
+			+ "	OR :#{#investmentTransactionCriteriaVO.isTypeAccrual} AND transaction_type_fk = " + Constants.DVID_TRANSACTION_TYPE_ACCRUAL
+			+ ") AND (CAST(:#{#investmentTransactionCriteriaVO.investorDvId} AS BIGINT) IS NULL OR I.investor_fk = :#{#investmentTransactionCriteriaVO.investorDvId})"
 			+ " AND (CAST(:#{#investmentTransactionCriteriaVO.productProviderDvId} AS BIGINT) IS NULL OR I.product_provider_fk = :#{#investmentTransactionCriteriaVO.productProviderDvId})"
 			+ " ORDER BY due_date, t_id")
 	public List<Object[]> findPendingTransactions(@Param("investmentTransactionCriteriaVO") InvestmentTransactionCriteriaVO investmentTransactionCriteriaVO);

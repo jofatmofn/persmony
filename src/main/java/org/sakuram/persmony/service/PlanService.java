@@ -45,8 +45,8 @@ public class PlanService {
 		for (IncomeExpenditureMatchPlan iEMP: incomeExpenditureMatchPlanList) {
 			planSearchResultVOList.add(new PlanSearchResultVO(
 					iEMP.getId(),
-					(iEMP.getIncomeInvestmentTransaction() == null ? iEMP.getIncomeCashFlow().toString() : iEMP.getIncomeInvestmentTransaction().toString()),
-					(iEMP.getExpenditureInvestmentTransaction() == null ? iEMP.getExpenditureCashFlow().toString() : iEMP.getExpenditureInvestmentTransaction().toString()),
+					(iEMP.getIncomeInvestmentTransaction() == null ? ("CF-" + iEMP.getIncomeCashFlow().getId() + Constants.TO_STRING_FIELD_DELIMITER + iEMP.getIncomeCashFlow().toString()) : ("IT-" + iEMP.getIncomeInvestmentTransaction().getId() + Constants.TO_STRING_FIELD_DELIMITER + iEMP.getIncomeInvestmentTransaction().toString())),
+					(iEMP.getExpenditureInvestmentTransaction() == null ? ("CF-" + iEMP.getExpenditureCashFlow().getId() + Constants.TO_STRING_FIELD_DELIMITER + iEMP.getExpenditureCashFlow().toString()) : ("IT-" + iEMP.getExpenditureInvestmentTransaction().getId() + Constants.TO_STRING_FIELD_DELIMITER + iEMP.getExpenditureInvestmentTransaction().toString())),
 					iEMP.getMappedAmount(),
 					new IdValueVO(iEMP.getStatus())
 					));
@@ -166,7 +166,7 @@ public class PlanService {
 		incomeExpenditureMatchPlanRepository.save(incomeExpenditureMatchPlan);
 	}
 	
-	public List<CashFlowVO> searchSavingsAccountTransactions(SbAcTxnCriteriaVO cfCriteriaVO) {
+	public List<CashFlowVO> searchCashFlows(SbAcTxnCriteriaVO cfCriteriaVO) {
 		List<Object[]> cashFlowList;
 		List<CashFlowVO> cashFlowVOList;
 		CashFlowVO cashFlowVO;
@@ -180,4 +180,25 @@ public class PlanService {
 		return cashFlowVOList;
 	}
 
+	public void mapCfToIt(long cashFlowId, long investmentTransactionId) {
+		List<IncomeExpenditureMatchPlan> incomeExpenditureMatchPlanList;
+		CashFlow cashFlow;
+		InvestmentTransaction investmentTransaction;
+		
+		cashFlow = cashFlowRepository.findById(cashFlowId)
+				.orElseThrow(() -> new AppException("Invalid Cash Flow Id " + cashFlowId, null));
+		investmentTransaction = investmentTransactionRepository.findById(investmentTransactionId)
+				.orElseThrow(() -> new AppException("Invalid Investment Transaction Id " + investmentTransactionId, null));
+		incomeExpenditureMatchPlanList = incomeExpenditureMatchPlanRepository.findByIncomeCashFlow(cashFlow);
+		if (incomeExpenditureMatchPlanList.size() == 0) {
+			throw new AppException("No plan found with the given Cash Flow as Income", null);
+		}
+		for (IncomeExpenditureMatchPlan iemp : incomeExpenditureMatchPlanList) {
+			if (iemp.getIncomeInvestmentTransaction() != null) {
+				throw new AppException("For Plan " + iemp.getId() + " mapping from income cash flow " + iemp.getIncomeCashFlow().getId() + " to income investment transaction " + iemp.getIncomeInvestmentTransaction().getId() + " already exists.", null);
+			}
+			iemp.setIncomeInvestmentTransaction(investmentTransaction);
+		}
+		incomeExpenditureMatchPlanRepository.saveAll(incomeExpenditureMatchPlanList);
+	}
 }

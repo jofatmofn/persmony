@@ -104,8 +104,18 @@ public class SatCfCriteriaComponent {
 		txnCatEarCriteriaVO = new TxnCatEarCriteriaComponent.TxnCatEarCriteriaVO();
 		formLayout.add(txnCatEarCriteriaComponent.showForm(txnCatEarCriteriaVO));
 		
-		binder.forField(sbAcTxnFromIdIntegerField).bind("fromId");
-		binder.forField(sbAcTxnToIdIntegerField).bind("toId");
+		binder.forField(sbAcTxnFromIdIntegerField)
+				.withConverter(
+						fieldValue -> fieldValue == null ? null : fieldValue.longValue(),
+						beanValue -> beanValue == null ? null : beanValue.intValue()
+						)
+				.bind("fromId");
+		binder.forField(sbAcTxnToIdIntegerField)
+				.withConverter(
+						fieldValue -> fieldValue == null ? null : fieldValue.longValue(),
+						beanValue -> beanValue == null ? null : beanValue.intValue()
+						)
+				.bind("toId");
 		binder.forField(sbAcTxnFromDatePicker).bind("fromDate");
 		binder.forField(sbAcTxnToDatePicker).bind("toDate");
 		binder.forField(sbAcTxnFromAmoutNumberField).bind("fromAmount");

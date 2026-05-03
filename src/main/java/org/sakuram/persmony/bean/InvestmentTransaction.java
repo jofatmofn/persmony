@@ -146,7 +146,7 @@ public class InvestmentTransaction { /* Dues of Payments, and Receipts <-- One r
 	}
 	
 	public String toString() {
-		return investment.toString() + "::" + dueDate.format(Constants.ISO_LOCAL_DATE_FORMATTER) + "::" + transactionType.getValue().substring(0, 1);
+		return investment.toString() + Constants.TO_STRING_FIELD_DELIMITER + dueDate.format(Constants.ISO_LOCAL_DATE_FORMATTER) + Constants.TO_STRING_FIELD_DELIMITER + transactionType.getValue().substring(0, 1);
 	}
 	
 }

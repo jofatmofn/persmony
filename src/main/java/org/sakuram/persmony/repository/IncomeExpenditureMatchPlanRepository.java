@@ -5,6 +5,7 @@ import java.util.List;
 import org.sakuram.persmony.bean.CashFlow;
 import org.sakuram.persmony.bean.IncomeExpenditureMatchPlan;
 import org.sakuram.persmony.bean.InvestmentTransaction;
+import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.valueobject.PlanSearchCriteriaVO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -49,6 +50,11 @@ public interface IncomeExpenditureMatchPlanRepository extends JpaRepository<Inco
 					
 					+ "AND (CAST(:#{#planSearchCriteriaVO.mappedFromAmount} AS NUMERIC) IS NULL OR IEMP.mapped_amount >= :#{#planSearchCriteriaVO.mappedFromAmount}) "
 					+ "AND (CAST(:#{#planSearchCriteriaVO.mappedToAmount} AS NUMERIC) IS NULL OR IEMP.mapped_amount <= :#{#planSearchCriteriaVO.mappedToAmount}) "
+					
+					+ "	AND (:#{#planSearchCriteriaVO.isStatusPending} AND IEMP.status_fk = " + Constants.DVID_TRANSACTION_STATUS_PENDING
+					+ "	OR :#{#planSearchCriteriaVO.isStatusCancelled} AND IEMP.status_fk = " + Constants.DVID_TRANSACTION_STATUS_CANCELLED
+					+ "	OR :#{#planSearchCriteriaVO.isStatusCompleted} AND IEMP.status_fk = " + Constants.DVID_TRANSACTION_STATUS_COMPLETED
+					+ ") "
 
 					+ "ORDER BY COALESCE(IIT.due_date, ICF.flow_date) "
 					)

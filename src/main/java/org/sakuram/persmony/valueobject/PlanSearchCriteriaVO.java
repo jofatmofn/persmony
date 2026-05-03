@@ -17,5 +17,6 @@ public class PlanSearchCriteriaVO {
 	LocalDate incomeFromDate, incomeToDate, expenditureFromDate, expenditureToDate;
 	Long incomeBankAccountOrInvestorDvId, expenditureBankAccountOrInvestorDvId;
 	BigDecimal mappedFromAmount, mappedToAmount;
+	boolean isStatusPending, isStatusCompleted, isStatusCancelled;
 
 }
