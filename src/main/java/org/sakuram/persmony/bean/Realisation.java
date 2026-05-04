@@ -97,7 +97,7 @@ public class Realisation {
 		return (interestAmount == null ? null : interestAmount.doubleValue());
 	}
 	
-	public void setInterestAmount(Double interestAmount) {
+	public void setInterestAmountD(Double interestAmount) {
 		this.interestAmount = (interestAmount == null ? null : BigDecimal.valueOf(interestAmount));
 	}
 	
@@ -105,7 +105,7 @@ public class Realisation {
 		return (tdsAmount == null ? null : tdsAmount.doubleValue());
 	}
 	
-	public void setTdsAmount(Double tdsAmount) {
+	public void setTdsAmountD(Double tdsAmount) {
 		this.tdsAmount = (tdsAmount == null ? null : BigDecimal.valueOf(tdsAmount));
 	}
 	

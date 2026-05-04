@@ -1,6 +1,7 @@
 package org.sakuram.persmony.service;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -604,8 +605,8 @@ public class MoneyTransactionService {
     		} else {
     			realisation.setAccountedRealisationDate(updateTaxDetailRequestVO.getAccountedDate());
 	    	}
-    		realisation.setInterestAmount(updateTaxDetailRequestVO.getInterestAmount());
-    		realisation.setTdsAmount(updateTaxDetailRequestVO.getTdsAmount());
+    		realisation.setInterestAmountD(updateTaxDetailRequestVO.getInterestAmount());
+    		realisation.setTdsAmountD(updateTaxDetailRequestVO.getTdsAmount());
     		realisation.setTdsReference(updateTaxDetailRequestVO.getTdsReference());
     		realisation.setInAis(updateTaxDetailRequestVO.getInAis() ? true : null);
     		realisation.setForm26asBookingDate(updateTaxDetailRequestVO.getForm26asBookingDate());
@@ -622,6 +623,16 @@ public class MoneyTransactionService {
     				));
     	}
     	return pendingInvestmentTransactionVOList;
+    }
+    
+    public void updateRealisationAmounts(RealisationVO realisationVO) {
+    	Realisation realisation = realisationRepository.findById(realisationVO.getRealisationId())
+    			.orElseThrow(() -> new AppException("Invalid Realisation Id " + realisationVO.getRealisationId(), null));
+    	realisation.setAmount(BigDecimal.valueOf(realisationVO.getAmount()));
+    	realisation.setReturnedPrincipalAmount(realisationVO.getReturnedPrincipalAmount() == null ? null : BigDecimal.valueOf(realisationVO.getReturnedPrincipalAmount()));
+    	realisation.setInterestAmount(realisationVO.getInterestAmount() == null ? null : BigDecimal.valueOf(realisationVO.getInterestAmount()));
+    	realisation.setTdsAmount(realisationVO.getTdsAmount() == null ? null : BigDecimal.valueOf(realisationVO.getTdsAmount()));
+    	realisationRepository.save(realisation);
     }
     
 	private void saveSchedule(List<ScheduleVO> scheduleVOList, Investment investment, long transactionType) {

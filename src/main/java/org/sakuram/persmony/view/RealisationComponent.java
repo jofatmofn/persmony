@@ -23,7 +23,6 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
-import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -45,15 +44,17 @@ public class RealisationComponent extends VerticalLayout {
 	SbAcTxnService sbAcTxnService;
 	DTInvestmentTransactionSearchComponent investmentTransactionSearchComponent;
 	InvestmentDetailComponent investmentDetailComponent;
+	DTInvestmentTransactionDetailComponent dtInvestmentTransactionDetailComponent;
 	@Getter
 	Button saveButton;
 	
-	public RealisationComponent(MiscService miscService, MoneyTransactionService moneyTransactionService, SbAcTxnService sbAcTxnService, DTInvestmentTransactionSearchComponent investmentTransactionSearchComponent, InvestmentDetailComponent investmentDetailComponent) {
+	public RealisationComponent(MiscService miscService, MoneyTransactionService moneyTransactionService, SbAcTxnService sbAcTxnService, DTInvestmentTransactionSearchComponent investmentTransactionSearchComponent, InvestmentDetailComponent investmentDetailComponent, DTInvestmentTransactionDetailComponent dtInvestmentTransactionDetailComponent) {
 		this.miscService = miscService;
 		this.moneyTransactionService = moneyTransactionService;
 		this.sbAcTxnService = sbAcTxnService;
 		this.investmentTransactionSearchComponent = investmentTransactionSearchComponent;
 		this.investmentDetailComponent = investmentDetailComponent;
+		this.dtInvestmentTransactionDetailComponent = dtInvestmentTransactionDetailComponent;
 		saveButton = new Button("Save");
 	}
 	
@@ -65,7 +66,7 @@ public class RealisationComponent extends VerticalLayout {
 		IntegerField investmentTransactionIdIntegerField;
 		Select<IdValueVO> realisationTypeDvSelect;
 		HorizontalLayout topPaneHorizontalLayout, hLayout;
-		FormLayout inFields1FormLayout, inFields2FormLayout, outFields1FormLayout, outFields2FormLayout, outFields3FormLayout;
+		FormLayout inFields1FormLayout, inFields2FormLayout;
 		InvestmentTransaction2VO investmentTransaction2VO;
 		Button proceedButton, itSearchButton;
 		List<IdValueVO> realisationTypeIdValueVOList;
@@ -86,7 +87,7 @@ public class RealisationComponent extends VerticalLayout {
 		// UI Elements
 		inFields1FormLayout = new FormLayout();
 		inFields1FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
-		topPaneHorizontalLayout.add(inFields1FormLayout);
+		topPaneHorizontalLayout.add(inFields1FormLayout, dtInvestmentTransactionDetailComponent.template());
 		
 		hLayout = new HorizontalLayout();
 		investmentTransactionIdIntegerField = new IntegerField();
@@ -137,56 +138,16 @@ public class RealisationComponent extends VerticalLayout {
 		inFields2FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
 		add(inFields2FormLayout);
 
-		outFields1FormLayout = new FormLayout();
-		outFields1FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
-		topPaneHorizontalLayout.add(outFields1FormLayout);
-		
-		outFields2FormLayout = new FormLayout();
-		outFields2FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
-		topPaneHorizontalLayout.add(outFields2FormLayout);
-		
-		outFields3FormLayout = new FormLayout();
-		outFields3FormLayout.setResponsiveSteps(new ResponsiveStep("0", 1));
-		topPaneHorizontalLayout.add(outFields3FormLayout);
-		
 		investmentTransactionIdIntegerField.addValueChangeListener(event -> {
-			NativeLabel transactionTypeLabel, dueAmountLabel, statusLabel, investorLabel, productProviderLabel, productTypeLabel;
-			Button investmentIdButton;
-			InvestmentTransaction2VO investmentTransaction2VOL;
-			
-			inFields2FormLayout.remove(inFields2FormLayout.getChildren().collect(Collectors.toList()));
-			outFields1FormLayout.remove(outFields1FormLayout.getChildren().collect(Collectors.toList()));
-			outFields2FormLayout.remove(outFields2FormLayout.getChildren().collect(Collectors.toList()));
-			outFields3FormLayout.remove(outFields3FormLayout.getChildren().collect(Collectors.toList()));
-			
 			try {
-				investmentTransaction2VOL = miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue());
+				if (investmentTransactionIdIntegerField.getValue() != null) {
+					miscService.fetchInvestmentTransaction(investmentTransactionIdIntegerField.getValue()).copyTo(investmentTransaction2VO);
+					dtInvestmentTransactionDetailComponent.showDetail(investmentTransaction2VO);
+				}
 			} catch (Exception e ) {
 				ViewFuncs.showError(UtilFuncs.messageFromException(e));
 				return;
 			}
-			
-			investmentTransaction2VOL.copyTo(investmentTransaction2VO); // To overcome "Local variable defined in an enclosing scope must be final or effectively final"
-			investmentIdButton = new Button(String.valueOf(investmentTransaction2VOL.getInvestmentId()));
-			investmentIdButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-			investmentIdButton.addClickListener(e -> {
-				investmentDetailComponent.showDetail(investmentTransaction2VOL.getInvestmentId());
-			});
-			outFields1FormLayout.addFormItem(investmentIdButton, "Investment Id");
-			investorLabel = new NativeLabel(investmentTransaction2VOL.getInvestor());
-			outFields1FormLayout.addFormItem(investorLabel, "Investor");
-			productProviderLabel = new NativeLabel(investmentTransaction2VOL.getProductProvider());
-			outFields1FormLayout.addFormItem(productProviderLabel, "Product Provider");
-			
-			productTypeLabel = new NativeLabel(investmentTransaction2VOL.getProductType());
-			outFields2FormLayout.addFormItem(productTypeLabel, "Product Type");
-			transactionTypeLabel = new NativeLabel(investmentTransaction2VOL.getTransactionType());
-			outFields2FormLayout.addFormItem(transactionTypeLabel, "Transaction Type");
-			
-			dueAmountLabel = new NativeLabel(investmentTransaction2VOL.getDueAmount() == null ? " " : investmentTransaction2VOL.getDueAmount().toString());
-			outFields3FormLayout.addFormItem(dueAmountLabel, "Due Amount");			
-			statusLabel = new NativeLabel(investmentTransaction2VOL.getStatus());
-			outFields3FormLayout.addFormItem(statusLabel, "Status");
 		});
 		
 		realisationTypeDvSelect.addValueChangeListener(event -> {
@@ -235,7 +196,7 @@ public class RealisationComponent extends VerticalLayout {
 		amountComponent = new AmountComponent(investmentTransaction2VO.getTransactionTypeDvId());
 		formLayout.addFormItem(amountComponent.getLayout(), "Realised Amount");
 		if (savingsAccountTransactionVO != null) {
-			amountComponent.setNetNumberField(savingsAccountTransactionVO.getAmount());
+			amountComponent.setFieldValues(savingsAccountTransactionVO.getAmount(), null, null, null);
 		}
 		
 		transactionDatePicker = new DatePicker();

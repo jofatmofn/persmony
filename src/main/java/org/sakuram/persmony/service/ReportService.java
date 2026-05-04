@@ -1441,9 +1441,9 @@ public class ReportService {
 			}
 			if (investment.getIsAccrualApplicable() != null && investment.getIsAccrualApplicable() &&
 					(investment.getClosureDate() == null || investment.getClosureDate().compareTo(fyEndDate) >= 0) &&
-					investmentYearEndAccrual > Constants.TOLERATED_DIFFERENCE_AMOUNT && !yearEndTransactionFound) {
+					investmentYearEndAccrual > Constants.TOLERATED_DIFFERENCE_AMOUNT) {
 				anticipatedAccrualDetailsForInvestor.add(new Object[] {investment.getId(), null, null,
-						"Accrual",
+						yearEndTransactionFound ? "TDS" : "Accrual",
 						fyEndDate,
 						"Missing Entry",
 						investment.getProductProvider().getValue(),

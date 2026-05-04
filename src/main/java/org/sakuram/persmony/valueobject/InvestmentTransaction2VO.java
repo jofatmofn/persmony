@@ -25,7 +25,7 @@ public class InvestmentTransaction2VO {
 	String productProvider;
 	String productType;
 	
-	public void copyTo(InvestmentTransaction2VO investmentTransactionVO) {	// TODO: Do this in LOMBOK way
+	public void copyTo(InvestmentTransaction2VO investmentTransactionVO) {	// TODO: Do this in LOMBOK way; Beware, reference copies!!!
 		investmentTransactionVO.investmentId = this.investmentId;
 		investmentTransactionVO.investmentTransactionId = this.investmentTransactionId;
 		investmentTransactionVO.transactionTypeDvId = this.transactionTypeDvId;

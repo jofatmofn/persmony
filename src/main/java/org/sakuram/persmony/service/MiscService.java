@@ -20,6 +20,7 @@ import org.sakuram.persmony.bean.InvestmentTransaction;
 import org.sakuram.persmony.bean.Realisation;
 import org.sakuram.persmony.repository.DomainValueRepository;
 import org.sakuram.persmony.repository.InvestmentTransactionRepository;
+import org.sakuram.persmony.repository.RealisationRepository;
 import org.sakuram.persmony.util.AppException;
 import org.sakuram.persmony.util.Constants;
 import org.sakuram.persmony.util.DomainValueFlags;
@@ -47,6 +48,9 @@ public class MiscService {
 
 	@Autowired
 	InvestmentTransactionRepository investmentTransactionRepository;
+	
+	@Autowired
+	RealisationRepository realisationRepository;
 	
     public void loadCache() {
     	List<Long> categoryDvIdList;
@@ -343,6 +347,24 @@ public class MiscService {
 				investmentTransaction.getInvestment().getProductProvider().getValue(),
 				investmentTransaction.getInvestment().getProductType().getValue()
 				);
+    }
+    
+    public RealisationVO fetchRealisation(long realisationId) {
+    	Realisation realisation = realisationRepository.findById(realisationId)
+    			.orElseThrow(() -> new AppException("Invalid Realisation Id " + realisationId, null));
+    	return new RealisationVO(
+    			realisation.getId(),
+    			realisation.getInvestmentTransaction().getId(),
+    			realisation.getRealisationDate(),
+    			realisation.getRealisationType().getValue(),
+    			realisation.getSavingsAccountTransaction() == null ? null : realisation.getSavingsAccountTransaction().getId(),
+				realisation.getReferredRealisation() == null ? null : realisation.getReferredRealisation().getId(),
+				realisation.getAmount(),
+				realisation.getReturnedPrincipalAmount(),
+				realisation.getInterestAmount(),
+				realisation.getTdsAmount(),
+				realisation.getTdsReference()
+    			);
     }
     
     public RealisationVO fetchRealisationAmountSummary(InvestmentTransaction investmentTransaction) {
